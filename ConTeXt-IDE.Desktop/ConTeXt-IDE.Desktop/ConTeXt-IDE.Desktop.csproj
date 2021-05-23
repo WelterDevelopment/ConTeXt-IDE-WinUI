@@ -5,7 +5,7 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>ConTeXt_IDE</RootNamespace>
     <Platforms>x86;x64;arm64</Platforms>
-    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -29,14 +29,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.WinUI" Version="7.0.1" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.0.1" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.0.1" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Core" Version="7.0.1" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Layout" Version="7.0.1" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.6" />
-    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.5.6" />
-    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.5.6" />
+    <PackageReference Include="CommunityToolkit.WinUI" Version="7.0.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.0.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.0.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Core" Version="7.0.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Layout" Version="7.0.2" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.7" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.5.7" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.5.7" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <Manifest Include="$(ApplicationManifest)" />
