@@ -1,0 +1,75 @@
+\startcomponent[c_3_section3]
+\environment[env_thesis]
+
+\startsection[title=Floats]
+\startsubsection[title=Tables]
+There are two table mechanisms in \ConTeXt:\the\columnwidth
+
+\startplacetable[location=here, reference=tab:tabulate, title={Tabulate (starttabulate - stoptabulate)}]
+	\starttabulate[|cw(.5\columnwidth)|lw(.5\columnwidth)|][unit=0pt]
+		\FL \NC {\bf Centered column} \NC {\bf Left aligned column} \NC \AR \LL
+		\NC One		\NC Two   \NC \AR
+		\NC Three \NC Four  \NC \AR
+	\stoptabulate
+\stopplacetable
+
+and
+
+\startplacetable[location=here, reference=tab:table, title={TABLE (bTABLE - eTABLE)}]
+	\setupTABLE[r][each][align=start]
+	\setupTABLE[r][first][bottomframe=on,topframe=on]
+	\setupTABLE[c][first][align=center]
+	\bTABLE[split=repeat,option=stretch,frame=off]
+		\bTABLEhead
+			\bTR \bTH Centered column \eTH \bTH Left aligned column \eTH \eTR
+		\eTABLEhead
+		\bTABLEbody
+			\bTR \bTD One \eTD \bTD Two \eTD \eTR
+			\bTR \bTD Three \eTD \bTD Four \eTD \eTR
+		\eTABLEbody
+	\eTABLE
+\stopplacetable
+
+Its clear that \ref[tab:tabulate] uses less lines of code and is more \LaTeX y, where with \ref[tab:table] you get full global control on how all the rows and columns of the table are formatted.
+
+There is also a mixture available where the code gets a little cleaner:
+
+\startplacetable[location=here, reference=tab:mix, title={TABLE (startTABLE - stopTABLE)}]
+	\setupTABLE[r][each][align=start]
+	\setupTABLE[r][first][style=bold,bottomframe=on,topframe=on]
+	\setupTABLE[c][first][align=center]
+	\startTABLE[split=repeat,option=stretch,frame=off]
+		\startTABLEhead
+			\NC Centered column \NC Left aligned column \NC \NR
+		\stopTABLEhead
+		\startTABLEbody
+			\NC One		\NC Two   \NC \NR
+			\NC Three \NC Four  \NC \NR
+		\stopTABLEbody
+	\stopTABLE
+\stopplacetable
+
+Please note, that with the last flavour, the only usable \quote{old} table commands are \type{\NC} and \type{\NR}. You cannot use other \quote{old} table commands (like \type{\FL}, \type{\VL}) because formatting is still done with \type{\setupTABLE}. 
+\stopsubsection
+
+\startsubsection[title={Figures}]
+\startplacefigure[location=here, reference=fig:examplefigure, title={Example Figure}]
+	\externalfigure[pictures/NyquistPlot1.png][maxwidth=\columnwidth, height=.35\columnwidth]
+\stopplacefigure
+This is a reference to \ref[fig:examplefigure].
+
+\startplacefigure[title={Subfigures}, reference=fig:combinations]
+\startfloatcombination[2*2]
+	\startplacesubfigure[title=Test, reference=fig:subfigure]
+		\externalfigure[pictures/NyquistPlot1.png][maxwidth=\columnwidth, height=.35\columnwidth]
+	\stopplacesubfigure
+	\startplacesubfigure[title=Test]
+		\externalfigure[pictures/NyquistPlot1.png][maxwidth=\columnwidth, height=.35\columnwidth]
+	\stopplacesubfigure
+\stopfloatcombination
+\stopplacefigure
+
+\stopsubsection
+
+\stopsection
+\stopcomponent

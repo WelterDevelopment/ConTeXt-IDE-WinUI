@@ -1,0 +1,344 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Monaco</RootNamespace>
+    <AssemblyName>MonacoEditorComponent</AssemblyName>
+    <TargetFramework>net5.0-windows10.0.19041</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <NoWarn>$(NoWarn);8305;2008;CS1591</NoWarn>
+    <Version>0.10.0.0</Version>
+    <AssemblyVersion>0.10.0.0</AssemblyVersion>
+    <FileVersion>0.10.0.0</FileVersion>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TypeScriptRemoveComments>true</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>false</TypeScriptSourceMap>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TypeScriptTarget>ES2015</TypeScriptTarget>
+    <TypeScriptModuleKind>ES6</TypeScriptModuleKind>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\MonacoEditorComponent.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\MonacoEditorComponent.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\x86\Release\MonacoEditorComponent.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <PlatformTarget>ARM</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <PlatformTarget>ARM</PlatformTarget>
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <DocumentationFile>bin\x64\Debug\MonacoEditorComponent.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <DocumentationFile>bin\x64\Release\MonacoEditorComponent.xml</DocumentationFile>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <Nullable>warnings</Nullable>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CodeEditor\CodeEditor.xaml.cs" />
+    <Compile Include="CodeEditor\CodeEditor.Events.cs" />
+    <Compile Include="CodeEditor\CodeEditor.Methods.cs" />
+    <Compile Include="CodeEditor\CodeEditor.Properties.cs" />
+    <Compile Include="Helpers\ObservableVector.cs" />
+    <Compile Include="Monaco\Editor\IEditorCommentsOptions.cs" />
+    <Compile Include="Monaco\Editor\ISingleEditOperation.cs" />
+    <Compile Include="Extensions\WebViewExtensions.cs" />
+    <Compile Include="Helpers\DebugLogger.cs" />
+    <Compile Include="Helpers\DispatcherTaskExtensions.cs" />
+    <Compile Include="Helpers\InterfaceToClassConverter.cs" />
+    <Compile Include="Helpers\KeyboardListener.cs" />
+    <Compile Include="Helpers\ParentAccessor.cs" />
+    <Compile Include="Helpers\ThemeListener.cs" />
+    <Compile Include="Monaco\Editor\AcceptSuggestionOnEnter.cs" />
+    <Compile Include="Monaco\Editor\AccessibilitySupport.cs" />
+    <Compile Include="Monaco\Editor\AutoClosingQuotes.cs" />
+    <Compile Include="Monaco\Editor\AutoClosingBrackets.cs" />
+    <Compile Include="Monaco\Editor\AutoClosingOvertype.cs" />
+    <Compile Include="Monaco\Editor\AutoFindInSelection.cs" />
+    <Compile Include="Monaco\Editor\AutoIndent.cs" />
+    <Compile Include="Monaco\Editor\AutoSurround.cs" />
+    <Compile Include="Monaco\Editor\ContextKey.cs" />
+    <Compile Include="Monaco\Editor\CursorBlinking.cs" />
+    <Compile Include="Monaco\Editor\CursorStyle.cs" />
+    <Compile Include="Monaco\Editor\CursorSurroundingLinesStyle.cs" />
+    <Compile Include="Monaco\Editor\Dimension.cs" />
+    <Compile Include="Monaco\Editor\EditorFindOptions.cs" />
+    <Compile Include="Monaco\Editor\EditorHoverOptions.cs" />
+    <Compile Include="Monaco\Editor\EditorLightbulbOptions.cs" />
+    <Compile Include="Monaco\Editor\EditorMinimapOptions.cs" />
+    <Compile Include="Monaco\Editor\FoldingStrategy.cs" />
+    <Compile Include="Monaco\Editor\GoToLocationOptions.cs" />
+    <Compile Include="Monaco\Editor\ISuggestOptions.cs" />
+    <Compile Include="Monaco\Editor\ScrollbarBehavior.cs" />
+    <Compile Include="Monaco\Editor\IContextKey.cs" />
+    <Compile Include="Monaco\Editor\IDiffEditorConstructionOptions.cs" />
+    <Compile Include="Monaco\Editor\IDiffEditorOptions.cs" />
+    <Compile Include="Monaco\Editor\IDimension.cs" />
+    <Compile Include="Monaco\Editor\IEditorConstructionOptions.cs" />
+    <Compile Include="Monaco\Editor\IModelDecorationMinimapOptions.cs" />
+    <Compile Include="Monaco\Editor\IModelDecorationOverviewRulerOptions.cs" />
+    <Compile Include="Monaco\Editor\IRelatedInformation.cs" />
+    <Compile Include="Monaco\Editor\IStandaloneEditorConstructionOptions.cs" />
+    <Compile Include="Monaco\Editor\SnippetSuggestions.cs" />
+    <Compile Include="Monaco\Editor\StandaloneEditorConstructionOptions.cs" />
+    <Compile Include="Monaco\Editor\IActionDescriptor.cs" />
+    <Compile Include="Monaco\Editor\IEditorFindOptions.cs" />
+    <Compile Include="Monaco\Editor\IEditorOptions.cs" />
+    <Compile Include="Monaco\Editor\IEditorScrollbarOptions.cs" />
+    <Compile Include="Monaco\Editor\IGlobalEditorOptions.cs" />
+    <Compile Include="Monaco\Editor\IMarker.cs" />
+    <Compile Include="Monaco\Editor\IMarkerData.cs" />
+    <Compile Include="Monaco\Editor\IModel.cs" />
+    <Compile Include="Monaco\Editor\IModelDecorationOptions.cs" />
+    <Compile Include="Monaco\Editor\IModelDeltaDecoration.cs" />
+    <Compile Include="Monaco\Editor\InsertMode.cs" />
+    <Compile Include="Monaco\Editor\IEditorParameterHintOptions.cs" />
+    <Compile Include="Monaco\Editor\LineNumbersType.cs" />
+    <Compile Include="Monaco\Editor\Marker.cs" />
+    <Compile Include="Monaco\Editor\MarkerData.cs" />
+    <Compile Include="Monaco\Editor\MatchBrackets.cs" />
+    <Compile Include="Monaco\Editor\MouseStyle.cs" />
+    <Compile Include="Monaco\Editor\MultiCursorModifier.cs" />
+    <Compile Include="Monaco\Editor\MultiCursorPaste.cs" />
+    <Compile Include="Monaco\Editor\Multiple.cs" />
+    <Compile Include="Monaco\Editor\RenderLineHighlight.cs" />
+    <Compile Include="Monaco\Editor\RenderWhitespace.cs" />
+    <Compile Include="Monaco\Editor\Show.cs" />
+    <Compile Include="Monaco\Editor\Side.cs" />
+    <Compile Include="Monaco\Editor\SuggestSelection.cs" />
+    <Compile Include="Monaco\Editor\TabCompletion.cs" />
+    <Compile Include="Monaco\Editor\TrackedRangeStickiness.cs" />
+    <Compile Include="Monaco\Editor\WordAtPosition.cs" />
+    <Compile Include="Monaco\Editor\IWordAtPosition.cs" />
+    <Compile Include="Monaco\Editor\WordWrap.cs" />
+    <Compile Include="Monaco\Editor\WrappingIndent.cs" />
+    <Compile Include="Monaco\Helpers\CssGlyphStyle.cs" />
+    <Compile Include="Monaco\Helpers\CssInlineStyle.cs" />
+    <Compile Include="Monaco\Helpers\CssLineStyle.cs" />
+    <Compile Include="Monaco\Helpers\CssStyleBroker.cs" />
+    <Compile Include="Monaco\Helpers\ICssStyle.cs" />
+    <Compile Include="Monaco\Helpers\Json.cs" />
+    <Compile Include="Monaco\Helpers\TextDecoration.cs" />
+    <Compile Include="Monaco\IMarkdownString.cs" />
+    <Compile Include="Monaco\IPosition.cs" />
+    <Compile Include="Monaco\IRange.cs" />
+    <Compile Include="Monaco\KeyCode.cs" />
+    <Compile Include="Monaco\KeyMod.cs" />
+    <Compile Include="Monaco\Languages\Command.cs" />
+    <Compile Include="Monaco\Languages\CompletionContext.cs" />
+    <Compile Include="Monaco\Languages\CompletionItem.cs" />
+    <Compile Include="Monaco\Languages\CompletionItemInsertTextRule.cs" />
+    <Compile Include="Monaco\Languages\CompletionItemKind.cs" />
+    <Compile Include="Monaco\Languages\CompletionItemProvider.cs" />
+    <Compile Include="Monaco\Languages\CompletionList.cs" />
+    <Compile Include="Monaco\Languages\Hover.cs" />
+    <Compile Include="Monaco\Languages\HoverProvider.cs" />
+    <Compile Include="Monaco\Languages\ILanguageExtensionPoint.cs" />
+    <Compile Include="Monaco\LanguagesHelper.cs" />
+    <Compile Include="Monaco\Languages\SuggestTriggerKind.cs" />
+    <Compile Include="Monaco\MarkerTag.cs" />
+    <Compile Include="Monaco\ModelHelper.cs" />
+    <Compile Include="Monaco\Position.cs" />
+    <Compile Include="Monaco\Range.cs" />
+    <Compile Include="Monaco\Selection.cs" />
+    <Compile Include="Monaco\SelectionDirection.cs" />
+    <Compile Include="Monaco\MarkerSeverity.cs" />
+    <Compile Include="Monaco\Uri.cs" />
+    <Compile Include="Monaco\UriComponents.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TypeScript.MSBuild">
+      <Version>4.2.4</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Nito.AsyncEx">
+      <Version>5.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ProjectReunion">
+      <Version>0.5.6</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="monaco-editor\monaco.d.ts" />
+    <TypeScriptCompile Include="ts-helpermethods\Monaco.Helpers.KeyboardListener.ts">
+      <SubType>Designer</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="ts-helpermethods\Monaco.Helpers.ParentAccessor.ts">
+      <SubType>Designer</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="ts-helpermethods\updateSelectedContent.ts">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="ts-helpermethods\otherScriptsToBeOrganized.ts">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="ts-helpermethods\registerCompletionItemProvider.ts">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </TypeScriptCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CodeEditor\CodeEditor.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="monaco-editor\*.*" />
+    <Content Include="monaco-editor\min\**\*.*" />
+    <Content Include="ts-helpermethods\*.js" />
+    <Content Remove="monaco-editor\monaco.d.ts" />
+    <EmbeddedResource Include="Properties\MonacoEditorComponent.rd.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="CodeEditor\CodeEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Content Include="Themes\Generic.xaml.old">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="monaco-editor\min-maps\vs\base\worker\workerMain.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.de.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.es.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.fr.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.it.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.ja.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.ko.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.ru.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.zh-cn.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\editor\editor.main.nls.zh-tw.js.map" />
+    <Content Include="monaco-editor\min-maps\vs\loader.js.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.18362.16" />
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" TargetingPackVersion="10.0.18362.16" />
+  </ItemGroup>
+</Project>

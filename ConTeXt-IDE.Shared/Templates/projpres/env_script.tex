@@ -1,0 +1,121 @@
+\startenvironment[env_script]
+
+% Basic Layout
+\setupcolors[state=start]
+\setuppapersize[A4][A4]
+\mainlanguage[en] % Header names
+\language[en] % Hyphenation
+\enableregime[utf]
+
+%\showgrid
+%\showframe
+%\showstruts
+%\showmakeup
+%\showsetups
+%\showlayout
+%\showfontdata
+
+\setuplayout[topspace=1cm, backspace=1.5cm, header=0.8cm, headerdistance=0.5cm, footer=0.8cm, bottom =0cm, bottomdistance=.5cm, height=fit, width=middle]
+\setuppagenumbering[alternative=onesided, page=no]
+  
+% PDF Output Adjustments
+\setupinteraction[state=start, page=yes, menu=on, focus=fit, style=, click=yes, color=, contrastcolor=]
+\placebookmarks[section,subsection,subject][section][force=yes]
+
+% Typography
+\setupindenting[no]
+\setupbodyfont[sans, 11pt]
+\definefontfeature[default][mode=node, kern=yes, bliga=yes, tlig=yes, ccmp=yes, language=dflt, protrusion=quality, expansion=quality]
+\setuptolerance[verytolerant,stretch]
+
+% Accent color
+\definecolor[accent][r=\ctxlua{context(45/255)},g=\ctxlua{context(137/255)},b=\ctxlua{context(204/255)}]
+
+% Header/Footer
+\setupfooter[style=\tf, location=lohi]
+\setupheader[style=\tf, location=lohi]
+
+% Section blocks layouting
+\definestructureconversionset[frontpart:pagenumber][][Romannumerals]
+\definestructureconversionset[bodypart:pagenumber][][numbers]
+\definestructureconversionset[appendix:pagenumber][][Romannumerals]
+\definestructureconversionset[backpart:pagenumber][][Romannumerals]
+\startsectionblockenvironment[frontpart]
+\setupfootertexts[]
+\setupfootertexts[][\userpagenumber][\userpagenumber][]
+\setupheadertexts[]
+\setupheadertexts[][][][]
+\stopsectionblockenvironment
+\startsectionblockenvironment[bodypart]
+\setupfootertexts[]
+\setupfootertexts[][\userpagenumber][\userpagenumber][]
+\setupheadertexts[{\getmarking[sectionnumber]~~\getmarking[section]}]
+\setupheadertexts[][][][]
+\savenumber[userpage]
+\resetnumber[userpage]
+\stopsectionblockenvironment
+\startsectionblockenvironment[appendix]
+\setuphead[section][number=no, conversion=A]
+\setuphead[subsection][conversion=number]
+\setupfootertexts[]
+\setupfootertexts[][\userpagenumber][\userpagenumber][]
+\setupheadertexts[]
+\setupheadertexts[][][][]
+\restorenumber[userpage]
+\incrementnumber[userpage]
+\decrementnumber[userpage]
+\stopsectionblockenvironment
+\startsectionblockenvironment[backpart]
+\setupfootertexts[]
+\setupfootertexts[][][][]
+\setupheadertexts[]
+\setupheadertexts[][][][]
+\stopsectionblockenvironment
+
+\definemakeup[title][doublesided=no, page=right, headerstate=empty, footerstate=empty,  pagestate=start, style=bigbodyfont, align=middle]
+
+% TOC style
+\setuplist[part][width=0mm, distance=2mm, style=bold, aligntitle=no]
+\setuplist[chapter][label=yes, width=fit, distance=2mm, style=bold]
+\setuplist[section,subject][width=0mm, distance=2mm, margin=0mm, style=bold, alternative=b]
+\setuplist[subsection,subsubject][width=0mm, distance=2mm, margin=5mm, alternative=c]
+\setuplist[subsubsection,subsubsubject][width=0mm, distance=2mm, margin=10mm, alternative=c]
+\setupcombinedlist[content][list={section,subsection}]
+
+\define\placecontent{
+\completecontent
+}
+
+% Ignore any columns and 'new section' title pages
+\unexpanded\def\startcolumn#1\stopcolumn{#1}
+\unexpanded\def\startcolumns[#1]#2\stopcolumns{#2}
+\unexpanded\def\startnewsection#1\stopnewsection{#1}
+
+% Heading setup
+\setuphead[chapter,title][style={\bfd}]
+\setuphead[section][style={\bfc}, before={\bigskip}, after={\medskip}, page=yes, header=empty]
+\setuphead[subject][style={\bfc}, before={\bigskip}, after={\medskip}, page=no, header=empty]
+\setuphead[subsection,subsubject][style={\bfb}, before={\medskip}, after={\medskip}]
+\setuphead[subsubsection,subsubsubject][style={\bfa}, before={\bigskip}, after={}]
+
+% Float captions
+\setupcaptions[table][location=top]
+\setupcaptions[figure][location=bottom]
+\setupcaptions[headstyle=\bf]
+
+% Referencing automation: \ref[Type:ReferenceName], somewhat equivalent to \autoref in LaTeX
+\definereferenceformat[refdef][style=\tf, text=definition ]
+\definereferenceformat[refthm][style=\tf, text=theorem ]
+\definereferenceformat[refrmk][style=\tf, text=remark ]
+\definereferenceformat[refsec][style=\tf, text=section ]
+\definereferenceformat[refeq][style=\tf, text=equation ]
+\definereferenceformat[reffig][style=\tf, text=figure ]
+\definereferenceformat[reftab][style=\tf, text=table ]
+\def\ref[#1:#2]{\csname ref#1\endcsname[#1:#2]}
+
+% Bibliography
+\usebtxdataset[default][literature.lua]
+\setupbtx[dataset=default]
+\usebtxdefinitions[aps]
+
+\stopenvironment

@@ -1,0 +1,848 @@
+﻿<Page
+    x:Class="ConTeXt_IDE.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:models="using:ConTeXt_IDE.Models"
+    xmlns:helpers="using:ConTeXt_IDE.Helpers"
+    xmlns:monaco="using:Monaco"
+    mc:Ignorable="d" DataContext="{x:Bind VM}" Loaded="Info_Loaded" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Background="{ThemeResource AcrylicColor}" >
+    <Page.Resources>
+        <DataTemplate x:Key="FolderTemplate" x:DataType="models:FileItem">
+            <models:MyTreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" CanDrag="False" ToolTipService.ToolTip="{Binding FileName}" HorizontalContentAlignment="Left" ItemsSource="{x:Bind Children}">
+                <models:MyTreeViewItem.ContextFlyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuFlyoutItem x:Name="NewFile" Icon="Add" Click="NewFile_Click" Text="New File"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="NewFolder" Icon="Add" Click="NewFolder_Click"  Text="New Folder"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="Delete" Icon="Delete" Click="Delete_Click" Text="Delete"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
+                    </MenuFlyout>
+                </models:MyTreeViewItem.ContextFlyout>
+                <StackPanel Margin="0" Orientation="Horizontal">
+                    <SymbolIcon Width="20" Symbol="Folder"/>
+                    <TextBlock Text="{Binding FileName, Mode=OneWay}"/>
+                </StackPanel>
+            </models:MyTreeViewItem>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FileTemplate" x:DataType="models:FileItem">
+            <models:MyTreeViewItem Tapped="FileItemTapped" Margin="0,0,0,0" ToolTipService.ToolTip="{Binding FileName}" >
+                <models:MyTreeViewItem.ContextFlyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuFlyoutItem Visibility="{Binding FileLanguage, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="SetRoot" Icon="Favorite" Click="SetRoot_Click" Visibility="{Binding Converter={StaticResource SetRootVisibility}}" IsEnabled="{Binding IsRoot, Converter={StaticResource BoolInverter}}" Text="Set as Main File"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="Delete" Icon="Delete" Click="Delete_Click" IsEnabled="{Binding IsRoot, Converter={StaticResource BoolInverter}}" Text="Delete"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
+                    </MenuFlyout>
+                </models:MyTreeViewItem.ContextFlyout>
+                <animations:Implicit.Animations>
+                    <animations:TranslationAnimation Duration="0:0:0.25" From="-50, 0, 0" To="0" ></animations:TranslationAnimation>
+                    <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+                </animations:Implicit.Animations>
+                <StackPanel Margin="0" Orientation="Horizontal">
+                    <!--<Image Width="20" Source="Assets/file.png"/>-->
+                    <SymbolIcon Width="20" Symbol="Document"></SymbolIcon>
+                    <TextBlock Text="{Binding FileName, Mode=OneWay}" FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" />
+                </StackPanel>
+            </models:MyTreeViewItem>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ProjectFolderTemplate" x:DataType="models:FileItem">
+            <models:MyTreeViewItem CanDrag="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ToolTipService.ToolTip="{Binding File.Path}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}" ItemsSource="{x:Bind Children}">
+                <models:MyTreeViewItem.ContextFlyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuFlyoutItem x:Name="NewFile" Icon="Add" Click="NewFile_Click" Text="New File"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="NewFolder" Icon="Add" Click="NewFolder_Click"  Text="New Folder"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="Unload" Icon="Undo" Click="Unload_Click" Text="Unload"></MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="ViewInExplorer" Icon="OpenFile" Click="OpeninExplorer_Click" Text="Open in Explorer"></MenuFlyoutItem>
+                    </MenuFlyout>
+                </models:MyTreeViewItem.ContextFlyout>
+                <Grid HorizontalAlignment="Stretch" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Grid.Column="0" Glyph="&#xE838;"></FontIcon>
+                    <TextBlock Grid.Column="1" HorizontalAlignment="Stretch" MaxLines="2" FontWeight="Bold" Text="{Binding FileName, Mode=OneWay}"/>
+                    <Button ToolTipService.ToolTip="Create file" VerticalAlignment="Center" IsEnabled="{Binding Source={StaticResource VM}, Path=IsProjectLoaded}"  Grid.Column="2"  Click="AddFile_Click">
+                        <SymbolIcon Symbol="Document"/>
+                    </Button>
+                    <Button  ToolTipService.ToolTip="Create folder" VerticalAlignment="Center" IsEnabled="{Binding Source={StaticResource VM}, Path=IsProjectLoaded}"  Grid.Column="3" Click="AddFolder_Click">
+                        <SymbolIcon Symbol="Folder"/>
+                    </Button>
+                </Grid>
+            </models:MyTreeViewItem>
+        </DataTemplate>
+
+        <models:ExplorerItemTemplateSelector
+            x:Key="ExplorerItemTemplateSelector"
+            FolderTemplate="{StaticResource FolderTemplate}"
+            FileTemplate="{StaticResource FileTemplate}"
+            ProjectFolderTemplate="{StaticResource ProjectFolderTemplate}"
+            />
+    </Page.Resources>
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <TabView Grid.Row="0" Foreground="White" IsAddTabButtonVisible="False" CanDragTabs="False" CanReorderTabs="False"  TabWidthMode="SizeToContent" x:Name="MainRibbon" >
+            <TabView.Background>
+                <SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
+            </TabView.Background>
+            <TabView.TabStripHeader>
+                <Grid x:Name="TabStripHeader" Background="Transparent">
+                    <Button VerticalAlignment="Center" Margin="4,0,0,-4" FontSize="18" BorderThickness="0" Padding="6"  Background="Transparent">
+                        <Button.Content>
+                            <FontIcon Glyph="&#xE70D;"/>
+
+                        </Button.Content>
+                        <Button.Flyout >
+                            <MenuFlyout Placement="Bottom">
+                                <MenuFlyoutItem ToolTipService.ToolTip="About this app" Text="About" Click="TitleButton_Click">
+                                    <MenuFlyoutItem.Icon>
+                                        <SymbolIcon Symbol="Help" ></SymbolIcon>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem  Text="Update ConTeXt" Click="Update_Click" Visibility="{Binding Default.DistributionInstalled, Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Updates the ConTeXt Distribution">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xECC5;" ></FontIcon>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem  Text="Rate this app" Click="Rate_Click" ToolTipService.ToolTip="Feel free to also use your review to communicate feature requests and bug reports!">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE734;" ></FontIcon>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <!--<MenuFlyoutItem  Text="View in GitHub" Click="Github_Click" ToolTipService.ToolTip="View the source code, commit changes and write feature requests and bug reports.">
+                                    <MenuFlyoutItem.Icon>
+                                        <BitmapIcon Foreground="{ThemeResource ForegroundColor}" UriSource="ms-appx:///Assets/GitHub.png" ></BitmapIcon>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>-->
+                            </MenuFlyout>
+
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+            </TabView.TabStripHeader>
+
+            <TabView.TabStripFooter>
+                <Grid x:Name="TabStripFooter" Background="Transparent" />
+            </TabView.TabStripFooter>
+            <TabView.TabItems>
+                <TabViewItem IsClosable="False" Foreground="White" ToolTipService.ToolTip="Start: Save, compile, set parameters">
+                    <TabViewItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon  Glyph="&#xE768;"></FontIcon>
+                            <TextBlock  Text="Start"></TextBlock>
+                        </StackPanel>
+                    </TabViewItem.Header>
+                    <ScrollViewer Style="{StaticResource RibbonView}">
+                        <StackPanel Style="{StaticResource RibbonContent}">
+                            <StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsFileItemLoaded, Converter={StaticResource BoolToVisibility}}">
+                                <Button CornerRadius="2,0,0,2"  IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="btnsave"  Click="Btnsave_Click" ToolTipService.ToolTip="Save current file">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <SymbolIcon Symbol="Save"></SymbolIcon>
+                                            <TextBlock  Text="Save" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <Button CornerRadius="0,2,2,0" BorderThickness="0,1,1,1" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="btnsaveall"  Click="btnsaveall_Click" ToolTipService.ToolTip="Save all opened files">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xEA35;"></FontIcon>
+                                            <TextBlock Text="Save all" VerticalAlignment="Center" ></TextBlock>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <Button x:Name="Root" CornerRadius="{x:Bind Current.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=right}" Visibility="{Binding CurrentProject.RootFile, Converter={StaticResource StringToVisibility}}" ToolTipService.ToolTip="Save all &amp; Compile root file" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}"  Click="Btncompileroot_Click" >
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <FontIcon Glyph="&#xF5B0;"></FontIcon>
+                                            <TextBlock Text="Root" VerticalAlignment="Center" ></TextBlock>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <Grid Visibility="{Binding CurrentFileItem.FileLanguage, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}">
+                                    <Button x:Name="Current" CornerRadius="{x:Bind Root.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=left}" Visibility="{Binding IsFileItemLoaded, Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Save &amp; Compile current file"   Click="Btncompile_Click" >
+                                        <Button.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <SymbolIcon Symbol="Play"></SymbolIcon>
+                                                <TextBlock  Text="Current" VerticalAlignment="Center" ></TextBlock>
+                                            </StackPanel>
+                                        </Button.Content>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsProjectLoaded, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ToggleButton Click="Modes_Click" CornerRadius="2,0,0,2" IsChecked="{Binding Default.UseModes, Mode=TwoWay}">
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE9D5;"></FontIcon>
+                                            <TextBlock  Text="Modes" ></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <Button  CornerRadius="0,2,2,0"  BorderThickness="0,1,1,1"  x:Name="Modes" ToolTipService.ToolTip="Select compile modes" IsEnabled="{Binding Default.UseModes,Mode=OneWay}" >
+                                    <Button.Content>
+                                        <FontIcon Glyph="&#xE70D;"></FontIcon>
+                                    </Button.Content>
+                                    <Button.Flyout>
+                                        <Flyout x:Name="ModeFlyout" Placement="Bottom">
+                                            <StackPanel Orientation="Vertical" Spacing="6">
+                                                <Button  Click="addMode_Click" ToolTipService.ToolTip="Add a Mode" >
+                                                    <Button.Content>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <SymbolIcon Symbol="Add"></SymbolIcon>
+                                                            <TextBlock  Text="Add mode" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                </Button>
+                                                <ListView SelectionMode="None" ItemsSource="{Binding CurrentProject.Modes}" >
+                                                    <ListView.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" Checked="CheckBox_Checked">
+                                                                <CheckBox.ContextFlyout>
+                                                                    <MenuFlyout>
+                                                                        <MenuFlyoutItem  x:Name="RemoveMode" Icon="Delete" Click="RemoveMode_Click" Text="Remove mode"></MenuFlyoutItem>
+                                                                    </MenuFlyout>
+                                                                </CheckBox.ContextFlyout>
+                                                            </CheckBox>
+                                                        </DataTemplate>
+                                                    </ListView.ItemTemplate>
+                                                </ListView>
+                                            </StackPanel>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsProjectLoaded, Converter={StaticResource BoolToVisibility}}">
+                                <ToggleButton CornerRadius="2,0,0,2" IsChecked="{Binding Default.UseParameters, Mode=TwoWay}">
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xEC7A;"></FontIcon>
+                                            <TextBlock  Text="Parameters" ></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <TextBox CornerRadius="0,2,2,0" IsSpellCheckEnabled="False" BorderThickness="0,1,1,1"  IsEnabled="{Binding Default.UseParameters}" Text="{Binding Default.AdditionalParameters, Mode=TwoWay}"></TextBox>
+                            </StackPanel>
+
+                            <TextBlock Visibility="{Binding IsProjectLoaded, Converter={StaticResource BoolToInvisibility}}" Text="Open a project folder to start compiling!"  Foreground="{ThemeResource ForegroundLightColor}"></TextBlock>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <TabViewItem IsClosable="False" ToolTipService.ToolTip="Editor: Change the editor's appearance and behaviour">
+                    <TabViewItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon  Glyph="&#xE70F;"></FontIcon>
+                            <TextBlock  Text="Editor"></TextBlock>
+                        </StackPanel>
+                    </TabViewItem.Header>
+                    <ScrollViewer Style="{StaticResource RibbonView}">
+                        <StackPanel Style="{StaticResource RibbonContent}">
+                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Line numbers:"></TextBlock>
+                            <ComboBox CornerRadius="0,2,2,0" ItemsSource="{Binding Default.ShowLineNumberOptions}" SelectionChangedTrigger="Always" SelectedItem="{Binding Default.ShowLineNumbers, Mode=TwoWay}"  FontFamily="Segoe UI"/>
+                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Wrapping:"></TextBlock>
+                            <ComboBox CornerRadius="0,2,2,0" ItemsSource="{Binding Default.WordWrapOptions}" SelectionChangedTrigger="Always" SelectedItem="{Binding Default.Wrap, Mode=TwoWay}"  FontFamily="Segoe UI"/>
+                            <!--<CheckBox Content="Text wrapping (prevents horizontal scrollbar)" IsChecked="{Binding Default.Wrap, Mode=TwoWay}"/>-->
+
+
+                            <ToggleButton IsChecked="{Binding Default.CodeFolding, Mode=TwoWay}">
+                                <ToggleButton.Content>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <FontIcon Glyph="&#xE974;"></FontIcon>
+                                        <TextBlock  Text="Code folding" ></TextBlock>
+                                    </StackPanel>
+                                </ToggleButton.Content>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding Default.MiniMap, Mode=TwoWay}">
+                                <ToggleButton.Content>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <FontIcon Glyph="&#xE7C4;"></FontIcon>
+                                        <TextBlock  Text="Minimap" ></TextBlock>
+                                    </StackPanel>
+                                </ToggleButton.Content>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding Default.Hover, Mode=TwoWay}">
+                                <ToggleButton.Content>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <FontIcon Glyph="&#xE7C9;"></FontIcon>
+                                        <TextBlock  Text="Hover info" ></TextBlock>
+                                    </StackPanel>
+                                </ToggleButton.Content>
+                            </ToggleButton>
+
+                            <DropDownButton  Content="Suggestions" ToolTipService.ToolTip="Enable code compleation and snippets" >
+                                <DropDownButton.Flyout>
+                                    <Flyout  Placement="Bottom">
+                                        <StackPanel Orientation="Vertical" >
+                                            <CheckBox  Content="ConTeXt sart-stop environments" IsChecked="{Binding Default.SuggestStartStop, Mode=TwoWay}"/>
+                                            <CheckBox  Content="ConTeXt commands" IsChecked="{Binding Default.SuggestCommands, Mode=TwoWay}"/>
+                                            <CheckBox  Content="ConTeXt command arguments (key=value options)" IsChecked="{Binding Default.SuggestArguments, Mode=TwoWay}"/>
+                                            <CheckBox  Content="ConTeXt font switches (\ss\tfa...)" IsChecked="{Binding Default.SuggestFontSwitches, Mode=TwoWay}"/>
+                                            <CheckBox  Content="TeX primitives" IsChecked="{Binding Default.SuggestPrimitives, Mode=TwoWay}"/>
+                                        </StackPanel>
+                                    </Flyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <Button  ToolTipService.ToolTip="Open a Manual" CornerRadius="2,0,0,2">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <SymbolIcon Symbol="Help"></SymbolIcon>
+                                            <TextBlock  Text="ConTeXt Documentation" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                        </StackPanel>
+
+                                    </Button.Content>
+                                    <Button.Flyout>
+                                        <Flyout>
+                                            <ListView  SelectionMode="None" IsItemClickEnabled="True" ItemClick="Help_ItemClick" ItemsSource="{Binding HelpFiles}" >
+                                                <ListView.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Margin="0,0,0,6" Spacing="0">
+                                                            <TextBlock Text="{Binding FriendlyName}" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
+                                                            <TextBlock Text="{Binding FileName}" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ListView.ItemTemplate>
+                                            </ListView>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                                <ToggleButton  BorderThickness="0,1,1,1" ToolTipService.ToolTip="Open ConTeXt Manuals in the internal viewer" IsChecked="{Binding Default.HelpPDFInInternalViewer, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer, Mode=OneWay}" CornerRadius="0,2,2,0">
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE89F;"></FontIcon>
+                                            <TextBlock  Text="Open internal" ></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                            </StackPanel>
+                        </StackPanel>
+
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <TabViewItem IsClosable="False" ToolTipService.ToolTip="Output: Change what should happen after compile">
+                    <TabViewItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon  Glyph="&#xE945;"></FontIcon>
+                            <TextBlock  Text="Output"></TextBlock>
+                        </StackPanel>
+                    </TabViewItem.Header>
+                    <ScrollViewer Style="{StaticResource RibbonView}">
+                        <StackPanel Style="{StaticResource RibbonContent}">
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <ToggleButton CornerRadius="2,0,0,2" IsChecked="{Binding Default.AutoOpenPDF, Mode=TwoWay}" >
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xEA90;"></FontIcon>
+                                            <TextBlock  Text="Auto-open PDF file"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <ToggleButton CornerRadius="0,2,2,0" BorderThickness="0,1,1,1" IsChecked="{Binding Default.InternalViewer, Mode=TwoWay}" >
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE89F;"></FontIcon>
+                                            <TextBlock  Text="open internally"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                            </StackPanel>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <ToggleButton CornerRadius="2,0,0,2" IsChecked="{Binding Default.AutoOpenLOG, Mode=TwoWay}">
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xEA37;"></FontIcon>
+                                            <TextBlock  Text="Auto-open LOG file"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <ToggleButton CornerRadius="0,2,2,0" BorderThickness="0,1,1,1" IsEnabled="{Binding Default.AutoOpenLOG}" IsChecked="{Binding Default.AutoOpenLOGOnlyOnError, Mode=TwoWay}" >
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE783;"></FontIcon>
+                                            <TextBlock  Text="only on error"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <TabViewItem IsClosable="False" ToolTipService.ToolTip="View: Change the appearance of this app">
+                    <TabViewItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon  Glyph="&#xF246;"></FontIcon>
+                            <TextBlock  Text="View"></TextBlock>
+                        </StackPanel>
+                    </TabViewItem.Header>
+                    <ScrollViewer Style="{StaticResource RibbonView}">
+                        <StackPanel Style="{StaticResource RibbonContent}">
+                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Theme:"></TextBlock>
+                            <ComboBox CornerRadius="0,2,2,0" ItemsSource="{Binding Default.ThemeOption}" SelectionChangedTrigger="Always" SelectedItem="{Binding Default.Theme, Mode=TwoWay}"  FontFamily="Segoe UI"/>
+
+                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Accent color:"></TextBlock>
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <Border  Padding="2" Width="36" Height="36" ToolTipService.ToolTip="{Binding AccentColor.Name}" BorderThickness="1,1,1,1" BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}" CornerRadius="0">
+                                    <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch" >
+                                        <Rectangle.Fill>
+                                            <SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}" ></SolidColorBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                </Border>
+                                <Button  CornerRadius="0,2,2,0"  BorderThickness="0,1,1,1" ToolTipService.ToolTip="Select an accent color" >
+                                    <Button.Content>
+                                        <FontIcon Glyph="&#xE70D;"></FontIcon>
+                                    </Button.Content>
+                                    <Button.Flyout>
+                                        <Flyout x:Name="ColorsFlyout" Placement="Bottom">
+                                            <StackPanel Orientation="Vertical">
+                                                <Button VerticalAlignment="Center" x:Name="ColorReset" Click="ColorReset_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Rectangle VerticalAlignment="Stretch" Height="26" Width="26" HorizontalAlignment="Stretch" >
+                                                            <Rectangle.Fill>
+                                                                <SolidColorBrush Color="{ThemeResource SystemAccentColor}" ></SolidColorBrush>
+                                                            </Rectangle.Fill>
+                                                        </Rectangle>
+                                                        <TextBlock Text="Use system accent color"></TextBlock>
+                                                    </StackPanel>
+                                                </Button>
+                                                <GridView    x:Name="ColorsGridView"    IsItemClickEnabled="True"  SelectionMode="Single"  ItemsSource="{Binding AccentColors, Mode=OneTime}" SelectedItem="{Binding AccentColor, Mode=TwoWay}" ItemClick="ColorsGridView_ItemClick" >
+                                                    <GridView.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <ItemsWrapGrid MaximumRowsOrColumns="8" Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </GridView.ItemsPanel>
+                                                    <GridView.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Height="36" Width="36" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                                <Rectangle ToolTipService.ToolTip="{Binding Name}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                                    <Rectangle.Fill>
+                                                                        <SolidColorBrush Color="{Binding Color}"></SolidColorBrush>
+                                                                    </Rectangle.Fill>
+                                                                </Rectangle>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </GridView.ItemTemplate>
+                                                </GridView>
+                                            </StackPanel>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <ToggleButton CornerRadius="2,0,0,2" IsChecked="{Binding Default.ShowProjectPane, Mode=TwoWay}" >
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xEA49;"></FontIcon>
+                                            <TextBlock  Text="Project pane"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <ToggleButton CornerRadius="0,2,2,0" BorderThickness="0,1,1,1" IsEnabled="{Binding Default.ShowProjectPane, Mode=OneWay}" IsChecked="{Binding Default.ShowProjects, Mode=TwoWay}" >
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE838;"></FontIcon>
+                                            <TextBlock  Text="Projects"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                            </StackPanel>
+
+                            <ToggleButton IsChecked="{Binding Default.ShowLog, Mode=TwoWay}" >
+                                <ToggleButton.Content>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <FontIcon Glyph="&#xEA37;"></FontIcon>
+                                        <TextBlock  Text="Application log"></TextBlock>
+                                    </StackPanel>
+                                </ToggleButton.Content>
+                            </ToggleButton>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <ToggleButton  IsChecked="{Binding Default.StartWithLastActiveProject, Mode=TwoWay}">
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE81C;"></FontIcon>
+                                            <TextBlock  Text="Auto-open last project"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <!--<ToggleButton CornerRadius="0,2,2,0" BorderThickness="0,1,1,1" IsEnabled="{Binding Default.StartWithLastActiveProject, Mode=OneWay}" IsChecked="{Binding Default.StartWithLastOpenFiles, Mode=TwoWay}" >
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <TextBlock  Text="Remember opened files"></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>-->
+                            </StackPanel>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+
+                            <ToggleButton IsChecked="{Binding Default.MultiInstance, Mode=TwoWay}" ToolTipService.ToolTip="Allow multiple app instances and file activation">
+                                <ToggleButton.Content>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <FontIcon Glyph="&#xF7ED;"></FontIcon>
+                                        <TextBlock  Text="Allow multiple app instances"></TextBlock>
+                                    </StackPanel>
+                                </ToggleButton.Content>
+                            </ToggleButton>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+            </TabView.TabItems>
+        </TabView>
+
+        <Grid Grid.Row="1" x:Name="ContentGrid" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ContentGridProjectPaneColumn" Width="{Binding Default.ShowProjectPane, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=300}"></ColumnDefinition>
+                <ColumnDefinition x:Name="ContentGridSplitter" Width="{Binding Default.ShowProjectPane, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=6}"></ColumnDefinition>
+                <ColumnDefinition x:Name="ContentGridMainGridColumn" Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid x:Name="ProjectsGrid" Visibility="{Binding Default.ShowProjectPane, Converter={StaticResource BoolToVisibility}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition x:Name="ProjectsGridCurrentRow" Height="*"></RowDefinition>
+                    <RowDefinition x:Name="ProjectsGridSplitter" Height="{Binding Default.ShowProjects, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=6}"></RowDefinition>
+                    <RowDefinition x:Name="ProjectsGridLibraryRow" Height="{Binding Default.ShowProjects, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=300}"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Grid x:Name="ProjectsGridCurrent" Grid.Row="0" Style="{StaticResource GridCell}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <animations:Implicit.ShowAnimations>
+                        <animations:TranslationAnimation Duration="0:0:0.25" From="-50, 0, 0" To="0" ></animations:TranslationAnimation>
+                        <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+                    </animations:Implicit.ShowAnimations>
+                    <!--<Grid Grid.Row="0" ColumnSpacing="6" x:Name="CurrentProjectHeaderGrid" Visibility="{Binding IsProjectLoaded}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock RightTapped="CurrentProject_RightTapped" ToolTipService.ToolTip="{Binding CurrentProject.Folder.Path}"  Grid.Column="0" Text="{Binding CurrentProject.Name}" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <FlyoutBase.AttachedFlyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuFlyoutItem Icon="OpenLocal" Text="Open in Explorer"  Click="OpeninExplorer_Click" />
+                                        <MenuFlyoutItem Icon="Undo" Text="Unload"  Click="Unload_Click" />
+                                    </MenuFlyout>
+                                </FlyoutBase.AttachedFlyout>
+                        </TextBlock>
+                        <Button  ToolTipService.ToolTip="Create file" VerticalAlignment="Center" IsEnabled="{Binding IsProjectLoaded}"  Grid.Column="1"  Click="AddFile_Click">
+                            <SymbolIcon Symbol="Document"/>
+                        </Button>
+                        <Button  ToolTipService.ToolTip="Create folder" VerticalAlignment="Center" IsEnabled="{Binding IsProjectLoaded}"  Grid.Column="2" Click="AddFolder_Click">
+                            <SymbolIcon Symbol="Folder"/>
+                        </Button>
+                    </Grid>-->
+                    <TreeView Margin="-12,0,0,0" Padding="-6,0,0,0" Grid.Row="0" SelectionMode="None"   ScrollViewer.VerticalScrollBarVisibility="Auto"  ItemTemplateSelector="{StaticResource ExplorerItemTemplateSelector}" ItemsSource="{Binding CurrentProject.Directory, Mode=OneWay}" 
+                      CanReorderItems="False" AllowDrop="False" DragItemsStarting="TreeView_DragItemsStarting"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" >
+                        <TreeView.ItemContainerTransitions>
+                            <TransitionCollection>
+                                <AddDeleteThemeTransition ></AddDeleteThemeTransition>
+                                <!--<ContentThemeTransition></ContentThemeTransition>-->
+                                <EntranceThemeTransition></EntranceThemeTransition>
+                            </TransitionCollection>
+                        </TreeView.ItemContainerTransitions>
+                    </TreeView>
+                </Grid>
+
+                <toolkit:GridSplitter  Style="{StaticResource RowSplitter}" Grid.Row="1"  Visibility="{Binding Default.ShowProjects, Converter={StaticResource BoolToVisibility}}" />
+
+                <Grid x:Name="ProjectsGridLibrary" Grid.Row="2" Style="{StaticResource GridCell}" Visibility="{Binding Default.ShowProjects, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <animations:Implicit.ShowAnimations>
+                        <animations:TranslationAnimation Duration="0:0:0.25" From="-50, 50, 0" To="0" ></animations:TranslationAnimation>
+                        <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+                    </animations:Implicit.ShowAnimations>
+                    <Button  HorizontalAlignment="Right" Grid.Row="0" x:Name="Btnaddproject" Click="Btnaddproject_Click" ToolTipService.ToolTip="Open a project folder">
+                        <Button.Content>
+                            <SymbolIcon Symbol="Add"></SymbolIcon>
+                        </Button.Content>
+                    </Button>
+                    <TextBlock Grid.Row="0" HorizontalAlignment="Left"  Text="Projects" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="Bold"></TextBlock>
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto" HorizontalScrollMode="Disabled">
+                        <ItemsControl Margin="6,0,0,0" ItemsSource="{Binding Default.ProjectList, Mode=OneWay}">
+                            <ItemsControl.Template>
+                                <ControlTemplate>
+                                    <ScrollViewer x:Name="ScrollViewer" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto" Padding="{TemplateBinding Padding}">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,6,0,0" ColumnSpacing="6">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"></ColumnDefinition>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="{Binding Name}" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" TextWrapping="Wrap" VerticalAlignment="Center" ToolTipService.ToolTip="{Binding Folder.Path}"></TextBlock>
+                                        <Button VerticalAlignment="Center"  ToolTipService.ToolTip="Open project" Click="BtnLoad_Click" Grid.Column="1" >
+                                            <Button.Content>
+                                                <FontIcon Glyph="&#xE8DA;"></FontIcon>
+                                            </Button.Content>
+                                        </Button>
+                                        <Button Margin="0,0,1,0" VerticalAlignment="Center"  ToolTipService.ToolTip="Remove project from this app" Name="Btndeleteproject" Click="Btndeleteproject_Click" Grid.Column="2" >
+                                            <Button.Content>
+                                                <SymbolIcon Symbol="Delete"></SymbolIcon>
+                                            </Button.Content>
+                                        </Button>
+
+
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+            <toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" Grid.Column="1"/>
+            <Grid x:Name="MainGrid"  Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition x:Name="IDEGridRow" Height="2*"></RowDefinition>
+                    <RowDefinition x:Name="LogGridSplitter" Height="{Binding Default.ShowLog, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=6}"></RowDefinition>
+                    <RowDefinition x:Name="LogGridRow" Height="{Binding Default.ShowLog, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=200}"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Grid x:Name="IDEGrid" Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition x:Name="EditorGridColumn" Width="*"></ColumnDefinition>
+                        <ColumnDefinition x:Name="PDFGridSplitter" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=6}"></ColumnDefinition>
+                        <ColumnDefinition x:Name="PDFGridColumn" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=400}"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid x:Name="EditGrid" Grid.Column="0" Style="{StaticResource GridCell}" Padding="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Grid Margin="6,6,6,0" CornerRadius="2" Background="#33fff700" x:Name="ErrorGrid" Grid.Row="0" Visibility="{Binding IsError, Converter={StaticResource BoolToVisibility}}">
+                            <ScrollViewer MaxHeight="200" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
+                                <Grid  Padding="6,6,6,6"  ColumnSpacing="6" >
+                                    <Grid.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Top"></Setter>
+                                            <Setter Property="TextWrapping" Value="WrapWholeWords"></Setter>
+                                            <Setter Property="Margin" Value="0,4,0,0"></Setter>
+                                        </Style>
+                                    </Grid.Resources>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Lua error:" Visibility="{Binding ConTeXtErrorMessage.lastluaerror, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding ConTeXtErrorMessage.lastluaerror}" IsTextSelectionEnabled="True" Visibility="{Binding ConTeXtErrorMessage.lastluaerror, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="0" Grid.Row="1" Text="TeX error:" Visibility="{Binding ConTeXtErrorMessage.lasttexerror, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding ConTeXtErrorMessage.lasttexerror}" IsTextSelectionEnabled="True" Visibility="{Binding ConTeXtErrorMessage.lasttexerror, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="Error at:" Visibility="{Binding ConTeXtErrorMessage.lastcontext, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding ConTeXtErrorMessage.lastcontext}" IsTextSelectionEnabled="True" Visibility="{Binding ConTeXtErrorMessage.lastcontext, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="0" Grid.Row="3" Text="TeX error help:" Visibility="{Binding ConTeXtErrorMessage.lasttexhelp, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding ConTeXtErrorMessage.lasttexhelp}" IsTextSelectionEnabled="True" Visibility="{Binding ConTeXtErrorMessage.lasttexhelp, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                    </Grid>
+                                    <Grid Grid.Column="1" ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="File:"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding ConTeXtErrorMessage.filename}" IsTextSelectionEnabled="True"></TextBlock>
+                                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Line number:"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding ConTeXtErrorMessage.linenumber}" IsTextSelectionEnabled="True"></TextBlock>
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="Lua error line:" Visibility="{Binding ConTeXtErrorMessage.luaerrorline, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding ConTeXtErrorMessage.luaerrorline}" IsTextSelectionEnabled="True" Visibility="{Binding ConTeXtErrorMessage.luaerrorline, Converter={StaticResource ErrorStringToVisibilityConverter}}"></TextBlock>
+                                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Offset:"></TextBlock>
+                                        <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding ConTeXtErrorMessage.offset}" IsTextSelectionEnabled="True"></TextBlock>
+                                    </Grid>
+                                </Grid>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!--<monaco:CodeEditor Grid.Row="3" Options="{Binding EditorOptions, Mode=OneWay}" RequestedTheme="{Binding Default.Theme, Mode=OneWay, Converter={StaticResource StringToTheme}}" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"   x:Name="Edit" Loading="Edit_Loading" Text="{Binding CurrentFileItem.FileContent,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" CodeLanguage="{Binding CurrentFileItem.FileLanguage, Mode=OneWay}">
+
+                        </monaco:CodeEditor>-->
+                        <TabView x:Name="Tabs" Grid.Row="1" 
+                       TabWidthMode="SizeToContent"  IsAddTabButtonVisible="False" 
+                      CloseButtonOverlayMode="Auto" 
+                   TabCloseRequested="Tabs_TabCloseRequested" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
+                      CanDragTabs="True" Background="Transparent"
+                      CanReorderTabs="True" TabItemsSource="{Binding FileItems}" SelectedItem="{Binding CurrentFileItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="Tabs_SelectionChanged"
+                      AllowDrop="True" TabStripDragOver="EditorTabViewDrag" TabStripDrop="EditorTabViewDrop" DragOver="EditorTabViewDrag" Drop="EditorTabViewDrop" FontFamily="Segoe">
+
+                            <TabView.TabItemTemplate>
+                                <DataTemplate x:DataType="models:FileItem">
+                                    <TabViewItem ToolTipService.ToolTip="{Binding FileName, Mode=OneWay}" IsClosable="{Binding IsPinned, Mode=OneWay, Converter={StaticResource BoolInverter}}">
+                                        <TabViewItem.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Visibility="{Binding FileLanguage, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>
+                                                <MenuFlyoutItem x:Name="SetRoot" Icon="Favorite" Click="SetRoot_Click" Visibility="{Binding Converter={StaticResource SetRootVisibility}}" IsEnabled="{Binding IsRoot, Converter={StaticResource BoolInverter}}" Text="Set as Main File"></MenuFlyoutItem>
+                                                <MenuFlyoutItem x:Name="Pin" Icon="Pin" Click="Pin_Click" Text="Toggle pin"></MenuFlyoutItem>
+                                                <MenuFlyoutItem x:Name="Save" Icon="Save" Click="Save_Click" IsEnabled="{Binding IsChanged}" Text="Save"></MenuFlyoutItem>
+                                                <MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
+                                            </MenuFlyout>
+                                        </TabViewItem.ContextFlyout>
+                                        <TabViewItem.HeaderTemplate>
+                                            <DataTemplate x:DataType="models:FileItem">
+                                                <StackPanel MaxWidth="90" Orientation="Horizontal" Spacing="0" Padding="0" Margin="0">
+                                                    <TextBlock FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" FontFamily="Segoe" Visibility="{Binding IsChanged, Converter={StaticResource BoolToVisibility}}" Text="*"></TextBlock>
+                                                    <TextBlock FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" Visibility="{Binding IsPinned, Converter={StaticResource BoolToInvisibility}}" FontFamily="Segoe" Text="{Binding FileName}"></TextBlock>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </TabViewItem.HeaderTemplate>
+                                        <TabViewItem.IconSource>
+                                            <SymbolIconSource Symbol="Document" />
+                                        </TabViewItem.IconSource>
+                                        <!--<TabViewItem.Content >
+                                            -->
+                                        <!--<DataTemplate x:DataType="models:FileItem">-->
+
+                                        <!--</DataTemplate>-->
+                                        <!--
+                                        </TabViewItem.Content>-->
+                                    </TabViewItem>
+                                </DataTemplate>
+                            </TabView.TabItemTemplate>
+                        </TabView>
+                        <Grid Grid.Row="2" VerticalAlignment="Stretch" Visibility="{Binding Source={StaticResource VM}, Path=IsFileItemLoaded, Converter={StaticResource BoolToVisibility}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <monaco:CodeEditor Background="Transparent" Options="{Binding EditorOptions, Mode=OneWay}" Grid.Row="0" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Loaded="Edit_Loading" PositionChanged="Edit_PositionChanged"  Unloaded="Edit_Unloaded" x:FieldModifier="public" x:Name="Edit" Text="{Binding CurrentFileItem.FileContent, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" CodeLanguage="{Binding CurrentFileItem.FileLanguage, Mode=OneWay}">
+                                <animations:Implicit.ShowAnimations>
+                                    <animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
+                                    <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+                                </animations:Implicit.ShowAnimations>
+                            </monaco:CodeEditor>
+                            <Grid  Grid.Row="1" Background="{ThemeResource SystemControlBackgroundAltHighBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="1" Text="R: " FontFamily="Segoe" HorizontalAlignment="Right"></TextBlock>
+                                <TextBlock Grid.Column="2" MinWidth="30" Text="{Binding ElementName=Edit, Mode=OneWay, Path=SelectedRange.PositionLineNumber}" FontFamily="Segoe" HorizontalAlignment="Right"></TextBlock>
+                                <TextBlock Grid.Column="3" Margin="5,0,0,0" Text="C: " FontFamily="Segoe" HorizontalAlignment="Right"></TextBlock>
+                                <TextBlock Grid.Column="4" MinWidth="30" Text="{Binding ElementName=Edit, Mode=OneWay, Path=SelectedRange.PositionColumn}" FontFamily="Segoe" HorizontalAlignment="Right"></TextBlock>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" Grid.Column="1" Width="6" Visibility="{Binding Default.InternalViewer, Converter={StaticResource BoolToVisibility}}"/>
+                    <Grid x:Name="ViewerGrid" Grid.Column="2"  Visibility="{Binding Default.InternalViewer, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource GridCell}" Padding="0">
+                        <animations:Implicit.ShowAnimations>
+                            <animations:TranslationAnimation Duration="0:0:0.25" From="50, 0, 0" To="0" ></animations:TranslationAnimation>
+                            <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+                        </animations:Implicit.ShowAnimations>
+
+                        <WebView2  FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="{Binding IsInternalViewerActive, Converter={StaticResource BoolToVisibility}}" x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" CoreWebView2Initialized="PDFReader_CoreWebView2Initialized" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0"></WebView2>
+
+                    </Grid>
+                </Grid>
+                <toolkit:GridSplitter Style="{StaticResource RowSplitter}" Grid.Row="1" Visibility="{Binding Default.ShowLog, Converter={StaticResource BoolToVisibility}}"/>
+
+                <Grid Tag="LogGrid" Grid.Row="2" Visibility="{Binding Default.ShowLog, Converter={StaticResource BoolToVisibility}}" Style="{StaticResource GridCell}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <animations:Implicit.ShowAnimations>
+                        <animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
+                        <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+                    </animations:Implicit.ShowAnimations>
+
+                    <TextBlock FontWeight="Bold" Text="Log" VerticalAlignment="Center" />
+                    <ScrollViewer x:Name="logscroll" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
+                        <RichTextBlock helpers:RichTextBlockHelper.Text="{Binding Blocks, Mode=TwoWay, UpdateSourceTrigger=Explicit}"  FontFamily="Segoe MDL2 Assets" IsTextSelectionEnabled="True" TextWrapping="NoWrap" x:Name="Log" Padding="0,0,0,0">
+                            <RichTextBlock.ContextFlyout>
+                                <TextCommandBarFlyout>
+                                    
+                                </TextCommandBarFlyout>
+                            </RichTextBlock.ContextFlyout>
+                        </RichTextBlock>
+                    </ScrollViewer>
+                    <Button Click="ClearLog_Click" HorizontalAlignment="Right">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal" >
+                                <SymbolIcon Symbol="Delete"></SymbolIcon>
+                                <TextBlock  Text="Clear" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+        <ContentDialog MinWidth="500" x:Name="AboutDialog" PrimaryButtonText="Close" DefaultButton="Primary">
+            <ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Margin="0,6,0,0" Style="{ThemeResource SubheaderTextBlockStyle}" Text="ConTeXt IDE"></TextBlock>
+                    <TextBlock Style="{ThemeResource BodyTextBlockStyle}" FontSize="20" Text="About"></TextBlock>
+                    <TextBlock x:Name="TB_Version" Style="{ThemeResource BodyTextBlockStyle}" Text=""></TextBlock>
+                    <TextBlock Style="{ThemeResource BodyTextBlockStyle}" Text="by wdev (wdev@outlook.de)"></TextBlock>
+                    <TextBlock Style="{ThemeResource BodyTextBlockStyle}" Text="This application is not related to Pragma ADE"></TextBlock>
+                    <TextBlock Style="{ThemeResource BodyTextBlockStyle}" FontSize="20" Text="Dependencies and references"></TextBlock>
+                    <HyperlinkButton Content="LuaMetaTeX (Pragma ADE)" NavigateUri="http://www.pragma-ade.nl/"></HyperlinkButton>
+                    <HyperlinkButton Content="monaco-editor (Microsoft Corporation)" NavigateUri="https://github.com/Microsoft/monaco-editor"></HyperlinkButton>
+                    <HyperlinkButton Content="MonacoEditorComponent (hawkerm)" NavigateUri="https://github.com/hawkerm/monaco-editor-uwp"></HyperlinkButton>
+                    <HyperlinkButton Content="PDF.js (Mozilla)" NavigateUri="https://github.com/mozilla/pdf.js/"></HyperlinkButton>
+                    <Button Click="Disclaimer_Click" Content="Show legal disclaimer" Margin="0,10,0,0"></Button>
+                    <WebView2 Visibility="Collapsed"  x:Name="DisclaimerView" Height="5000" Loaded="DisclaimerView_Loaded"></WebView2>
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+    </Grid>
+</Page>

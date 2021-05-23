@@ -1,0 +1,28 @@
+﻿<ContentDialog
+    x:Class="ConTeXt_IDE.SelectTemplate"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Select a tamplate"
+    PrimaryButtonText="Select"
+    SecondaryButtonText="Cancel" DefaultButton="Primary">
+    <Grid>
+        <StackPanel>
+            <ListView x:FieldModifier="public" x:Name="TempList" SelectionMode="Single" ItemsSource="{x:Bind templateSelections}" SelectedIndex="1">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}">
+                        </Setter>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Content}" ></TextBlock>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </Grid>
+</ContentDialog>
