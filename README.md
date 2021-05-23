@@ -18,7 +18,7 @@ Bugs and Limitations that are directly caused by the current implementation of P
 All these Issues will get fixed in ~Q4 2021
 
 ### Changelog
-#### 2021-05-23 (Version X.X.X)
+#### 2021-05-23 (Version 1.4.7)
 - Saving, compiling and other file operations are no longer blocking the UI thread. This increases the "smoothness" of the app tremendously.
 - Instead of being forced to the system accent color, you can now choose a different color from the palette. The accent color automatically gets darkened/lightened when the Dark/Light theme is applied. 
 - Many improvements in the Light theme (whoever would want to use that ... :D), especially the syntax highlighting colors are a lot more readable now.
@@ -37,7 +37,7 @@ Pull requests are always appreciated. The IDE is pretty basic right now. More fu
    - No console needs to be used. If there are compiler errors they should get pretty-printed. Modes and other compiler parameters should be set graphically.
 - Design guidelines: 
    - The UI should deeply integrate to the design of Windows 10 with its theming and accent colors.
-   - The ribbon (basically a TabView) should be as self-explinatory as possible.
+   - The ribbon (basically a TabView) should be as self-explinatory as possible. It should not look overpopulated. Everything needs to be indicated by suitable icons.
 
 ### Project structure
 ```
@@ -59,17 +59,19 @@ ConTeXt-IDE
 |      ...
 │   
 ```
-Everything UI-related is in the "ConTeXt-IDE.Shared" folder. This might make the porting to .NET MAUI quite easy.
+Everything UI-related is in the "ConTeXt-IDE.Shared" folder. This might make the porting to .NET MAUI quite easy. 
 
 ### ToDo
 If you want to contribute changes, here are some points that come to mind:
 
-#### Code cleanup
-- The PDF.JS viewer is currently located in ConTeXt-IDE.Shared (folders "Build" and "web"). Thats quite a mess and the viewer should be wraped in a WebView2-based WinUI3-control like MonacoEditorComponent
-- The whole code looks quite messy (CodeMaid is not ready for Project Reunion and I'm too lazy to organize my classes...)
-
 #### Functions
-- Ability to atomaticaly download, install and update ConTeXt-compatible modules from CTAN.
+- Ability to download, install and update ConTeXt-compatible modules from CTAN.
 - The in-app ConTeXt Templates should be fetched from a GitHub-Page at runtime.
 - App localization: Provide basic language support for Spanish, French, Italian, German, ...
 - Graphical implementation of every compiler parameter that is possible (for a parameter list see https://wiki.contextgarden.net/Context)
+
+#### Code cleanup
+- The PDF.JS viewer is currently located in ConTeXt-IDE.Shared (folders "Build" and "web"). Thats quite a mess and the viewer should be wraped in a WebView2-based WinUI3-control like MonacoEditorComponent
+- MonacoEditorComponent is copied from https://github.com/hawkerm/monaco-editor-uwp/pull/32 and the containing monaco-editor folder is copied from https://www.npmjs.com/package/monaco-editor/v/0.20.0. I tweaked the monaco-editor 20.0 to be able to get syntax highlighting for context (see ConTeXt-IDE-WinUI\MonacoEditorComponent\monaco-editor\min\vs\basic-languages\context\context.js). Registering the context language should be done outside of MonacoEditorComponent so that it is more easy to update monaco-editor.
+- The whole code looks quite messy (CodeMaid is not ready for Project Reunion and I'm too lazy to organize my classes...).
+- Lots of zombie code and fiddly workarounds.
