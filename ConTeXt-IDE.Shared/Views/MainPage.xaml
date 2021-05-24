@@ -9,7 +9,7 @@
     xmlns:models="using:ConTeXt_IDE.Models"
     xmlns:helpers="using:ConTeXt_IDE.Helpers"
     xmlns:monaco="using:Monaco"
-    mc:Ignorable="d" DataContext="{x:Bind VM}" Loaded="Info_Loaded" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Background="{ThemeResource AcrylicColor}" >
+    mc:Ignorable="d" DataContext="{x:Bind VM}" Loaded="Page_Loaded" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Background="{ThemeResource AcrylicColor}" >
     <Page.Resources>
         <DataTemplate x:Key="FolderTemplate" x:DataType="models:FileItem">
             <models:MyTreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" CanDrag="False" ToolTipService.ToolTip="{Binding FileName}" HorizontalContentAlignment="Left" ItemsSource="{x:Bind Children}">
@@ -69,10 +69,10 @@
                     </Grid.ColumnDefinitions>
                     <FontIcon Grid.Column="0" Glyph="&#xE838;"></FontIcon>
                     <TextBlock Grid.Column="1" HorizontalAlignment="Stretch" MaxLines="2" FontWeight="Bold" Text="{Binding FileName, Mode=OneWay}"/>
-                    <Button ToolTipService.ToolTip="Create file" VerticalAlignment="Center" IsEnabled="{Binding Source={StaticResource VM}, Path=IsProjectLoaded}"  Grid.Column="2"  Click="AddFile_Click">
+                    <Button ToolTipService.ToolTip="Create file" VerticalAlignment="Center" IsEnabled="{Binding Source={StaticResource VM}, Path=IsProjectLoaded}"  Grid.Column="2"  Click="AddFileRoot_Click">
                         <SymbolIcon Symbol="Document"/>
                     </Button>
-                    <Button  ToolTipService.ToolTip="Create folder" VerticalAlignment="Center" IsEnabled="{Binding Source={StaticResource VM}, Path=IsProjectLoaded}"  Grid.Column="3" Click="AddFolder_Click">
+                    <Button  ToolTipService.ToolTip="Create folder" VerticalAlignment="Center" IsEnabled="{Binding Source={StaticResource VM}, Path=IsProjectLoaded}"  Grid.Column="3" Click="AddFolderRoot_Click">
                         <SymbolIcon Symbol="Folder"/>
                     </Button>
                 </Grid>
@@ -119,11 +119,11 @@
                                         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE734;" ></FontIcon>
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <!--<MenuFlyoutItem  Text="View in GitHub" Click="Github_Click" ToolTipService.ToolTip="View the source code, commit changes and write feature requests and bug reports.">
+                                <MenuFlyoutItem  Text="View in GitHub" Click="Github_Click" ToolTipService.ToolTip="View the source code, pull request changes and write feature requests and bug reports.">
                                     <MenuFlyoutItem.Icon>
                                         <BitmapIcon Foreground="{ThemeResource ForegroundColor}" UriSource="ms-appx:///Assets/GitHub.png" ></BitmapIcon>
                                     </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>-->
+                                </MenuFlyoutItem>
                             </MenuFlyout>
 
                         </Button.Flyout>
@@ -211,7 +211,7 @@
                                                 <ListView SelectionMode="None" ItemsSource="{Binding CurrentProject.Modes}" >
                                                     <ListView.ItemTemplate>
                                                         <DataTemplate>
-                                                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" Checked="CheckBox_Checked">
+                                                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}">
                                                                 <CheckBox.ContextFlyout>
                                                                     <MenuFlyout>
                                                                         <MenuFlyoutItem  x:Name="RemoveMode" Icon="Delete" Click="RemoveMode_Click" Text="Remove mode"></MenuFlyoutItem>
@@ -285,8 +285,8 @@
                                 </ToggleButton.Content>
                             </ToggleButton>
 
-                            <DropDownButton  Content="Suggestions" ToolTipService.ToolTip="Enable code compleation and snippets" >
-                                <DropDownButton.Flyout>
+                            <Button ToolTipService.ToolTip="Enable code compleation and snippets" >
+                                <Button.Flyout>
                                     <Flyout  Placement="Bottom">
                                         <StackPanel Orientation="Vertical" >
                                             <CheckBox  Content="ConTeXt sart-stop environments" IsChecked="{Binding Default.SuggestStartStop, Mode=TwoWay}"/>
@@ -296,8 +296,14 @@
                                             <CheckBox  Content="TeX primitives" IsChecked="{Binding Default.SuggestPrimitives, Mode=TwoWay}"/>
                                         </StackPanel>
                                     </Flyout>
-                                </DropDownButton.Flyout>
-                            </DropDownButton>
+                                </Button.Flyout>
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Suggestions"></TextBlock>
+                                        <FontIcon Glyph="&#xE70D;"></FontIcon>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
 
                             <Border Style="{StaticResource Separator}" ></Border>
 
@@ -719,7 +725,7 @@
                       CloseButtonOverlayMode="Auto" 
                    TabCloseRequested="Tabs_TabCloseRequested" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
                       CanDragTabs="True" Background="Transparent"
-                      CanReorderTabs="True" TabItemsSource="{Binding FileItems}" SelectedItem="{Binding CurrentFileItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="Tabs_SelectionChanged"
+                      CanReorderTabs="True" TabItemsSource="{Binding FileItems}" SelectedItem="{Binding CurrentFileItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                       AllowDrop="True" TabStripDragOver="EditorTabViewDrag" TabStripDrop="EditorTabViewDrop" DragOver="EditorTabViewDrag" Drop="EditorTabViewDrop" FontFamily="Segoe">
 
                             <TabView.TabItemTemplate>
