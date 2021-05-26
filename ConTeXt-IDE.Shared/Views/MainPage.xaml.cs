@@ -23,6 +23,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -559,8 +560,8 @@ namespace ConTeXt_IDE
 
         private async void FileItemTapped(object sender, TappedRoutedEventArgs e)
         {
-            var treeviewitem = (sender as MyTreeViewItem);
-            var fileitem = treeviewitem.DataContext as FileItem;
+            MyTreeViewItem treeviewitem = sender as MyTreeViewItem;
+            FileItem fileitem = treeviewitem.DataContext as FileItem;
 
             if (fileitem.Type == FileItem.ExplorerItemType.File)
             {
@@ -577,6 +578,7 @@ namespace ConTeXt_IDE
                     tip.HeroContent = content;
                     tip.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
                     RootGrid.Children.Add(tip);
+                
                     tip.IsOpen = true;
                 }
                 else if (type == ".pdf")
@@ -691,8 +693,15 @@ namespace ConTeXt_IDE
                             App.VM.IsError = true;
                             StorageFile errorfile = error as StorageFile;
                             string text = await FileIO.ReadTextAsync(errorfile);
-                            string newtext = text.Replace("  ", "").Replace("return", "").Replace("[\"", "\"").Replace("\"]", "\"").Replace(@"\n", "").Replace("=", ":");
+
+                            // BAD code, quick hack to convert the lua table to a json format. Depending on special characters in the error message, the JsonConvert.DeserializeObject function can through errors.
+                            string newtext = text.Replace("  ", "").Replace("return", "").Replace("[\"", "\"").Replace("\"]", "\"").Replace("=", ":");
+                            string pattern = @"([^\\])(\\n)"; // Matches every \n except \\n
+                            string replacement = "$1"; // Match gets replaced with first capturing group, e.g. ]\n --> ]
+                            newtext = Regex.Replace(newtext, pattern, replacement);
+
                             var errormessage = JsonConvert.DeserializeObject<ConTeXtErrorMessage>(newtext);
+
                             App.VM.Log("Compiler error: " + errormessage.lasttexerror);
                             App.VM.ConTeXtErrorMessage = errormessage;
                         }
@@ -884,13 +893,22 @@ namespace ConTeXt_IDE
             VM.CurrentProject.LastOpenedFiles = VM.FileItems.Select(x => x.FileName).ToList();
         }
 
-        private void Pin_Click(object sender, RoutedEventArgs e)
+        private async void Pin_Click(object sender, RoutedEventArgs e)
         {
             var fi = (FileItem)(sender as FrameworkElement).DataContext;
+
+            if (!fi.IsPinned) {
+                bool reselect = fi == VM.CurrentFileItem;
+                VM.FileItems.Remove(fi);
+                VM.FileItems.Insert(0, fi);
+                if (reselect)
+                {
+                    await Task.Delay(500);
+                    VM.CurrentFileItem = fi;
+                }
+            }
+
             fi.IsPinned = !fi.IsPinned;
-            int currind = VM.FileItems.IndexOf(fi);
-            if (currind > 0)
-                VM.FileItems.Move(currind, 0);
         }
 
         #endregion

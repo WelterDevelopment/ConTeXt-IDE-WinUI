@@ -474,11 +474,6 @@
             <local:FileTypeToVisibility x:Key="FileTypeToVisibility" />
             <local:VisibilityToCornerRadius x:Key="VisibilityToCornerRadius" />
 
-            <Style TargetType="AppBarButton">
-                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"/>
-                <Setter Property="LabelPosition" Value="Default"/>
-            </Style>
-
             <ResourceDictionary.ThemeDictionaries>
 
                 <ResourceDictionary x:Key="Default">
@@ -496,13 +491,11 @@
                     <Color x:Key="GripperColor">#555555</Color>
                     <Color x:Key="ForegroundLightColor">#DDEEEEEE</Color>
                     <Color x:Key="AcrylicColor">#444444</Color>
-                    <!--<Color x:Key="SystemAltHighColor">Red</Color>-->
                     <SolidColorBrush x:Key="AccentColorBrushHigh" Color="{ThemeResource SystemAccentColorLight2}"></SolidColorBrush>
                     <SolidColorBrush x:Key="AccentColorBrushLow" Color="{ThemeResource SystemAccentColorDark2}"></SolidColorBrush>
                     <SolidColorBrush x:Key="SystemControlBackgroundAltHighHighBrush" Color="{Binding AccentColorLowLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
                     <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{Binding AccentColorLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
                     <StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>
-                    <!--<StaticResource x:Key="SystemAccentColor" ResourceKey="SystemAccentColorDark2"></StaticResource>-->
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="HighContrast">
@@ -529,8 +522,6 @@
                     <SolidColorBrush x:Key="AccentColorBrushHigh" Color="{ThemeResource SystemAccentColorDark2}"></SolidColorBrush>
                     <SolidColorBrush x:Key="AccentColorBrushLow" Color="{ThemeResource SystemAccentColorLight2}"></SolidColorBrush>
                     <StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>
-
-                    <!--<StaticResource x:Key="SystemAccentColor" ResourceKey="SystemAccentColorLight2"></StaticResource>-->
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
