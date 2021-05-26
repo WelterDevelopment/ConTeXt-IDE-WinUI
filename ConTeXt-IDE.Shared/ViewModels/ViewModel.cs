@@ -65,7 +65,7 @@ namespace ConTeXt_IDE.ViewModels
                 EditorOptions.LineNumbers = Enum.Parse<LineNumbersType>(Default.ShowLineNumbers);
                 EditorOptions.Links = true;
                 EditorOptions.Minimap = new EditorMinimapOptions() { Enabled = Default.MiniMap, ShowSlider = Show.Always, RenderCharacters = true };
-                EditorOptions.MouseWheelZoom = true;
+                EditorOptions.MouseWheelZoom = false;
                 EditorOptions.OccurrencesHighlight = false;
                 EditorOptions.ParameterHints = new IEditorParameterHintOptions() { Cycle = true, Enabled = true };
                 EditorOptions.QuickSuggestions = true;
@@ -75,7 +75,9 @@ namespace ConTeXt_IDE.ViewModels
                 EditorOptions.SnippetSuggestions = SnippetSuggestions.Inline;
                 EditorOptions.SuggestOnTriggerCharacters = true;
                 EditorOptions.SuggestSelection = SuggestSelection.RecentlyUsed;
-
+                EditorOptions.FontSize = Default.FontSize ;
+               
+                
                 // EditorOptions.Suggest.ShowProperties = true;
                 EditorOptions.DisableLayerHinting = true;
                 EditorOptions.Lightbulb = new EditorLightbulbOptions() { Enabled = true };
@@ -85,6 +87,9 @@ namespace ConTeXt_IDE.ViewModels
                 EditorOptions.WordBasedSuggestions = false;
                 EditorOptions.WordWrap = Enum.Parse<WordWrap>(Default.Wrap);
                 EditorOptions.WrappingIndent = WrappingIndent.Indent;
+
+               // EditorOptions.PropertyChanged += EditorOptions_PropertyChanged;
+
             }
             catch (TypeInitializationException ex)
             {
@@ -95,6 +100,12 @@ namespace ConTeXt_IDE.ViewModels
                 Log("Exception" + ex.Message);
             }
         }
+
+        private void EditorOptions_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+           
+        }
+
         private ColorPaletteResources FindColorPaletteResourcesForTheme(string theme)
         {
             foreach (var themeDictionary in Application.Current.Resources.ThemeDictionaries)
@@ -119,6 +130,8 @@ namespace ConTeXt_IDE.ViewModels
             }
             return null;
         }
+
+        
 
         public AppServiceConnection AppServiceConnection { get; set; }
 
@@ -157,6 +170,8 @@ namespace ConTeXt_IDE.ViewModels
             new Helpfile() { FriendlyName = "Manual", FileName = "ma-cb-en.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\manuals\" },
             new Helpfile() { FriendlyName = "Commands", FileName = "setup-en.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\qrcs\" },
         };
+
+        
 
         private static Color ColorFromHex(string hex)
         {
@@ -230,6 +245,10 @@ namespace ConTeXt_IDE.ViewModels
 
         public bool IsError { get => Get(false); set => Set(value); }
 
+        public bool IsIndeterminate { get => Get(true); set => Set(value); }
+
+        public int ProgressValue { get => Get(0); set => Set(value); }
+
         public bool IsFileItemLoaded { get => Get(false); set { Set(value); if (value) { IsVisible = false; } else { IsVisible = false; } } }
 
         public bool IsInternalViewerActive { get => Get(false); set => Set(value); }
@@ -242,11 +261,13 @@ namespace ConTeXt_IDE.ViewModels
 
         public bool IsProjectLoaded { get => Get(false); set => Set(value); }
 
-        public bool IsSaving { get => Get(false); set { Set(value); if (value) { IsVisible = true; } if (!value && !IsError) { IsVisible = false; } } }
+        public bool IsSaving { get => Get(false); set { Set(value); if (value) { IsVisible = true; IsPaused = false; } if (!value && !IsError) { IsVisible = false; } } }
 
         public bool IsVisible { get => Get(false); set => Set(value); }
 
         public string NVHead { get => Get(""); set => Set(value); }
+
+        public ObservableCollection<ContextCommand> ContextCommands { get => Get(new ObservableCollection<ContextCommand>()); set => Set(value); }
 
         public StorageItemMostRecentlyUsedList RecentAccessList { get => Get<StorageItemMostRecentlyUsedList>(); set => Set(value); }
 
@@ -451,6 +472,7 @@ namespace ConTeXt_IDE.ViewModels
                         }
                     }
                 }
+
             }
             catch (Exception ex)
             {

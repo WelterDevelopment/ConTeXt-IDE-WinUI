@@ -70,10 +70,21 @@ namespace ConTeXt_IDE.Models
                 {
                     settings.HelpItemList =
                     new ObservableCollection<HelpItem>()
-            {
-                new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
-                new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
-            };
+                        {
+                            new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
+                            new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
+                        };
+                }
+
+                if (settings.ContextModules.Count == 0)
+                {
+                    settings.ContextModules = new ObservableCollection<ContextModule>() {
+                        new ContextModule() { IsInstalled = false, Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter-2020.06.29.zip", Type = ContextModuleType.TDSArchive},
+                        new ContextModule() { IsInstalled = false, Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
+                        new ContextModule() { IsInstalled = false, Name = "letter", Description = "Package for writing letters", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-letter.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-letter\"},
+                        new ContextModule() { IsInstalled = true, Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
+                        new ContextModule() { IsInstalled = true, Name = "pgfplots", Description = "Create normal/logarithmic plots in two and three dimensions", URL = @"http://mirrors.ctan.org/install/graphics/pgf/contrib/pgfplots.tds.zip", Type = ContextModuleType.TDSArchive},
+                    };
                 }
 
                 return settings;
@@ -115,6 +126,8 @@ namespace ConTeXt_IDE.Models
         public string Theme { get => Get("Default"); set { Set(value); ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default); } }
         public string AccentColor { get => Get("Default"); set { Set(value); } }
         public string TexFileName { get => Get(""); set => Set(value); }
+
+        public int FontSize { get => Get(50); set { Set(value); if (App.VM != null) App.VM.EditorOptions.FontSize = value; } }
         public string Modes { get => Get(""); set => Set(value); }
         public bool CodeFolding { get => Get(true); set { Set(value); if (App.VM != null) App.VM.EditorOptions.Folding = value; } }
         public bool MiniMap { get => Get(true); set { Set(value); if (App.VM != null) App.VM.EditorOptions.Minimap = new EditorMinimapOptions() { Enabled = value, ShowSlider =  Show.Always, RenderCharacters = true }; ; } }
@@ -125,6 +138,10 @@ namespace ConTeXt_IDE.Models
         public bool SuggestCommands { get => Get(true); set => Set(value); }
         public bool SuggestArguments { get => Get(true); set => Set(value); }
         public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
+
+        
+        public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
+
         public ObservableCollection<Project> ProjectList { get => Get(new ObservableCollection<Project>()); set => Set(value); }
        
         public ObservableCollection<HelpItem> HelpItemList

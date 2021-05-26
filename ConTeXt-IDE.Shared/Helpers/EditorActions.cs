@@ -44,7 +44,7 @@ namespace ConTeXt_IDE.Helpers
         public string KeybindingContext => null;
 
         //public int[] Keybindings => new int[] { Monaco.KeyMod.Chord(Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter, Monaco.KeyCode.F5) };
-        public int[] Keybindings => new int[] { KeyMod.CtrlCmd | KeyCode.Shift | KeyCode.KEY_S };
+        public int[] Keybindings => new int[] { KeyMod.CtrlCmd | KeyCode.KEY_W };
 
         public string Label => "Save all";
         public string Precondition => null;

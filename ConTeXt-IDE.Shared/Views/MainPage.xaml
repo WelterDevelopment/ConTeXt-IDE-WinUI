@@ -109,11 +109,11 @@
                                         <SymbolIcon Symbol="Help" ></SymbolIcon>
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <MenuFlyoutItem  Text="Update ConTeXt" Click="Update_Click" Visibility="{Binding Default.DistributionInstalled, Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Updates the ConTeXt Distribution">
+                                <!--<MenuFlyoutItem  Text="Update ConTeXt" Click="Update_Click" Visibility="{Binding Default.DistributionInstalled, Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Updates the ConTeXt Distribution">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon Glyph="&#xECC5;" ></FontIcon>
                                     </MenuFlyoutItem.Icon>
-                                </MenuFlyoutItem>
+                                </MenuFlyoutItem>-->
                                 <MenuFlyoutItem  Text="Rate this app" Click="Rate_Click" ToolTipService.ToolTip="Feel free to also use your review to communicate feature requests and bug reports!">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE734;" ></FontIcon>
@@ -183,7 +183,9 @@
                                     </Button>
                                 </Grid>
                             </StackPanel>
-
+                            
+                            <Border Style="{StaticResource Separator}" ></Border>
+                            
                             <StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsProjectLoaded, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                                 <ToggleButton Click="Modes_Click" CornerRadius="2,0,0,2" IsChecked="{Binding Default.UseModes, Mode=TwoWay}">
                                     <ToggleButton.Content>
@@ -259,6 +261,7 @@
                             <ComboBox CornerRadius="0,2,2,0" ItemsSource="{Binding Default.WordWrapOptions}" SelectionChangedTrigger="Always" SelectedItem="{Binding Default.Wrap, Mode=TwoWay}"  FontFamily="Segoe UI"/>
                             <!--<CheckBox Content="Text wrapping (prevents horizontal scrollbar)" IsChecked="{Binding Default.Wrap, Mode=TwoWay}"/>-->
 
+                            
 
                             <ToggleButton IsChecked="{Binding Default.CodeFolding, Mode=TwoWay}">
                                 <ToggleButton.Content>
@@ -276,6 +279,14 @@
                                     </StackPanel>
                                 </ToggleButton.Content>
                             </ToggleButton>
+
+                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Font Size: "></TextBlock>
+                            <NumberBox Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" SpinButtonPlacementMode="Inline" CornerRadius="0,2,2,0">
+                                
+                            </NumberBox>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+
                             <ToggleButton IsChecked="{Binding Default.Hover, Mode=TwoWay}">
                                 <ToggleButton.Content>
                                     <StackPanel Orientation="Horizontal" >
@@ -305,41 +316,7 @@
                                 </Button.Content>
                             </Button>
 
-                            <Border Style="{StaticResource Separator}" ></Border>
-
-                            <StackPanel Orientation="Horizontal" Spacing="0">
-                                <Button  ToolTipService.ToolTip="Open a Manual" CornerRadius="2,0,0,2">
-                                    <Button.Content>
-                                        <StackPanel Orientation="Horizontal" >
-                                            <SymbolIcon Symbol="Help"></SymbolIcon>
-                                            <TextBlock  Text="ConTeXt Documentation" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
-                                        </StackPanel>
-
-                                    </Button.Content>
-                                    <Button.Flyout>
-                                        <Flyout>
-                                            <ListView  SelectionMode="None" IsItemClickEnabled="True" ItemClick="Help_ItemClick" ItemsSource="{Binding HelpFiles}" >
-                                                <ListView.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <StackPanel Margin="0,0,0,6" Spacing="0">
-                                                            <TextBlock Text="{Binding FriendlyName}" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
-                                                            <TextBlock Text="{Binding FileName}" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </ListView.ItemTemplate>
-                                            </ListView>
-                                        </Flyout>
-                                    </Button.Flyout>
-                                </Button>
-                                <ToggleButton  BorderThickness="0,1,1,1" ToolTipService.ToolTip="Open ConTeXt Manuals in the internal viewer" IsChecked="{Binding Default.HelpPDFInInternalViewer, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer, Mode=OneWay}" CornerRadius="0,2,2,0">
-                                    <ToggleButton.Content>
-                                        <StackPanel Orientation="Horizontal" >
-                                            <FontIcon Glyph="&#xE89F;"></FontIcon>
-                                            <TextBlock  Text="Open internal" ></TextBlock>
-                                        </StackPanel>
-                                    </ToggleButton.Content>
-                                </ToggleButton>
-                            </StackPanel>
+                            
                         </StackPanel>
 
                     </ScrollViewer>
@@ -518,6 +495,113 @@
                                     </StackPanel>
                                 </ToggleButton.Content>
                             </ToggleButton>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <TabViewItem IsClosable="False" ToolTipService.ToolTip="ConTeXt: Modules and Documentation">
+                    <TabViewItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon  Glyph="&#xE71D;"></FontIcon>
+                            <TextBlock  Text="ConTeXt"></TextBlock>
+                        </StackPanel>
+                    </TabViewItem.Header>
+                    <ScrollViewer Style="{StaticResource RibbonView}">
+                        <StackPanel Style="{StaticResource RibbonContent}">
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <Button  ToolTipService.ToolTip="Open a Manual" CornerRadius="2,0,0,2">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <SymbolIcon Symbol="Help"></SymbolIcon>
+                                            <TextBlock  Text="PDF Manuals" VerticalAlignment="Center" ></TextBlock>
+                                        </StackPanel>
+
+                                    </Button.Content>
+                                    <Button.Flyout>
+                                        <Flyout>
+                                            <ListView  SelectionMode="None" IsItemClickEnabled="True" ItemClick="Help_ItemClick" ItemsSource="{Binding HelpFiles}" >
+                                                <ListView.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Margin="0,0,0,6" Spacing="0">
+                                                            <TextBlock Text="{Binding FriendlyName}" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
+                                                            <TextBlock Text="{Binding FileName}" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ListView.ItemTemplate>
+                                            </ListView>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                                <ToggleButton  BorderThickness="0,1,1,1" ToolTipService.ToolTip="Open ConTeXt Manuals in the internal viewer" IsChecked="{Binding Default.HelpPDFInInternalViewer, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer, Mode=OneWay}" CornerRadius="0,2,2,0">
+                                    <ToggleButton.Content>
+                                        <StackPanel Orientation="Horizontal" >
+                                            <FontIcon Glyph="&#xE89F;"></FontIcon>
+                                            <TextBlock  Text="Open internal" ></TextBlock>
+                                        </StackPanel>
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                            </StackPanel>
+
+                            <Border Style="{StaticResource Separator}" ></Border>
+
+                            <Button Visibility="{Binding Default.DistributionInstalled, Converter={StaticResource BoolToVisibility}, Mode=OneWay}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Update ConTeXt distribution"   Click="Update_Click" >
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon Glyph="&#xECC5;" ></FontIcon>
+                                        <TextBlock Text="Update ConTeXt" VerticalAlignment="Center" ></TextBlock>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
+
+                            <Button ToolTipService.ToolTip="Manage ConTeXt modules" >
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal" >
+                                        <SymbolIcon Symbol="AllApps"></SymbolIcon>
+                                        <TextBlock  Text="Manage Modules" VerticalAlignment="Center"></TextBlock>
+                                    </StackPanel>
+                                </Button.Content>
+                                <Button.Flyout>
+                                    <Flyout Placement="Bottom">
+                                        <ListView SelectionMode="None" IsItemClickEnabled="False" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}, Mode=OneWay}" ItemsSource="{Binding Default.ContextModules}" >
+                                            <ListView.ItemContainerStyle>
+                                                <Style TargetType="ListViewItem">
+                                                    <Setter Property="HorizontalContentAlignment"  Value="Stretch"></Setter>
+                                                    <Setter Property="Margin"  Value="0,0,0,6"></Setter>
+                                                </Style>
+                                            </ListView.ItemContainerStyle>
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid ColumnSpacing="6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <StackPanel Grid.Column="0" Width="200"  Spacing="2" Orientation="Vertical">
+                                                            <TextBlock Text="{Binding Name}" Style="{ThemeResource SubtitleTextBlockStyle}"></TextBlock>
+                                                            <TextBlock Text="{Binding Description}" Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="WrapWholeWords"></TextBlock>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Column="1" Spacing="6" Orientation="Horizontal" VerticalAlignment="Center" >
+                                                            <Button Click="Btn_InstallModule_Click" ToolTipService.ToolTip="Download and install the latest version">
+                                                                <Button.Content>
+                                                                    <SymbolIcon Symbol="Add"></SymbolIcon>
+                                                                </Button.Content>
+                                                            </Button>
+                                                            <Button Click="Btn_RemoveModule_Click" IsEnabled="{Binding IsInstalled, Mode=OneWay}" ToolTipService.ToolTip="Remove module files">
+                                                                <Button.Content>
+                                                                    <SymbolIcon Symbol="Delete"></SymbolIcon>
+                                                                </Button.Content>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
 
                         </StackPanel>
                     </ScrollViewer>
@@ -767,7 +851,7 @@
                                 <RowDefinition Height="*"></RowDefinition>
                                 <RowDefinition Height="Auto"></RowDefinition>
                             </Grid.RowDefinitions>
-                            <monaco:CodeEditor Background="Transparent" Options="{Binding EditorOptions, Mode=OneWay}" Grid.Row="0" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Loaded="Edit_Loading" PositionChanged="Edit_PositionChanged"  Unloaded="Edit_Unloaded" x:FieldModifier="public" x:Name="Edit" Text="{Binding CurrentFileItem.FileContent, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" CodeLanguage="{Binding CurrentFileItem.FileLanguage, Mode=OneWay}">
+                            <monaco:CodeEditor Background="Transparent" Options="{Binding EditorOptions, Mode=TwoWay}" Grid.Row="0" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Loaded="Edit_Loading" PositionChanged="Edit_PositionChanged"  Unloaded="Edit_Unloaded" x:FieldModifier="public" x:Name="Edit" Text="{Binding CurrentFileItem.FileContent, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" CodeLanguage="{Binding CurrentFileItem.FileLanguage, Mode=OneWay}">
                                 <animations:Implicit.ShowAnimations>
                                     <animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
                                     <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>

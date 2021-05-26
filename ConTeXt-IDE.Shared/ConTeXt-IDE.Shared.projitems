@@ -18,6 +18,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\EditorActions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RichTextBlockHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThemeHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOptiongroup.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOptionValue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOption.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextModule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

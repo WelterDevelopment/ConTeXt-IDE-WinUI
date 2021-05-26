@@ -1,6 +1,4 @@
-﻿
-
-using ConTeXt_IDE.Helpers;
+﻿using ConTeXt_IDE.Helpers;
 
 namespace ConTeXt_IDE.Models
 {

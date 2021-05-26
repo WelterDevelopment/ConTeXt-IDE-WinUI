@@ -1,10 +1,10 @@
-# ConTeXt-IDE
+# ConTeXt IDE
 This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C# 9 / .NET 5 with the Project Reunion 0.5 framework using only controls from the UI library WinUI 3. In the future, it *might* be possible to turn this into a .NET MAUI app that runs cross-platform on Windows, MacOS and (highly unlikely) also on Linux.
 
 ## Usage
 
 ### Installation
-The app can be installed via the Microsoft store on x64 devices with Windows 10 version 17763 and up: https://www.microsoft.com/store/apps/9NN9Q389TTJR
+The app can be installed via the Microsoft store on x64 devices with Windows 10 version 17763 and up: <a href='https://www.microsoft.com/store/apps/9NN9Q389TTJR?cid=storebadge&ocid=badge'><img src='https://developer.microsoft.com/store/badges/images/English_get_L.png' alt='English badge' height=20 /></a>
 
 ### Known bugs and missing features
 Bugs and Limitations that are directly caused by the current implementation of Project Reunion 0.5:

@@ -93,7 +93,7 @@ namespace ConTeXt_IDE
             {
                 WebClient wc = new WebClient();
 
-                wc.DownloadProgressChanged += (a, b) => { Progressbar.Value = b.ProgressPercentage; };
+                wc.DownloadProgressChanged += (a, b) => { VM.ProgressValue = b.ProgressPercentage; };
                 wc.DownloadFileCompleted += (a, b) =>
                 {
                     Install();
@@ -111,7 +111,7 @@ namespace ConTeXt_IDE
 
         private async void Install()
         {
-            Progressbar.IsIndeterminate = true;
+            VM.IsIndeterminate = true;
             VM.InfoMessage(true, "Installing...", "Please wait up to 2 minutes for the Evergreen WebView2 Runtime to install.", InfoBarSeverity.Informational);
             bool InstallSuccessful = false;
             await Task.Run(async () => { InstallSuccessful = await InstallTask(); });
@@ -119,15 +119,15 @@ namespace ConTeXt_IDE
             {
                 VM.Default.EvergreenInstalled = true;
                 VM.InfoMessage(true, "Success!", "The editor and viewer controls are now fully operational.", InfoBarSeverity.Success);
-                Progressbar.Visibility = Visibility.Collapsed;
+                VM.IsVisible = false;
                 await Task.Delay(2500);
-                Progressbar.IsIndeterminate = true;
+                VM.IsIndeterminate = true;
                 RootFrame.Navigate(typeof(MainPage));
             }
             else
             {
                 VM.InfoMessage(true, "Error", "Something went wrong. Please try again later.", InfoBarSeverity.Error);
-                Progressbar.Visibility = Visibility.Collapsed;
+                VM.IsVisible = false;
             }
         }
 
@@ -169,7 +169,7 @@ namespace ConTeXt_IDE
 
             if (VM.Default.EvergreenInstalled)
             {
-                Progressbar.IsIndeterminate = true;
+                VM.IsIndeterminate = true;
                 RootFrame.Navigate(typeof(MainPage));
             }
             else

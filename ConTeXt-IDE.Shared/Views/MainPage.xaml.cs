@@ -19,7 +19,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -73,9 +75,9 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.InfoMessage(true,"Exception",ex.Message, InfoBarSeverity.Error);
+                App.VM.InfoMessage(true, "Exception", ex.Message, InfoBarSeverity.Error);
             }
-            
+
         }
 
         #region Page Load
@@ -110,11 +112,24 @@ namespace ConTeXt_IDE
                     await edit.AddActionAsync(new RunRootAction());
                     await edit.AddActionAsync(new SaveAction());
                     await edit.AddActionAsync(new SaveAllAction());
+
+                    await edit.AddCommandAsync(KeyMod.CtrlCmd | KeyCode.NUMPAD_SUBTRACT, () =>
+                    {
+                        if (VM.Default.FontSize > 6)
+                            VM.Default.FontSize--;
+                    });
+
+                    await edit.AddCommandAsync(KeyMod.CtrlCmd | KeyCode.NUMPAD_ADD, () =>
+                    {
+                        if (VM.Default.FontSize < 100)
+                            VM.Default.FontSize++;
+                    });
+
                     loaded = true;
                 }
                 catch (Exception ex)
                 {
-                    VM.InfoMessage(true,"Error on CodeEditor load", ex.Message, InfoBarSeverity.Error);
+                    VM.InfoMessage(true, "Error on CodeEditor load", ex.Message, InfoBarSeverity.Error);
                 }
             }
         }
@@ -154,6 +169,10 @@ namespace ConTeXt_IDE
                 {
                     VM.InfoMessage(true, "ConTeXt Installation failed", "Please try again after reinstalling the app. Feel free to contact the app's author in case the problem persists!", InfoBarSeverity.Error);
                 }
+            }
+            else if (File.Exists(filePath))
+            {
+                VM.Default.DistributionInstalled = true;
             }
 
             await VM.Startup();
@@ -235,16 +254,16 @@ namespace ConTeXt_IDE
         public static ObservableCollection<FileItem> DraggedItemsSource { get; set; }
 
 
-        public static async Task CopyFolderAsync(StorageFolder source, StorageFolder destinationContainer, string desiredName = null)
+        public static async Task CopyFolderAsync(StorageFolder sourceFolder, StorageFolder destinationFolder, string desiredName = null)
         {
-            foreach (var folder in await source.GetFoldersAsync())
+            foreach (var folder in await sourceFolder.GetFoldersAsync())
             {
-                var innerfolder = await destinationContainer.CreateFolderAsync(folder.Name, CreationCollisionOption.GenerateUniqueName);
+                var innerfolder = await destinationFolder.CreateFolderAsync(folder.Name, CreationCollisionOption.OpenIfExists);
                 await CopyFolderAsync(folder, innerfolder);
             }
-            foreach (var file in await source.GetFilesAsync())
+            foreach (var file in await sourceFolder.GetFilesAsync())
             {
-                await file.CopyAsync(destinationContainer, file.Name, NameCollisionOption.GenerateUniqueName);
+                await file.CopyAsync(destinationFolder, file.Name, NameCollisionOption.ReplaceExisting);
             }
         }
 
@@ -665,7 +684,7 @@ namespace ConTeXt_IDE
                         string curPDFPath = Path.Combine(App.VM.Default.TexFilePath, curPDF);
                         string newPathToFile = Path.Combine(local, curPDF);
                         StorageFolder currFolder = await StorageFolder.GetFolderFromPathAsync(App.VM.Default.TexFileFolder);
-                       
+
                         var error = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(App.VM.Default.TexFileName) + "-error.log");
                         if (error != null)
                         {
@@ -811,7 +830,8 @@ namespace ConTeXt_IDE
                 UseShellExecute = false,
                 WorkingDirectory = VM.Default.TexFileFolder
             };
-            p.OutputDataReceived += (e, f) => { //VM.Log(f.Data.);
+            p.OutputDataReceived += (e, f) =>
+            { //VM.Log(f.Data.);
             };
             //p.ErrorDataReceived += (e, f) => {Log(f.Data); };
             p.StartInfo = info;
@@ -1097,7 +1117,7 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                VM.InfoMessage(true,"Error on loading project",ex.Message, InfoBarSeverity.Error);
+                VM.InfoMessage(true, "Error on loading project", ex.Message, InfoBarSeverity.Error);
             }
         }
 
@@ -1170,7 +1190,8 @@ namespace ConTeXt_IDE
                     UseShellExecute = false,
                     WorkingDirectory = VM.Default.ContextDistributionPath
                 };
-                p.OutputDataReceived += (e, f) => {// VM.Log(f.Data);
+                p.OutputDataReceived += (e, f) =>
+                {// VM.Log(f.Data);
                 };
                 p.StartInfo = info;
                 p.Start();
@@ -1289,7 +1310,7 @@ namespace ConTeXt_IDE
 
         private void ColorsGridView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if ( e.ClickedItem is AccentColor accentColor)
+            if (e.ClickedItem is AccentColor accentColor)
             {
                 SetColor(accentColor);
                 VM.Default.AccentColor = accentColor.Name;
@@ -1317,9 +1338,169 @@ namespace ConTeXt_IDE
 
         private void ColorReset_Click(object sender, RoutedEventArgs e)
         {
-            VM.AccentColor = VM.AccentColors.Find(x=>x.Color == (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent));
+            VM.AccentColor = VM.AccentColors.Find(x => x.Color == (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent));
             SetColor(VM.AccentColor);
             VM.Default.AccentColor = "Default";
+        }
+
+        #endregion
+
+        #region ConTeXt
+
+        private async void Btn_InstallModule_Click(object sender, RoutedEventArgs e)
+        {
+
+            
+            ContextModule module = (sender as FrameworkElement).DataContext as ContextModule;
+
+            if (NetworkInterface.GetIsNetworkAvailable())
+             DownloadModule(module);
+
+           
+        }
+
+        private async void Btn_RemoveModule_Click(object sender, RoutedEventArgs e)
+        {
+            VM.IsIndeterminate = true;
+            VM.IsSaving = true;
+            ContextModule module = (sender as FrameworkElement).DataContext as ContextModule;
+
+            string modulepath = Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf\tex\context\third\", module.Name + @"\");
+
+            if (Directory.Exists(modulepath)) { 
+            await (await StorageFolder.GetFolderFromPathAsync(modulepath)).DeleteAsync(); 
+        }
+
+            module.IsInstalled = false;
+
+            VM.Default.SaveSettings();
+
+            await Generate();
+            VM.IsSaving = false;
+        }
+
+        private void DownloadModule(ContextModule module)
+        {
+            try
+            {
+                VM.IsIndeterminate = true;
+                VM.IsSaving = true;
+                using (WebClient wc = new WebClient())
+                {
+                    string filepath = Path.Combine(ApplicationData.Current.LocalFolder.Path, module.Name + ".zip");
+
+                    if (File.Exists(filepath))
+                    {
+                        File.Delete(filepath);
+                    }
+
+                    bool InstallSuccessful = false;
+                    wc.DownloadProgressChanged += (a, b) => { VM.ProgressValue = b.ProgressPercentage; };
+                    wc.DownloadFileCompleted += async (a, b) =>
+                    {
+                        VM.IsIndeterminate = true;
+
+                    InstallSuccessful = await InstallModule(module, filepath);
+
+                        VM.IsSaving = false;
+
+                        module.IsInstalled = true;
+
+
+                        VM.Default.SaveSettings();
+                    };
+                    wc.DownloadFileAsync(new System.Uri(module.URL), filepath);
+                }
+            }
+            catch (Exception ex)
+            {
+                VM.InfoMessage(true, "Download Error", ex.Message, InfoBarSeverity.Error);
+            }
+
+
+        }
+
+        private async Task<bool> InstallModule(ContextModule module, string filepath)
+        {
+            try
+            {
+                string installpath = "";
+                switch (module.Type)
+                {
+                    case ContextModuleType.TDSArchive:
+                        installpath = @"tex\texmf\";
+                        break;
+                    case ContextModuleType.Archive:
+                        installpath = @"tex\texmf\";
+                        break;
+                    case ContextModuleType.GitHub:
+                        installpath = @"tex\texmf\";
+                        break;
+                }
+
+                string extractionpath = Path.Combine(ApplicationData.Current.LocalFolder.Path, installpath);
+
+                ZipFile.ExtractToDirectory(filepath, extractionpath, true);
+
+                if (File.Exists(filepath))
+                {
+                    File.Delete(filepath);
+                }
+
+                if (module.Type == ContextModuleType.Archive)
+                {
+                    var folder = await StorageFolder.GetFolderFromPathAsync(Path.Combine(extractionpath, module.ArchiveFolderPath));
+                   // VM.InfoMessage(true, folder.Path);
+                    var extractionfolder = await StorageFolder.GetFolderFromPathAsync(extractionpath);
+                    // VM.InfoMessage(true, extractionfolder.Path);
+
+                    await CopyFolderAsync(folder, extractionfolder);
+                  
+                }
+
+                
+
+                return await Generate();
+            }
+            catch (Exception ex)
+            {
+                VM.InfoMessage(true, "Install Error", ex.Message, InfoBarSeverity.Error);
+                return false;
+            }
+        }
+
+        private async Task<bool> Generate()
+        {
+            Process p = new Process();
+            ProcessStartInfo info = new ProcessStartInfo(@"C:\Windows\System32\cmd.exe")
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                WorkingDirectory = VM.Default.ContextDistributionPath
+            };
+            //p.OutputDataReceived += (e, f) =>
+            //{ //VM.Log(f.Data.);
+            //};
+            //p.ErrorDataReceived += (e, f) => {Log(f.Data); };
+            p.StartInfo = info;
+            p.Start();
+            p.BeginOutputReadLine();
+            //using (StreamReader sr = p.StandardOutput)
+            using (StreamWriter sw = p.StandardInput)
+            {
+                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --make " );
+                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --generate ");
+
+            }
+
+            p.WaitForExit();
+
+            return p.ExitCode == 0;
+
         }
 
         #endregion

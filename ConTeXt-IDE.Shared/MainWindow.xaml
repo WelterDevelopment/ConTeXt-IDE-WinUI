@@ -29,7 +29,7 @@
         </Grid>
         <InfoBar Grid.Row="1" IsOpen="{Binding InfoOpen, Mode=TwoWay}"  Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
         <Frame Grid.Row="2" Loaded="RootFrame_Loaded" x:FieldModifier="public" x:Name="RootFrame"></Frame>
-        <ProgressBar Name="Progressbar" Grid.Row="2" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Visibility="{Binding IsVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" HorizontalAlignment="Stretch"  IsIndeterminate="True" ShowError="{Binding IsError}">
+        <ProgressBar Name="Progressbar" Grid.Row="2" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Visibility="{Binding IsVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">
             <animations:Implicit.ShowAnimations>
                 <animations:OpacityAnimation Duration="0:0:0.5" From="0" To="1"></animations:OpacityAnimation>
             </animations:Implicit.ShowAnimations>
