@@ -9,7 +9,6 @@ The app can be installed via the Microsoft store on x64 devices with Windows 10 
 ### Known bugs and missing features
 Bugs and Limitations that are directly caused by the current implementation of Project Reunion 0.5:
 - No app lifecycle methods (open files from the Windows Explorer, check for unsaved files on app closing, ...)
-- No DockingManager (The app currently uses an own fiddly workaround using GridSplitters)
 - No windowing (The pdf output cannot be undocked from the app)
 - Graphic glitches with the new WebView2 control (weird and random thin white borders at the top and left edges; suddenly occuring thick margins at the bottom and right edges)
 - The ribbon is not part of the window's title bar. The titlebar's color cannot be changed. The Minimize/Maximize/Close buttons look different from the buttons the system is using.
@@ -18,6 +17,11 @@ Bugs and Limitations that are directly caused by the current implementation of P
 All these Issues will get fixed in ~Q4 2021
 
 ### Changelog
+#### 2021-06-01 (Version 1.5.0)
+- You can now install and update ConTeXt modules directly from the source (CTAN or ConTeXtGarden)
+- Added a Setting for the editor's font size
+- Bug fixes: The "Toggle pin" functionality does not cause app crashes anymore (but is still quite janky); Parsing errors of the *-error.log file have been resolved
+
 #### 2021-05-23 (Version 1.4.7)
 - Saving, compiling and other file operations are no longer blocking the UI thread. This increases the "smoothness" of the app tremendously.
 - Instead of being forced to the system accent color, you can now choose a different color from the palette. The accent color automatically gets darkened/lightened when the Dark/Light theme is applied. 
