@@ -1,11 +1,9 @@
-﻿
-using ConTeXt_IDE.Models;
+﻿using ConTeXt_IDE.Models;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using Windows.UI.Text;
 
@@ -60,6 +58,7 @@ namespace ConTeXt_IDE.Helpers
             return value.ToString();
         }
     }
+
     public class EnumToString : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -73,7 +72,6 @@ namespace ConTeXt_IDE.Helpers
             return Enum.Parse(Assembly.GetExecutingAssembly().GetType(parameter as string), value as string, false);
         }
     }
-
 
     public class StringToThemeConverter : IValueConverter
     {
@@ -163,7 +161,6 @@ namespace ConTeXt_IDE.Helpers
         }
     }
 
-
     public class SetRootVisibility : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -177,7 +174,6 @@ namespace ConTeXt_IDE.Helpers
             return null;
         }
     }
-
 
     public class FileTypeToVisibility : IValueConverter
     {
@@ -270,6 +266,7 @@ namespace ConTeXt_IDE.Helpers
             return ((GridLength)value) == open ? true : false;
         }
     }
+
     public class VisibilityToCornerRadius : IValueConverter
     {
         private CornerRadius connectedside = new CornerRadius(2);
@@ -297,6 +294,7 @@ namespace ConTeXt_IDE.Helpers
             return ((CornerRadius)value) == connectedside ? true : false;
         }
     }
+
     public class VisibilityToBorderThickness : IValueConverter
     {
         private Thickness connectedside = new Thickness(1);

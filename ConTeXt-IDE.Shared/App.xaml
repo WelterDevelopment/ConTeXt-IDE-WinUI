@@ -269,7 +269,7 @@
             </Style>
             <Style TargetType="ComboBox" >
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-                <Setter Property="MinWidth" Value="100"></Setter>
+                <Setter Property="MinWidth" Value="50"></Setter>
                 <Setter Property="Background" Value="{StaticResource SystemControlBackgroundBaseLowRevealBackgroundBrush}"></Setter>
                 <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
             </Style>

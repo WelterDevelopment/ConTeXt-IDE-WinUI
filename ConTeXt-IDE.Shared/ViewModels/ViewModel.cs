@@ -1,6 +1,5 @@
 ﻿using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
-using ConTeXt_IDE.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Monaco.Editor;

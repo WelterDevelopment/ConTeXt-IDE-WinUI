@@ -14,7 +14,6 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Bindable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Converters.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DispatcherHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\EditorActions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RichTextBlockHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThemeHelper.cs" />

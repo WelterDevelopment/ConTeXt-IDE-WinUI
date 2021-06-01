@@ -4,7 +4,6 @@ using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -21,7 +20,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -32,9 +30,6 @@ using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
 using Windows.System;
-using Windows.UI;
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace ConTeXt_IDE
 {
@@ -658,12 +653,6 @@ namespace ConTeXt_IDE
                     App.VM.Default.TexFileFolder = filetocompile.FileFolder;
                     App.VM.Default.TexFileName = filetocompile.FileName;
                     App.VM.Default.TexFilePath = filetocompile.File.Path;
-                    //  ValueSet request = new ValueSet { { "compile", true } };
-                    // AppServiceResponse response = await App.VM.AppServiceConnection.SendMessageAsync(request);
-                    // display the response key/value pairs
-                    //foreach (string key in response.Message.Keys)
-
-                    // if ((string)response.Message[key] == "compiled")
 
                     bool compileSuccessful = false;
 
@@ -791,9 +780,9 @@ namespace ConTeXt_IDE
             CompileTex(false, fi);
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
+        private async  void Save_Click(object sender, RoutedEventArgs e)
         {
-            VM.Save((sender as FrameworkElement).DataContext as FileItem);
+           await VM.Save((sender as FrameworkElement).DataContext as FileItem);
         }
 
         private async Task<bool> InstallContext()
@@ -1069,7 +1058,7 @@ namespace ConTeXt_IDE
                                         string root = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
                                         string path = root + @"\Templates";
                                         var templateFolder = await StorageFolder.GetFolderFromPathAsync(path + @"\" + project);
-                                        //ZipFile.ExtractToDirectory(path + @"\" + project + ".zip", folder.Path,true);
+
                                         await CopyFolderAsync(templateFolder, folder);
                                         string rootfile = "";
                                         switch (project)
@@ -1080,7 +1069,7 @@ namespace ConTeXt_IDE
                                             case "single": rootfile = "main.tex"; break;
                                             default: break;
                                         }
-                                        //var proj = new Project(folder.Name, folder, await App.VM.GenerateTreeView(folder, rootfile)) { RootFile = rootfile };
+
                                         StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Name, folder, "");
                                         StorageApplicationPermissions.MostRecentlyUsedList.AddOrReplace(folder.Name, folder, "");
                                         App.VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
@@ -1093,10 +1082,6 @@ namespace ConTeXt_IDE
                                         App.VM.GenerateTreeView(folder, rootfile);
 
                                         App.VM.Default.LastActiveProject = proj.Name;
-
-
-
-                                        // App.AppViewModel.UpdateRecentAccessList();
                                     }
                                 }
                             }
@@ -1161,9 +1146,9 @@ namespace ConTeXt_IDE
             DisclaimerView.Visibility = DisclaimerView.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void TitleButton_Click(object sender, RoutedEventArgs e)
+        private async void TitleButton_Click(object sender, RoutedEventArgs e)
         {
-            AboutDialog.ShowAsync();
+           await AboutDialog.ShowAsync();
         }
 
         private async void Update_Click(object sender, RoutedEventArgs e)
@@ -1214,9 +1199,6 @@ namespace ConTeXt_IDE
                 p.StartInfo = info;
                 p.Start();
                 p.BeginOutputReadLine();
-
-
-                //await Task.Delay(500);
 
                 using (StreamWriter sw = p.StandardInput)
                 {
@@ -1322,6 +1304,47 @@ namespace ConTeXt_IDE
             }
         }
 
+        private void Btn_FontSize_Click(object sender, RoutedEventArgs e)
+        { 
+            switch ((sender as FrameworkElement).Tag.ToString())
+            {
+                case "FontSizeUp":
+                    if (VM.Default.FontSize < 100)
+                        VM.Default.FontSize++;
+                    break;
+                case "FontSizeDown":
+                    if (VM.Default.FontSize > 6)
+                        VM.Default.FontSize--;
+                    break;
+            }
+        }
+
+        private void Btn_FontSize_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            switch ((sender as FrameworkElement).Tag.ToString())
+            {
+                case "FontSizeUp":
+                    if (VM.Default.FontSize < 100)
+                        VM.Default.FontSize++;
+                    break;
+                case "FontSizeDown":
+                    if (VM.Default.FontSize > 6)
+                        VM.Default.FontSize--;
+                    break;
+            }
+            e.Handled = true;
+        }
+
+        private void Tbx_FontSize_Wheel(object sender, PointerRoutedEventArgs e)
+        {
+            var point = e.GetCurrentPoint(sender as UIElement);
+            int wheeldelta = point.Properties.MouseWheelDelta;
+            if (VM.Default.FontSize < 100 && wheeldelta > 0)
+                VM.Default.FontSize++;
+            if (VM.Default.FontSize > 6 && wheeldelta < 0)
+                VM.Default.FontSize--;
+        }
+
         #endregion
 
         #region Ribbon : View
@@ -1367,14 +1390,10 @@ namespace ConTeXt_IDE
 
         private async void Btn_InstallModule_Click(object sender, RoutedEventArgs e)
         {
-
-            
             ContextModule module = (sender as FrameworkElement).DataContext as ContextModule;
 
             if (NetworkInterface.GetIsNetworkAvailable())
              DownloadModule(module);
-
-           
         }
 
         private async void Btn_RemoveModule_Click(object sender, RoutedEventArgs e)
@@ -1385,9 +1404,10 @@ namespace ConTeXt_IDE
 
             string modulepath = Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf\tex\context\third\", module.Name + @"\");
 
-            if (Directory.Exists(modulepath)) { 
-            await (await StorageFolder.GetFolderFromPathAsync(modulepath)).DeleteAsync(); 
-        }
+            if (Directory.Exists(modulepath))
+            {
+                await (await StorageFolder.GetFolderFromPathAsync(modulepath)).DeleteAsync();
+            }
 
             module.IsInstalled = false;
 

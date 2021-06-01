@@ -4,16 +4,8 @@ namespace ConTeXt_IDE.Models
 {
     public class Mode : Bindable
     {
-        public bool IsSelected
-        {
-            get { return Get<bool>(); }
-            set { Set(value); }
-        }
+        public bool IsSelected { get => Get(false); set => Set(value); }
 
-        public string Name
-        {
-            get { return Get<string>(); }
-            set { Set(value); }
-        }
+        public string Name { get => Get<string>(); set => Set(value); }
     }
 }

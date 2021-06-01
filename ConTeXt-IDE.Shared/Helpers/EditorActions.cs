@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +22,6 @@ namespace ConTeXt_IDE.Helpers
         public string Id => "save";
         public string KeybindingContext => null;
 
-        //public int[] Keybindings => new int[] { Monaco.KeyMod.Chord(Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter, Monaco.KeyCode.F5) };
         public int[] Keybindings => new int[] { Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.KEY_S };
 
         public string Label => "Save";
@@ -43,7 +41,6 @@ namespace ConTeXt_IDE.Helpers
         public string Id => "saveall";
         public string KeybindingContext => null;
 
-        //public int[] Keybindings => new int[] { Monaco.KeyMod.Chord(Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter, Monaco.KeyCode.F5) };
         public int[] Keybindings => new int[] { KeyMod.CtrlCmd | KeyCode.KEY_W };
 
         public string Label => "Save all";
@@ -63,7 +60,6 @@ namespace ConTeXt_IDE.Helpers
         public string Id => "compile";
         public string KeybindingContext => null;
 
-        //public int[] Keybindings => new int[] { Monaco.KeyMod.Chord(Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter, Monaco.KeyCode.F5) };
         public int[] Keybindings => new int[] { Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter, Monaco.KeyCode.F5 };
 
         public string Label => "Save & Compile";
@@ -105,7 +101,6 @@ namespace ConTeXt_IDE.Helpers
         public string Id => "fileoutline";
         public string KeybindingContext => null;
 
-        //public int[] Keybindings => new int[] { Monaco.KeyMod.Chord(Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.Enter, Monaco.KeyCode.F5) };
         public int[] Keybindings => new int[] { Monaco.KeyMod.CtrlCmd | Monaco.KeyCode.F2 };
 
         public string Label => "File Outline";

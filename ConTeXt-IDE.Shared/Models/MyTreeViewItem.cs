@@ -1,58 +1,16 @@
-﻿
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
-using Windows.UI.Xaml;
 
 namespace ConTeXt_IDE.Models
 {
-    class MyTreeViewItem : Microsoft.UI.Xaml.Controls.TreeViewItem
+    class MyTreeViewItem : TreeViewItem
     {
-        //protected override void OnDragEnter(DragEventArgs e)
-        //{
-        //    try
-        //    {
-        //        e.AcceptedOperation = DataPackageOperation.None;
-        //        var draggedItem = MainPage.DraggedItems[0];
-        //        var draggedOverItem = DataContext as FileItem;
-        //        // Block TreeViewNode auto expanding if we are dragging a group onto another group
-        //        if (draggedItem.File is StorageFolder && draggedOverItem.File is StorageFolder)
-        //        {
-        //            // e.Handled = true;
-        //        }
-        //        if (draggedItem.File is StorageFile sf && draggedOverItem.File is StorageFolder fold)
-        //        {
-
-        //            if (draggedItem.FileFolder == fold.Path)
-        //            {
-        //                //App.VM.LOG("DRAGENTER "+ draggedItem.FileFolder + " :: " + fold.Path);
-        //                e.AcceptedOperation = DataPackageOperation.None;
-
-        //               // e.Handled = true;
-        //            }
-        //            else
-        //            {
-        //                e.AcceptedOperation = DataPackageOperation.Move;
-        //                e.DragUIOverride.Caption = "Move to this folder";
-        //              //  e.Handled = true;
-        //            }
-        //        }
-        //        base.OnDragEnter(e);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        App.VM.LOG("Error at DragEnter: " + ex.Message);
-        //    }
-        //}
-
         protected override async void OnDragOver(DragEventArgs e)
         {
             try
@@ -116,11 +74,6 @@ namespace ConTeXt_IDE.Models
             try
             {
                 var data = DataContext as FileItem;
-                // Block all drops on leaf node
-                //if (data.File is )
-                //{
-                //    e.Handled = true;
-                //}
                 if (data.File is StorageFolder fold)
                 {
                     if (MainPage.DraggedItems.Count > 0)

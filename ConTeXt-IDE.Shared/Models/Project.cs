@@ -14,36 +14,20 @@ namespace ConTeXt_IDE.Models
 {
     public class Project : Bindable
     {
-
         public Project(string name = "", StorageFolder folder = null, ObservableCollection<FileItem> directory = null)
         {
-           Directory = directory;
+            Directory = directory;
             Name = name;
             Folder = folder;
-            //if (Directory != null)
-            //    Directory.CollectionChanged += Directory_CollectionChanged;
         }
 
         [JsonIgnore]
-        public ObservableCollection<FileItem> Directory
-        {
-            get => Get(new ObservableCollection<FileItem>());
-            set {Set(value);  //if (App.VM.Started) Directory.CollectionChanged += Directory_CollectionChanged; 
-            }
-        }
+        public ObservableCollection<FileItem> Directory { get => Get(new ObservableCollection<FileItem>()); set => Set(value); }
 
         [JsonIgnore]
-        public StorageFolder Folder
-        {
-            get => Get<StorageFolder>(null);
-            set => Set(value);
-        }
+        public StorageFolder Folder { get => Get<StorageFolder>(null); set => Set(value); }
 
-        public string Name
-        {
-            get => Get("");
-            set => Set(value);
-        }
+        public string Name { get => Get(""); set => Set(value); }
 
         public string RootFile
         {
@@ -66,53 +50,12 @@ namespace ConTeXt_IDE.Models
             }
         }
 
-        public List<string> LastOpenedFiles
-        {
-            get => Get(new List<string>() { RootFile });
-            set
-            {
-                Set(value);
-               
-            }
-        }
+        public List<string> LastOpenedFiles { get => Get(new List<string>() { RootFile }); set => Set(value); }
 
         public ObservableCollection<Mode> Modes
         {
             get => Get(new ObservableCollection<Mode>() { new Mode() { Name = "print", IsSelected = false }, new Mode() { Name = "screen", IsSelected = false }, new Mode() { Name = "draft", IsSelected = false }, });
             set => Set(value);
         }
-
-        
-
-        //public async void Directory_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        //{
-        //    try
-        //    {
-        //       // await App.VM.LOG("Copying: "+e.Action.ToString());
-        //        if (App.VM.IsProjectLoaded)
-        //            if (e.Action == NotifyCollectionChangedAction.Add)
-        //            {
-        //                foreach (FileItem fi in e.NewItems)
-        //                {
-        //                    if (fi.File is StorageFile file)
-        //                    {
-        //                        if (fi.FileFolder != Folder.Path)
-        //                        {
-        //                            await file.CopyAsync(Folder, file.Name, NameCollisionOption.GenerateUniqueName);
-        //                            fi.FileFolder = Path.GetDirectoryName(file.Path);
-        //                        }
-        //                    }
-        //                    else if (fi.File is StorageFolder fold)
-        //                    {
-        //                        // await fold.c
-        //                    }
-        //                }
-        //            }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        App.VM.LOG("Error on ProjectList.CollectionChanged: "+ex.Message);
-        //    }
-        //}
     }
 }

@@ -203,6 +203,7 @@ namespace Monaco
 
         private void WebView_CoreWebView2Initialized(WebView2 sender, CoreWebView2InitializedEventArgs args)
         {
+            //sender.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false; // not yet implemented
             sender.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             sender.CoreWebView2.Settings.AreDevToolsEnabled = false;
             sender.CoreWebView2.Settings.AreHostObjectsAllowed = true;

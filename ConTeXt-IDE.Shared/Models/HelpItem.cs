@@ -9,38 +9,16 @@ using Windows.UI.Xaml.Data;
 
 namespace ConTeXt_IDE.Models
 {
-    // TODO: TeachingTip provider, Currently not working
     public class HelpItem : Bindable
     {
-        public string ID
-        {
-            get { return Get(""); }
-            set { Set(value); }
-        }
+        public string ID { get => Get(""); set => Set(value); }
 
-        public string Title
-        {
-            get { return Get("Help"); }
-            set { Set(value); }
-        }
+        public string Title { get => Get("Help"); set => Set(value); }
 
-        public string Subtitle
-        {
-            get { return Get(""); }
-            set { Set(value); }
-        }
+        public string Subtitle { get => Get(""); set => Set(value); }
 
-        public string Text
-        {
-            get { return Get(""); }
-            set { Set(value); }
-        }
+        public string Text { get => Get(""); set => Set(value); }
 
-        public bool Shown
-        {
-            get { return Get(false); }
-            set { Set(value);// App.VM.Default?.SaveSettings(); 
-            }
-        }
+        public bool Shown { get => Get(false); set => Set(value); }
     }
 }

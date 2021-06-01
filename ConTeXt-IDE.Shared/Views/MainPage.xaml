@@ -281,7 +281,22 @@
                             </ToggleButton>
 
                             <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Font Size: "></TextBlock>
-                            <NumberBox Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" Height="100" SpinButtonPlacementMode="Inline" CornerRadius="0,2,2,0">  </NumberBox>
+                            <!--NumberBox is busted, has fixed unchangable height-->
+                            <!--<NumberBox Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" SpinButtonPlacementMode="Inline" CornerRadius="0,2,2,0">  </NumberBox>-->
+                            <StackPanel Orientation="Horizontal" Spacing="0">
+                                <TextBox InputScope="Number" BorderThickness="1,1,0,1" Text="{Binding Default.FontSize, Mode=TwoWay}" CornerRadius="0" PointerWheelChanged="Tbx_FontSize_Wheel"></TextBox>
+                                <Button CornerRadius="0" BorderThickness="1" Tag="FontSizeUp" Click="Btn_FontSize_Click">
+                                    <Button.Content>
+                                        <FontIcon Glyph="&#xE70E;"></FontIcon>
+                                    </Button.Content>
+                                </Button>
+                                <Button CornerRadius="0,2,2,0" BorderThickness="0,1,1,1" Tag="FontSizeDown" Click="Btn_FontSize_Click" >
+                                    <Button.Content>
+                                        <FontIcon Glyph="&#xE70D;"></FontIcon>
+                                    </Button.Content>
+                                </Button>
+                            </StackPanel>
+                           
 
                             <Border Style="{StaticResource Separator}" ></Border>
 
@@ -584,7 +599,7 @@
                                                         <StackPanel Grid.Column="1" Spacing="6" Orientation="Horizontal" VerticalAlignment="Center" >
                                                             <Button Click="Btn_InstallModule_Click" ToolTipService.ToolTip="Download and install the latest version">
                                                                 <Button.Content>
-                                                                    <SymbolIcon Symbol="Add"></SymbolIcon>
+                                                                    <SymbolIcon Symbol="Download"></SymbolIcon>
                                                                 </Button.Content>
                                                             </Button>
                                                             <Button Click="Btn_RemoveModule_Click" IsEnabled="{Binding IsInstalled, Mode=OneWay}" ToolTipService.ToolTip="Remove module files">
