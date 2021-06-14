@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\EditorActions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RichTextBlockHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThemeHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ContextInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOptiongroup.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommand.cs" />

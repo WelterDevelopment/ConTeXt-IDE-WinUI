@@ -12,14 +12,17 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary>
+                <ResourceDictionary >
                     <CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
                     <CornerRadius x:Key="ControlCornerRadius">4</CornerRadius>
                 </ResourceDictionary>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ColorPaletteResources Accent="{ThemeResource SystemAccentColor}" />
             </ResourceDictionary.MergedDictionaries>
 
             <vm:ViewModel x:Key="VM"></vm:ViewModel>
+
+            
 
             <CornerRadius x:Key="CornerRadius">2</CornerRadius>
 
@@ -150,6 +153,14 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <!--<Style TargetType="ListViewItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        
+                    </Setter.Value>
+                </Setter>
+            </Style>-->
 
             <Style TargetType="ToggleButton" BasedOn="{StaticResource ToggleButtonRevealStyle}">
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
@@ -458,6 +469,12 @@
 
             <helpers:AccentColorSetting x:Key="AccentColorSetting"/>
 
+            <local:ArgumentOptionalToText x:Key="ArgumentOptionalToText"></local:ArgumentOptionalToText>
+            <local:ArgumentTypeToText x:Key="ArgumentTypeToText"></local:ArgumentTypeToText>
+            <local:ParameterDefaultToDecoration x:Key="ParameterDefaultToDecoration"></local:ParameterDefaultToDecoration>
+
+            <local:ParameterTypeToText x:Key="ParameterTypeToText"></local:ParameterTypeToText>
+            <local:CommandTypeToText x:Key="CommandTypeToText"></local:CommandTypeToText>
             <local:StringComparer x:Key="StringComparer"></local:StringComparer>
             <local:StringToThemeConverter x:Key="StringToTheme"></local:StringToThemeConverter>
             <local:StringToVisibility x:Key="StringToVisibility"></local:StringToVisibility>
@@ -473,13 +490,14 @@
             <local:SetRootVisibility x:Key="SetRootVisibility" />
             <local:FileTypeToVisibility x:Key="FileTypeToVisibility" />
             <local:VisibilityToCornerRadius x:Key="VisibilityToCornerRadius" />
-
+            
             <ResourceDictionary.ThemeDictionaries>
 
                 <ResourceDictionary x:Key="Default">
-                    <!--<ResourceDictionary.MergedDictionaries>
-                        <ColorPaletteResources  Accent="{ThemeResource SystemAccentColor}" />
-                    </ResourceDictionary.MergedDictionaries>-->
+                    <ResourceDictionary.MergedDictionaries>
+                        <!--<ColorPaletteResources  Accent="ForestGreen" BaseHigh="Yellow" BaseLow="Orange" BaseMedium="Red" BaseMediumHigh="Violet" BaseMediumLow="Blue" />-->
+                        
+                    </ResourceDictionary.MergedDictionaries>
                     <AcrylicBrush x:Key="MyAcrylicBrush" BackgroundSource="HostBackdrop" TintColor="{ThemeResource AcrylicColor}"        FallbackColor="{ThemeResource AcrylicColor}"/>
                     <AcrylicBrush x:Key="ContentAcrylicBrush" BackgroundSource="Backdrop" TintColor="#FF444444" TintOpacity="1" TintLuminosityOpacity="1" FallbackColor="#FF444444"/>
                     <AcrylicBrush x:Key="ItemAcrylicBrush" BackgroundSource="HostBackdrop" TintColor="#FF222222" TintOpacity="0.9" FallbackColor="#FF222222"/>

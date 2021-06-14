@@ -72,8 +72,9 @@ namespace ConTeXt_IDE.Helpers
 
                 AccentColorHigh = ChangeColorBrightness(value, HighFactor * 0.2f);
                 AccentColorLow = ChangeColorBrightness(value, LowFactor * 0.2f);
-                AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.7f), 0.8f);
-                AccentColorLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.8f), 0.9f);
+                AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.4f), 0.9f);
+                AccentColorLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.6f), 0.9f);
+                AccentColorLowLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.8f), 0.9f);
 
                 // Application.Current.Resources["SystemAccentColor"] = value;
             } 
@@ -83,6 +84,7 @@ namespace ConTeXt_IDE.Helpers
         public Color AccentColorLow { get => Get<Color>(); set => Set(value); }
         public Color AccentColorLowLow { get => Get<Color>(); set => Set(value); }
         public Color AccentColorLowLowLow { get => Get<Color>(); set => Set(value); }
+        public Color AccentColorLowLowLowLow { get => Get<Color>(); set => Set(value); }
 
         public static Color ChangeColorBrightness(Color color, float correctionFactor)
         {

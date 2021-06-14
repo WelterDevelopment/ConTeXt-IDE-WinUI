@@ -1,4 +1,6 @@
-﻿using ConTeXt_IDE.ViewModels;
+﻿using ConTeXt_IDE.Helpers;
+using ConTeXt_IDE.Models;
+using ConTeXt_IDE.ViewModels;
 using Microsoft.UI.Xaml;
 using System;
 using System.Threading;
@@ -28,10 +30,14 @@ namespace ConTeXt_IDE
         {
             try
             {
+
                 this.InitializeComponent();
                 UnhandledException += App_UnhandledException;
 
-                
+                RequestedTheme = Settings.Default.Theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
+
+               
+
             }
             catch (Exception ex)
             {
@@ -76,13 +82,20 @@ namespace ConTeXt_IDE
                 }
                 else VM = new ViewModel();
 
-                //StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+                var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
+                setting.Theme = VM.Default.Theme == "Light" ? ElementTheme.Light : ElementTheme.Dark;
+                setting.AccentColor = VM.AccentColor.Color;
+                ColorPaletteResources palette = new ColorPaletteResources();
+                palette.Accent = setting.AccentColorLow;
+                App.Current.Resources.MergedDictionaries.Add(palette);
 
-                RequestedTheme = VM.Default.Theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
+                //StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+                // RequestedTheme = VM.Default.Theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
+
             }
             catch (Exception ex)
             {
-                VM.Log(ex.Message);
+                VM.Log("Exception on Startup: " + ex.Message);
             }
 
         }

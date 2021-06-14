@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Windows.ApplicationModel;
@@ -51,6 +52,7 @@ namespace ConTeXt_IDE.Models
                 else
                 {
                     string json = File.ReadAllText(settingsPath);
+                    Debug.WriteLine(json);
                     settings = FromJson(json);
                 }
 
@@ -91,7 +93,7 @@ namespace ConTeXt_IDE.Models
             }
             catch (Exception ex)
             {
-                App.VM.Log(ex.Message);
+                //App.VM.Log("Exception on getting Settings: "+ex.Message);
 
                 return null;
             }
@@ -113,6 +115,7 @@ namespace ConTeXt_IDE.Models
         public bool ShowOutline { get => Get(true); set => Set(value); }
         public bool ShowProjectPane { get => Get(true); set => Set(value); }
         public bool ShowProjects { get => Get(true); set => Set(value); }
+        public bool ShowCommandReference { get => Get(false); set => Set(value); }
         public bool StartWithLastActiveProject { get => Get(true); set => Set(value); }
         public bool StartWithLastOpenFiles { get => Get(false); set => Set(value); }
         public bool SuggestArguments { get => Get(true); set => Set(value); }
@@ -135,10 +138,12 @@ namespace ConTeXt_IDE.Models
         public string TexFileFolder { get => Get(""); set => Set(value); }
         public string TexFileName { get => Get(""); set => Set(value); }
         public string TexFilePath { get => Get(""); set => Set(value); }
-        public string Theme { get => Get("Default"); set { Set(value); ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default); } }
+        public string Theme { get => Get("Default"); set { Set(value); if (App.VM != null) ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default); } }
         public string Wrap { get => Get("On"); set { Set(value); if (App.VM != null) App.VM.EditorOptions.WordWrap = Enum.Parse<WordWrap>(value); } }
 
         
+        public List<CommandGroup> CommandGroups { get => Get(new List<CommandGroup>()); set => Set(value); }
+
         public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
 
         public ObservableCollection<Project> ProjectList { get => Get(new ObservableCollection<Project>()); set => Set(value); }

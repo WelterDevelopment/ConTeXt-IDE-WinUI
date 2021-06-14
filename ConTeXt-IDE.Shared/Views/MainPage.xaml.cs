@@ -23,6 +23,8 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Serialization;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
@@ -30,13 +32,15 @@ using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
 using Windows.System;
+using Windows.UI;
 
 namespace ConTeXt_IDE
 {
     public sealed partial class MainPage : Page
     {
-
         private ViewModel VM { get; } = App.VM;
+
+        public Color SystemAccentColor = (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
 
         public MainPage()
         {
@@ -73,7 +77,6 @@ namespace ConTeXt_IDE
             {
                 App.VM.InfoMessage(true, "Exception", ex.Message, InfoBarSeverity.Error);
             }
-
         }
 
         #region Page Load
@@ -81,6 +84,8 @@ namespace ConTeXt_IDE
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            InitializeCommandReference();
+            //SetColor(null, false);
         }
 
         public async void FirstStart()
@@ -358,7 +363,7 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                VM.Log(ex.Message);
+                VM.Log("Exception on adding File: " + ex.Message);
             }
         }
 
@@ -387,7 +392,7 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.Log(ex.Message);
+                App.VM.Log("Exception on adding Folder: " + ex.Message);
             }
         }
 
@@ -573,7 +578,7 @@ namespace ConTeXt_IDE
                     tip.HeroContent = content;
                     tip.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
                     RootGrid.Children.Add(tip);
-                
+
                     tip.IsOpen = true;
                 }
                 else if (type == ".pdf")
@@ -780,9 +785,9 @@ namespace ConTeXt_IDE
             CompileTex(false, fi);
         }
 
-        private async  void Save_Click(object sender, RoutedEventArgs e)
+        private async void Save_Click(object sender, RoutedEventArgs e)
         {
-           await VM.Save((sender as FrameworkElement).DataContext as FileItem);
+            await VM.Save((sender as FrameworkElement).DataContext as FileItem);
         }
 
         private async Task<bool> InstallContext()
@@ -886,7 +891,8 @@ namespace ConTeXt_IDE
         {
             var fi = (FileItem)(sender as FrameworkElement).DataContext;
 
-            if (!fi.IsPinned) {
+            if (!fi.IsPinned)
+            {
                 bool reselect = fi == VM.CurrentFileItem;
                 VM.FileItems.Remove(fi);
                 VM.FileItems.Insert(0, fi);
@@ -1093,7 +1099,7 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.Log(ex.Message);
+                App.VM.Log("Exception on adding Project: " + ex.Message);
             }
         }
 
@@ -1148,7 +1154,7 @@ namespace ConTeXt_IDE
 
         private async void TitleButton_Click(object sender, RoutedEventArgs e)
         {
-           await AboutDialog.ShowAsync();
+            await AboutDialog.ShowAsync();
         }
 
         private async void Update_Click(object sender, RoutedEventArgs e)
@@ -1300,12 +1306,12 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.Log(ex.Message);
+                App.VM.Log("Exception on Help Item Click: " + ex.Message);
             }
         }
 
         private void Btn_FontSize_Click(object sender, RoutedEventArgs e)
-        { 
+        {
             switch ((sender as FrameworkElement).Tag.ToString())
             {
                 case "FontSizeUp":
@@ -1358,13 +1364,41 @@ namespace ConTeXt_IDE
             }
         }
 
-        private void SetColor(AccentColor accentColor)
+        private void SetColor(AccentColor accentColor = null, bool reload = true)
         {
-            ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).AccentColor = accentColor.Color;
-
-            //ReloadPageTheme(this.RequestedTheme);
+            var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
+            if (accentColor != null) setting.AccentColor = accentColor.Color;
+            ColorPaletteResources palette = new ColorPaletteResources();
+            palette.Accent = setting.AccentColorLow;
+            App.Current.Resources.MergedDictionaries.Add(palette);
+            ReloadPageTheme(this.RequestedTheme);
         }
-        private void ReloadPageTheme(ElementTheme startTheme)
+
+        private ColorPaletteResources FindColorPaletteResourcesForTheme(string theme)
+        {
+            foreach (var themeDictionary in Application.Current.Resources.ThemeDictionaries)
+            {
+                if (themeDictionary.Key.ToString() == theme)
+                {
+                    if (themeDictionary.Value is ColorPaletteResources)
+                    {
+                        return themeDictionary.Value as ColorPaletteResources;
+                    }
+                    else if (themeDictionary.Value is ResourceDictionary targetDictionary)
+                    {
+                        foreach (var mergedDictionary in targetDictionary.MergedDictionaries)
+                        {
+                            if (mergedDictionary is ColorPaletteResources)
+                            {
+                                return mergedDictionary as ColorPaletteResources;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        private async void ReloadPageTheme(ElementTheme startTheme)
         {
             if (this.RequestedTheme == ElementTheme.Dark)
                 VM.Default.Theme = "Light";
@@ -1372,6 +1406,8 @@ namespace ConTeXt_IDE
                 VM.Default.Theme = "Default";
             else if (this.RequestedTheme == ElementTheme.Default)
                 VM.Default.Theme = "Dark";
+
+            //await Task.Delay(5000);
 
             if (this.RequestedTheme != startTheme)
                 ReloadPageTheme(startTheme);
@@ -1393,7 +1429,7 @@ namespace ConTeXt_IDE
             ContextModule module = (sender as FrameworkElement).DataContext as ContextModule;
 
             if (NetworkInterface.GetIsNetworkAvailable())
-             DownloadModule(module);
+                DownloadModule(module);
         }
 
         private async void Btn_RemoveModule_Click(object sender, RoutedEventArgs e)
@@ -1438,7 +1474,7 @@ namespace ConTeXt_IDE
                     {
                         VM.IsIndeterminate = true;
 
-                    InstallSuccessful = await InstallModule(module, filepath);
+                        InstallSuccessful = await InstallModule(module, filepath);
 
                         VM.IsSaving = false;
 
@@ -1488,15 +1524,15 @@ namespace ConTeXt_IDE
                 if (module.Type == ContextModuleType.Archive)
                 {
                     var folder = await StorageFolder.GetFolderFromPathAsync(Path.Combine(extractionpath, module.ArchiveFolderPath));
-                   // VM.InfoMessage(true, folder.Path);
+                    // VM.InfoMessage(true, folder.Path);
                     var extractionfolder = await StorageFolder.GetFolderFromPathAsync(extractionpath);
                     // VM.InfoMessage(true, extractionfolder.Path);
 
                     await CopyFolderAsync(folder, extractionfolder);
-                  
+
                 }
 
-                
+
 
                 return await Generate();
             }
@@ -1530,7 +1566,7 @@ namespace ConTeXt_IDE
             //using (StreamReader sr = p.StandardOutput)
             using (StreamWriter sw = p.StandardInput)
             {
-                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --make " );
+                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --make ");
                 sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --generate ");
 
             }
@@ -1542,5 +1578,127 @@ namespace ConTeXt_IDE
         }
 
         #endregion
+        private IEnumerable<Command> contextcommands;
+        private async void InitializeCommandReference()
+        {
+            try
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
+                string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
+                using (StringReader reader = new StringReader(xml))
+                {
+                    var contextinterface = (Interface)serializer.Deserialize(reader);
+
+                    contextcommands = contextinterface.InterfaceList.SelectMany(x => x.Command);
+
+                    foreach (Command command in contextcommands)
+                    {
+                        if (command?.Arguments?.ArgumentsList != null)
+                        {
+                            int i = 0;
+                            foreach (Argument argument in command?.Arguments?.ArgumentsList)
+                            {
+                                if (argument != null)
+                                {
+                                    i++;
+                                    argument.Number = i;
+                                }
+                            }
+                        }
+                    }
+
+                    IOrderedEnumerable<IGrouping<string, Command>> query = from item in contextcommands
+                                                                           group item by item?.Category into g
+                                                                           where !string.IsNullOrWhiteSpace(g.Key)
+                                                                           orderby g.Key
+                                                                           select g;
+
+                    VM.ContextCommandGroupList = query.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+
+                    if (VM.Default.CommandGroups.Count == 0)
+                    {
+                        VM.Default.CommandGroups = VM.ContextCommandGroupList.Select(x => new CommandGroup() { Name = x }).ToList();
+                    }
+                    IOrderedEnumerable<IGrouping<string, Command>> filtered;
+                    filtered = from item in query
+                               where VM.Default.CommandGroups.Where(x => x.IsSelected).Select(x => x.Name).Contains(item.Key)
+                               orderby item.Key
+                               select item;
+
+                    VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+                    cvs.Source = filtered;
+
+                    DocumentationView.SelectedIndex = -1;
+                }
+            }
+            catch (Exception ex)
+            {
+                VM.InfoMessage(true, "Error", ex.Message, InfoBarSeverity.Error);
+            }
+
+        }
+
+        private void GroupList_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            GroupListView.Visibility = Visibility.Collapsed;
+            DocumentationView.IsEnabled = true;
+            DocumentationView.Visibility = Visibility.Visible;
+            DocumentationView.ScrollIntoView((cvs.Source as IOrderedEnumerable<IGrouping<string, Command>>).SelectMany(x => x).First(x => x.Category == (string)e.ClickedItem), ScrollIntoViewAlignment.Leading);
+
+        }
+
+        private void Btn_GroupHeader_Click(object sender, RoutedEventArgs e)
+        {
+            DocumentationView.IsEnabled = false;
+            DocumentationView.Visibility = Visibility.Collapsed;
+            GroupListView.Visibility = Visibility.Visible;
+            GroupListView.SelectedItem = ((sender as Button).DataContext as IGrouping<string, Command>).Key;
+            GroupListView.ScrollIntoView(((sender as Button).DataContext as IGrouping<string, Command>).Key, ScrollIntoViewAlignment.Default);
+
+        }
+
+        private void Btn_CommandGroup_Click(object sender, RoutedEventArgs e)
+        {
+            InitializeCommandReference();
+        }
+
+        private bool IsSearching = false;
+        private async void Searchtext_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                if (!IsSearching)
+                {
+                    IsSearching = true;
+                    IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
+                    string text = (sender as TextBox).Text;
+                    await Task.Run(() => { filtered = UpdateSearchFilter(text); });
+
+                    VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+                    cvs.Source = filtered;
+
+                    DocumentationView.SelectedIndex = -1;
+                    IsSearching = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                VM.Log(ex.Message);
+            }
+        }
+
+        private IOrderedEnumerable<IGrouping<string, Command>> UpdateSearchFilter(string text)
+        {
+            IOrderedEnumerable<IGrouping<string, Command>> query = from item in contextcommands
+                                                                   where item.Name.Insert(0, @"\" + (item.Type == "environment" ? "start" : "")).Contains(text)
+                                                                   group item by item?.Category into g
+                                                                   where !string.IsNullOrWhiteSpace(g.Key)
+                                                                   orderby g.Key
+                                                                   select g;
+            return from item in query
+                   where VM.Default.CommandGroups.Where(x => x.IsSelected).Select(x => x.Name).Contains(item.Key)
+                   orderby item.Key
+                   select item;
+        }
     }
 }

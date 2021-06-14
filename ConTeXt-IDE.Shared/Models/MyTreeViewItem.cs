@@ -160,4 +160,25 @@ namespace ConTeXt_IDE.Models
             else return FileTemplate;
         }
     }
+
+    public class CommandItemTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate KeywordsTemplate { get; set; }
+        public DataTemplate AssignmentsTemplate { get; set; }
+
+        protected override DataTemplate SelectTemplateCore(object item, DependencyObject dependency)
+        {
+            if (item is Keywords)
+            {
+                return KeywordsTemplate;
+            }
+           else  if (item is Assignments)
+            {
+                return AssignmentsTemplate;
+            }
+            else 
+            return null;
+        }
+
+    }
 }

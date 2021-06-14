@@ -27,6 +27,112 @@ namespace ConTeXt_IDE.Helpers
         }
     }
 
+    public class ArgumentTypeToText : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is Argument argument)
+            {
+                string openingdelimiter;
+                string closingdelimiter;
+                switch (argument.Delimiters)
+                {
+                    case "braces": openingdelimiter = "{"; closingdelimiter = "}"; break;
+                    case "none": openingdelimiter = ""; closingdelimiter = ""; break;
+                    default: openingdelimiter = "["; closingdelimiter = "]"; break;
+                }
+
+                string argumentcontent = "";
+                switch (argument)
+                {
+                    case Keywords arg: argumentcontent = arg.List == "yes" ? "..., ..." : "..."; break;
+                    case Assignments arg: argumentcontent = arg.List == "yes" ? "...=..., ...=..." : "...=..."; break;
+                }
+
+                return openingdelimiter + argumentcontent + closingdelimiter;
+            }
+            else return "";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return "";
+        }
+    }
+
+    public class ArgumentOptionalToText : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is string optional)
+            {
+                return optional == "yes" ? "OPT" : "";
+            }
+            else return "";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return "";
+        }
+    }
+
+    public class ParameterDefaultToDecoration : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is string parameterdefault)
+            {
+                return parameterdefault == "yes" ? TextDecorations.Underline : TextDecorations.None;
+            }
+            else return TextDecorations.None;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return "";
+        }
+    } 
+    
+    public class ParameterTypeToText : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is string parametertype && value != null)
+            {
+                if (parametertype.StartsWith("cd:"))
+                {
+                    string type = parametertype.Remove(0,3);
+                    return type.ToUpper();
+                }
+                else return parametertype;
+            }
+            else return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return "";
+        }
+    }
+
+ public class CommandTypeToText : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is string type)
+            {
+                return type == "environment" ? "start" : "";
+            }
+            else return "";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return "";
+        }
+    }
+
     public class StringToVisibility : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)

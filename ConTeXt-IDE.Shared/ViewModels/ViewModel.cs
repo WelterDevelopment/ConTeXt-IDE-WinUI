@@ -2,6 +2,7 @@
 using ConTeXt_IDE.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using Monaco.Editor;
 using System;
 using System.Collections.Generic;
@@ -266,11 +267,21 @@ namespace ConTeXt_IDE.ViewModels
 
         public string NVHead { get => Get(""); set => Set(value); }
 
+        public Command SelectedCommand { get => Get<Command>(null); set { if (SelectedCommand != null) { SelectedCommand.IsSelected = false; SelectedCommand.SelectedIndex = -1; } Set(value); if (value != null) value.IsSelected = true; } }
+
+        public List<string> ContextCommandGroupList { get => Get(new List<string>()); set => Set(value); }
+
+        public CollectionViewSource cvs { get => Get(new CollectionViewSource() { IsSourceGrouped = true }); set => Set(value); }
+
         public ObservableCollection<ContextCommand> ContextCommands { get => Get(new ObservableCollection<ContextCommand>()); set => Set(value); }
+
+        
 
         public StorageItemMostRecentlyUsedList RecentAccessList { get => Get<StorageItemMostRecentlyUsedList>(); set => Set(value); }
 
         public string SelectedPath { get => Get(""); set => Set(value); }
+
+        
 
         public void GenerateTreeView(StorageFolder folder, string rootfile = null)
         {
