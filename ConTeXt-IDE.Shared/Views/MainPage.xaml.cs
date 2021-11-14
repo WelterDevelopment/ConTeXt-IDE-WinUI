@@ -1,5 +1,6 @@
 ﻿using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
+using ConTeXt_IDE.Shared.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -9,7 +10,6 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
-using Monaco;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
@@ -48,8 +49,8 @@ namespace ConTeXt_IDE
             {
                 InitializeComponent();
                 App.MainPage = this;
-
                 // Listen to the Settings --> Update the fiddly docking manager
+                //App.m_window.SetTitleBar(TabStripFooter);
                 VM.Default.PropertyChanged += Default_PropertyChanged;
 
                 //SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
@@ -98,42 +99,7 @@ namespace ConTeXt_IDE
         }
 
         private bool loaded = false;
-        private async void Edit_Loading(object sender, RoutedEventArgs e)
-        {
-            if (!loaded)
-            {
-                try
-                {
-                    loaded = true;
-                    var edit = sender as CodeEditor;
-                    var languages = new LanguagesHelper(edit);
-                    await languages.RegisterHoverProviderAsync("context", new EditorHoverProvider());
-                    await languages.RegisterCompletionItemProviderAsync("context", new ContextCompletionProvider());
-                    await edit.AddActionAsync(new RunAction());
-                    await edit.AddActionAsync(new RunRootAction());
-                    await edit.AddActionAsync(new SaveAction());
-                    await edit.AddActionAsync(new SaveAllAction());
-
-                    await edit.AddCommandAsync(KeyMod.CtrlCmd | KeyCode.NUMPAD_SUBTRACT, () =>
-                    {
-                        if (VM.Default.FontSize > 6)
-                            VM.Default.FontSize--;
-                    });
-
-                    await edit.AddCommandAsync(KeyMod.CtrlCmd | KeyCode.NUMPAD_ADD, () =>
-                    {
-                        if (VM.Default.FontSize < 100)
-                            VM.Default.FontSize++;
-                    });
-
-                    loaded = true;
-                }
-                catch (Exception ex)
-                {
-                    VM.InfoMessage(true, "Error on CodeEditor load", ex.Message, InfoBarSeverity.Error);
-                }
-            }
-        }
+       
         private void Edit_Unloaded(object sender, RoutedEventArgs e)
         {
             loaded = false;
@@ -743,10 +709,10 @@ namespace ConTeXt_IDE
                             }
                         }
                     }
+                    Codewriter.Focus(FocusState.Keyboard);
                 }
                 catch (Exception f)
                 {
-                    App.VM.IsError = true;
                     App.VM.Log("Exception at compile: " + f.Message);
                 }
             App.VM.IsSaving = false;
@@ -782,12 +748,14 @@ namespace ConTeXt_IDE
         {
             FileItem fi = (sender as FrameworkElement).DataContext as FileItem;
             await VM.SaveAll();
+            Codewriter.Save();
             CompileTex(false, fi);
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             await VM.Save((sender as FrameworkElement).DataContext as FileItem);
+            Codewriter.Save();
         }
 
         private async Task<bool> InstallContext()
@@ -872,19 +840,27 @@ namespace ConTeXt_IDE
 
         private async void Tabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
         {
-            var fi = args.Tab.DataContext as FileItem;
-            if (fi.IsChanged)
+            try
             {
-                var save = new ContentDialog() { XamlRoot = XamlRoot, Title = "Do you want to save this file before closing?", PrimaryButtonText = "Yes", SecondaryButtonText = "No", DefaultButton = ContentDialogButton.Primary };
-
-                if (await save.ShowAsync() == ContentDialogResult.Primary)
+                var fi = args.Tab.DataContext as FileItem;
+                if (fi.IsChanged)
                 {
-                    await App.VM.Save(fi);
-                }
-            }
+                    var save = new ContentDialog() { XamlRoot = XamlRoot, Title = "Do you want to save this file before closing?", PrimaryButtonText = "Yes", SecondaryButtonText = "No", DefaultButton = ContentDialogButton.Primary };
 
-            VM.FileItems.Remove(fi);
-            VM.CurrentProject.LastOpenedFiles = VM.FileItems.Select(x => x.FileName).ToList();
+                    if (await save.ShowAsync() == ContentDialogResult.Primary)
+                    {
+                        await App.VM.Save(fi);
+                    }
+                }
+                if (VM.FileItems.Contains(fi))
+                    VM.FileItems.Remove(fi);
+
+                //VM.CurrentProject.LastOpenedFiles = VM.FileItems.Select(x => x.FileName).ToList();
+            }
+            catch (Exception ex)
+            {
+                await VM.Log(ex.Message);
+            }
         }
 
         private async void Pin_Click(object sender, RoutedEventArgs e)
@@ -997,7 +973,6 @@ namespace ConTeXt_IDE
         {
             try
             {
-                VM.CurrentFileItem.CurrentLine = (int)(await (sender as CodeEditor).GetPositionAsync()).LineNumber;
             }
             catch
             {
@@ -1038,7 +1013,7 @@ namespace ConTeXt_IDE
                                     var proj = new Project(folder.Name, folder, App.VM.FileItemsTree);
                                     App.VM.Default.ProjectList.Add(proj);
                                     App.VM.CurrentProject = proj;
-                                    App.VM.GenerateTreeView(folder);
+                                    await App.VM.GenerateTreeView(folder);
 
                                     App.VM.Default.LastActiveProject = proj.Name;
                                     // App.AppViewModel.UpdateRecentAccessList();
@@ -1085,9 +1060,11 @@ namespace ConTeXt_IDE
                                         proj.RootFile = rootfile;
                                         App.VM.Default.ProjectList.Add(proj);
                                         App.VM.CurrentProject = proj;
-                                        App.VM.GenerateTreeView(folder, rootfile);
+                                       await  App.VM.GenerateTreeView(folder, rootfile);
 
                                         App.VM.Default.LastActiveProject = proj.Name;
+
+                                        App.VM.OpenFile(App.VM.CurrentRootItem);
                                     }
                                 }
                             }
@@ -1237,23 +1214,27 @@ namespace ConTeXt_IDE
         private async void Btncompile_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
+            Codewriter.Save();
             CompileTex();
         }
 
         private async void Btncompileroot_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
+            Codewriter.Save();
             CompileTex(true);
         }
 
         private async void Btnsave_Click(object sender, RoutedEventArgs e)
         {
             await VM.Save();
+            Codewriter.Save();
         }
 
         private async void btnsaveall_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
+            Codewriter.Save();
         }
 
         private void Modes_Click(object sender, RoutedEventArgs e)
@@ -1314,29 +1295,25 @@ namespace ConTeXt_IDE
         {
             switch ((sender as FrameworkElement).Tag.ToString())
             {
-                case "FontSizeUp":
-                    if (VM.Default.FontSize < 100)
-                        VM.Default.FontSize++;
-                    break;
-                case "FontSizeDown":
-                    if (VM.Default.FontSize > 6)
-                        VM.Default.FontSize--;
-                    break;
+                case "FontSizeUp": VM.Default.FontSize++; break;
+                case "FontSizeDown": VM.Default.FontSize--; break;
             }
+        }
+        private void Btn_Exit_Click(object sender, RoutedEventArgs e)
+        {
+            App.Current.Exit();
+        }
+        private void Btn_Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            //App.Current.mini();
         }
 
         private void Btn_FontSize_Holding(object sender, HoldingRoutedEventArgs e)
         {
             switch ((sender as FrameworkElement).Tag.ToString())
             {
-                case "FontSizeUp":
-                    if (VM.Default.FontSize < 100)
-                        VM.Default.FontSize++;
-                    break;
-                case "FontSizeDown":
-                    if (VM.Default.FontSize > 6)
-                        VM.Default.FontSize--;
-                    break;
+                case "FontSizeUp": VM.Default.FontSize++; break;
+                case "FontSizeDown": VM.Default.FontSize--; break;
             }
             e.Handled = true;
         }
@@ -1345,10 +1322,14 @@ namespace ConTeXt_IDE
         {
             var point = e.GetCurrentPoint(sender as UIElement);
             int wheeldelta = point.Properties.MouseWheelDelta;
-            if (VM.Default.FontSize < 100 && wheeldelta > 0)
+            if (wheeldelta > 0)
+            {
                 VM.Default.FontSize++;
-            if (VM.Default.FontSize > 6 && wheeldelta < 0)
+            }
+            else
+            {
                 VM.Default.FontSize--;
+            }
         }
 
         #endregion
@@ -1578,7 +1559,7 @@ namespace ConTeXt_IDE
         }
 
         #endregion
-        private IEnumerable<Command> contextcommands;
+        private List<Command> contextcommands;
         private async void InitializeCommandReference()
         {
             try
@@ -1587,9 +1568,25 @@ namespace ConTeXt_IDE
                 string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
                 using (StringReader reader = new StringReader(xml))
                 {
-                    var contextinterface = (Interface)serializer.Deserialize(reader);
+                    Interface contextinterface = (Interface)serializer.Deserialize(reader);
+                    List<Command> commands = contextinterface.InterfaceList.SelectMany(x => x.Command).ToList();
+                    List<Command> commandstoiterate = new(commands);
 
-                    contextcommands = contextinterface.InterfaceList.SelectMany(x => x.Command);
+                    foreach (var instancecommand in commandstoiterate.Where(x => x.Variant?.ToLower() == "instance"))
+                    {
+                        if (instancecommand?.Instances?.Constant != null)
+                        {
+                            foreach (var command in instancecommand?.Instances?.Constant)
+                            {
+                                Command newcommand = (Command)instancecommand.Clone();
+                                newcommand.Name = command?.Value;
+                                commands.Insert(commands.IndexOf(instancecommand),newcommand);
+                            }
+                            commands.Remove(instancecommand);
+                        }
+                    }
+
+                    contextcommands = commands;
 
                     foreach (Command command in contextcommands)
                     {
@@ -1629,6 +1626,7 @@ namespace ConTeXt_IDE
                     cvs.Source = filtered;
 
                     DocumentationView.SelectedIndex = -1;
+                    PopulateIntelliSense("ConTeXt");
                 }
             }
             catch (Exception ex)
@@ -1636,6 +1634,20 @@ namespace ConTeXt_IDE
                 VM.InfoMessage(true, "Error", ex.Message, InfoBarSeverity.Error);
             }
 
+        }
+
+        private void PopulateIntelliSense(string name)
+        {
+            var lang = FileLanguages.LanguageList.First(x => x.Name == name);
+            if (lang.Commands == null)
+                lang.Commands = new();
+            foreach (Command command in contextcommands)
+            {
+                lang.Commands.Add(new(@"\" + (command.Type == "environment" ? "start" : "") + command.Name) { Snippet = (command.Type == "environment" ? "[]\n\t\n\\stop" +command.Name : ""), Description = "Type: " + command.Type + "\nVariant: " + command.Variant + "\nCategory: " + command.Category });
+            }
+            if (Codewriter.Language.Name == name)
+                Codewriter.Language.Commands = lang.Commands;
+            Codewriter.UpdateSuggestions();            
         }
 
         private void GroupList_ItemClick(object sender, ItemClickEventArgs e)
@@ -1700,5 +1712,7 @@ namespace ConTeXt_IDE
                    orderby item.Key
                    select item;
         }
+
+ 
     }
 }

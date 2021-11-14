@@ -18,7 +18,7 @@ namespace ConTeXt_IDE
 
     {
         public static ViewModel VM { get; set; }
-        private MainWindow m_window;
+        public static MainWindow m_window;
 
         private const string MutexName = "##||ConTeXt_IDE||##";
         private Mutex _mutex;

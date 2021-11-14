@@ -1,4 +1,5 @@
 ﻿using ConTeXt_IDE.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
@@ -60,7 +61,7 @@ namespace ConTeXt_IDE.Models
 	}
 
 	[XmlRoot(ElementName = "command")]
-	public class Command : Bindable
+	public class Command : Bindable, ICloneable
 	{
 		[XmlElement(ElementName = "arguments")]
 		public Arguments Arguments { get; set; }
@@ -100,6 +101,11 @@ namespace ConTeXt_IDE.Models
 
 		[XmlIgnore]
 		public int SelectedIndex { get => Get(-1); set => Set(value); }
+
+		public object Clone()
+		{
+			return this.MemberwiseClone();
+		}
 	}
 
 	[XmlRoot(ElementName = "variable")]

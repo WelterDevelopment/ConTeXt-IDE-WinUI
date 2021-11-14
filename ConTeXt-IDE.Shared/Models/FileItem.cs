@@ -1,14 +1,17 @@
 ﻿
+using CodeEditorControl_WinUI;
 using ConTeXt_IDE.Helpers;
+using ConTeXt_IDE.Shared.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using Windows.Storage;
 
 namespace ConTeXt_IDE.Models
 {
-    public class FileItem : Bindable
+    public class FileItem : Helpers.Bindable
     {
         public FileItem(IStorageItem file, bool isRoot = false)
         {
@@ -55,7 +58,9 @@ namespace ConTeXt_IDE.Models
 
         public string FileFolder { get => Get(""); set => Set(value); }
 
-        public string FileLanguage { get => Get(""); set => Set(value); }
+        public string FileLanguage { get => Get("ConTeXt"); set { Set(value); Language = FileLanguages.LanguageList.First(x => x.Name == value); } }
+
+        public Language Language { get => Get<Language>(); set => Set(value); }
 
         public string FileName { get => Get(""); set => Set(value); }
 
@@ -82,12 +87,12 @@ namespace ConTeXt_IDE.Models
         {
             switch (ext)
             {
-                case ".tex": return "context";
-                case ".mkiv": return "context";
-                case ".mkii": return "context";
-                case ".mkxl": return "context";
-                case ".mkvi": return "context";
-                case ".lua": return "lua";
+                case ".tex": return "ConTeXt";
+                case ".mkiv": return "ConTeXt";
+                case ".mkii": return "ConTeXt";
+                case ".mkxl": return "ConTeXt";
+                case ".mkvi": return "ConTeXt";
+                case ".lua": return "Lua";
                 case ".json": return "javascript";
                 case ".js": return "javascript";
                 case ".r": return "r";
@@ -97,7 +102,7 @@ namespace ConTeXt_IDE.Models
                 case ".xml": return "xml";
                 case ".yaml": return "yaml";
                 case ".ts": return "typescript";
-                case ".log": return "log";
+                case ".log": return "Log";
                 case ".png": return "bitmap";
                 case ".bmp": return "bitmap";
                 case ".svg": return "vector";

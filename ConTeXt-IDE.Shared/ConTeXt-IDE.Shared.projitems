@@ -14,7 +14,6 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Bindable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Converters.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\EditorActions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RichTextBlockHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThemeHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextInterface.cs" />
@@ -24,6 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOptionValue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOption.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Languages.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

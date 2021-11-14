@@ -272,7 +272,7 @@ namespace ConTeXt_IDE.Helpers
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             var item = (FileItem)value;
-            return item.Level == 0 && item.FileLanguage == "context" ? Visibility.Visible : Visibility.Collapsed;
+            return item.Level == 0 && item.FileLanguage == "ConTeXt" ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -285,7 +285,7 @@ namespace ConTeXt_IDE.Helpers
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return (string)value == (string)parameter ? Visibility.Visible : Visibility.Collapsed;
+            return ((string)value).ToLower() == ((string)parameter).ToLower() ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

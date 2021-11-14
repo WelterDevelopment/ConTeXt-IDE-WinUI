@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows10.0.19041</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>ConTeXt_IDE</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;arm64</Platforms>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.WinUI" Version="7.0.3" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.0.3" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.0.3" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Core" Version="7.0.3" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Input" Version="7.0.3" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Layout" Version="7.0.3" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" Version="0.8.2.23" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.5" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.5" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.5" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CodeEditorControl-WinUI\CodeEditorControl-WinUI.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\..\..\..\..\ConTeXt-IDE-WinUI\ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems" Label="Shared" />
+</Project>

@@ -1,9 +1,9 @@
-﻿using ConTeXt_IDE.Helpers;
+﻿using CodeEditorControl_WinUI;
+using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
-using Monaco.Editor;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,7 +19,7 @@ using Windows.UI;
 
 namespace ConTeXt_IDE.ViewModels
 {
-    public class ViewModel : Bindable
+    public class ViewModel : Helpers.Bindable
     {
         public ObservableCollection<FileActivatedEventArgs> FileActivatedEvents = new ObservableCollection<FileActivatedEventArgs>() { };
         public ObservableCollection<FileItem> FileItemsTree = new ObservableCollection<FileItem>();
@@ -49,46 +49,7 @@ namespace ConTeXt_IDE.ViewModels
 
                 //var ce = new CodeEditor();
                 //EditorOptions = ce.Options;
-                EditorOptions.AcceptSuggestionOnCommitCharacter = true;
-                EditorOptions.AutoIndent = AutoIndent.Keep;
-                EditorOptions.CodeLens = true;
-                EditorOptions.Contextmenu = true;
-                EditorOptions.CopyWithSyntaxHighlighting = true;
-                EditorOptions.CursorBlinking = CursorBlinking.Solid;
-                EditorOptions.DetectIndentation = false;
-                EditorOptions.DragAndDrop = true;
-                EditorOptions.Folding = Default.CodeFolding;
-                EditorOptions.FoldingStrategy = FoldingStrategy.Auto;
-                EditorOptions.FormatOnPaste = true;
-                EditorOptions.Hover = new EditorHoverOptions() { Enabled = Default.Hover, Delay = 100, Sticky = true };
-                EditorOptions.InsertSpaces = false;
-                EditorOptions.LineNumbers = Enum.Parse<LineNumbersType>(Default.ShowLineNumbers);
-                EditorOptions.Links = true;
-                EditorOptions.Minimap = new EditorMinimapOptions() { Enabled = Default.MiniMap, ShowSlider = Show.Always, RenderCharacters = true };
-                EditorOptions.MouseWheelZoom = false;
-                EditorOptions.OccurrencesHighlight = false;
-                EditorOptions.ParameterHints = new IEditorParameterHintOptions() { Cycle = true, Enabled = true };
-                EditorOptions.QuickSuggestions = true;
-                EditorOptions.RenderControlCharacters = true;
-                EditorOptions.RoundedSelection = true;
-                EditorOptions.ScrollBeyondLastLine = false;
-                EditorOptions.SnippetSuggestions = SnippetSuggestions.Inline;
-                EditorOptions.SuggestOnTriggerCharacters = true;
-                EditorOptions.SuggestSelection = SuggestSelection.RecentlyUsed;
-                EditorOptions.FontSize = Default.FontSize ;
-               
-                
-                // EditorOptions.Suggest.ShowProperties = true;
-                EditorOptions.DisableLayerHinting = true;
-                EditorOptions.Lightbulb = new EditorLightbulbOptions() { Enabled = true };
-                EditorOptions.PeekWidgetDefaultFocus = true;
-                EditorOptions.TabSize = 2;
-                EditorOptions.UseTabStops = true;
-                EditorOptions.WordBasedSuggestions = false;
-                EditorOptions.WordWrap = Enum.Parse<WordWrap>(Default.Wrap);
-                EditorOptions.WrappingIndent = WrappingIndent.Indent;
-
-               // EditorOptions.PropertyChanged += EditorOptions_PropertyChanged;
+            
 
             }
             catch (TypeInitializationException ex)
@@ -155,14 +116,16 @@ namespace ConTeXt_IDE.ViewModels
 
         public ConTeXtErrorMessage ConTeXtErrorMessage { get => Get(new ConTeXtErrorMessage()); set => Set(value); }
 
-        public FileItem CurrentFileItem { get => Get(new FileItem(null)); set { Set(value); App.MainPage?.Edit?.RevealLineInCenterAsync((uint)value?.CurrentLine); } }
+        public FileItem CurrentFileItem { get => Get(new FileItem(null)); set { Set(value);  } }
         public FileItem CurrentRootItem { get => Get<FileItem>(null); set => Set(value); }
 
         public Project CurrentProject { get => Get(new Project()); set { Set(value); IsProjectLoaded = value?.Folder != null; if (value?.Folder != null) Log("Project " + value.Name + " loaded."); } }
 
         public Settings Default { get; } = Settings.Default;
 
-        public StandaloneEditorConstructionOptions EditorOptions { get => Get(new StandaloneEditorConstructionOptions()); set => Set(value); }
+       
+
+
 
         public ObservableCollection<FileItem> FileItems { get => Get(new ObservableCollection<FileItem>()); set => Set(value); }
 
@@ -283,14 +246,14 @@ namespace ConTeXt_IDE.ViewModels
 
         
 
-        public void GenerateTreeView(StorageFolder folder, string rootfile = null)
+        public async Task GenerateTreeView(StorageFolder folder, string rootfile = null)
         {
             rootFile = rootfile;
 
             if (folder != null)
             {
                 FileItemsTree.Add(new FileItem(folder) { IsExpanded = true, Type = FileItem.ExplorerItemType.ProjectRootFolder });
-                DirWalk(folder);
+                await DirWalk(folder);
             }
             else
             {
@@ -298,7 +261,7 @@ namespace ConTeXt_IDE.ViewModels
             }
         }
         private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf" };
-        private async void DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
+        private async Task DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
         {
             try
             {
@@ -313,7 +276,7 @@ namespace ConTeXt_IDE.ViewModels
                             currFolder.Children.Add(SubFolder);
                         else
                             FileItemsTree[0].Children.Add(SubFolder);
-                        DirWalk(d, SubFolder, level + 1);
+                        await DirWalk(d, SubFolder, level + 1);
                     }
                 }
                 foreach (StorageFile f in files)
@@ -328,7 +291,8 @@ namespace ConTeXt_IDE.ViewModels
                         else
                         {
                             fi.IsRoot = fi.FileName == rootFile;
-                            if (fi.IsRoot) CurrentRootItem = fi;
+                            if (fi.IsRoot) 
+                                CurrentRootItem = fi;
                             FileItemsTree[0].Children.Add(fi);
                         }
                     }
@@ -394,14 +358,15 @@ namespace ConTeXt_IDE.ViewModels
                     else
                     {
                         FileItems.Add(File);
+                        //await Task.Delay(500); // ObservableCollection.Add() is slow, so setting CurrentFileItem = File will result in an exception because FileItems is still empty. A cleaner approach is needed. 
                         await Log("File " + File.FileName + " opened");
                     }
 
-                    await Task.Delay(500);
-                    CurrentFileItem = File;
+                    if (FileItems.Contains(File))
+                        CurrentFileItem = File;
 
-                    if (!ProjectLoad)
-                        CurrentProject.LastOpenedFiles = FileItems.Select(x => x.FileName).ToList();
+                    //if (!ProjectLoad)
+                    //    CurrentProject.LastOpenedFiles = FileItems.Select(x => x.FileName).ToList();
                 }
                 else
                 {
@@ -429,7 +394,7 @@ namespace ConTeXt_IDE.ViewModels
 
                     project.Folder = f;
                     FileItemsTree = new ObservableCollection<FileItem>();
-                    GenerateTreeView(f, proj.RootFile);
+                   await  GenerateTreeView(f, proj.RootFile);
 
                     project.Directory = FileItemsTree;
 
@@ -440,9 +405,9 @@ namespace ConTeXt_IDE.ViewModels
 
                 if (!string.IsNullOrEmpty(CurrentProject?.RootFile))
                 {
-                    await Task.Delay(1000);
+                    //await Task.Delay(1000);
                     if (!Default.StartWithLastOpenFiles && CurrentRootItem != null)
-                        OpenFile(CurrentRootItem);
+                        OpenFile(CurrentRootItem, true);
                     else if (Default.StartWithLastOpenFiles)
                     {
                         foreach (var item in CurrentProject.LastOpenedFiles)
@@ -451,7 +416,7 @@ namespace ConTeXt_IDE.ViewModels
                             if (fileItem != null) OpenFile(fileItem, true);
                         }
                     }
-                    await Task.Delay(500);
+                   // await Task.Delay(500);
                 }
             }
             catch (Exception ex)

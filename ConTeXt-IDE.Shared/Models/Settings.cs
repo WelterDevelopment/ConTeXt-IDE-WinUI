@@ -1,7 +1,6 @@
 ﻿
 using ConTeXt_IDE.Helpers;
 using Microsoft.UI.Xaml;
-using Monaco.Editor;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -102,14 +101,11 @@ namespace ConTeXt_IDE.Models
         public bool AutoOpenLOG { get => Get(false); set => Set(value); }
         public bool AutoOpenLOGOnlyOnError { get => Get(true); set => Set(value); }
         public bool AutoOpenPDF { get => Get(true); set => Set(value); }
-        public bool CodeFolding { get => Get(true); set { Set(value); if (App.VM != null) App.VM.EditorOptions.Folding = value; } }
         public bool DistributionInstalled { get => Get(false); set => Set(value); }
         public bool EvergreenInstalled { get => Get(false); set => Set(value); }
         public bool FirstStart { get => Get(true); set => Set(value); }
         public bool HelpPDFInInternalViewer { get => Get(false); set => Set(value); }
-        public bool Hover { get => Get(true); set { Set(value); if (App.VM != null) App.VM.EditorOptions.Hover = new EditorHoverOptions() { Enabled = value, Delay = 100, Sticky = true }; } }
         public bool InternalViewer { get => Get(true); set => Set(value); }
-        public bool MiniMap { get => Get(true); set { Set(value); if (App.VM != null) App.VM.EditorOptions.Minimap = new EditorMinimapOptions() { Enabled = value, ShowSlider =  Show.Always, RenderCharacters = true }; ; } }
         public bool MultiInstance { get => Get(false); set => Set(value); }
         public bool ShowLog { get => Get(false); set => Set(value); }
         public bool ShowOutline { get => Get(true); set => Set(value); }
@@ -123,9 +119,13 @@ namespace ConTeXt_IDE.Models
         public bool SuggestFontSwitches { get => Get(true); set => Set(value); }
         public bool SuggestPrimitives { get => Get(true); set => Set(value); }
         public bool SuggestStartStop { get => Get(true); set => Set(value); }
+        public bool TextWrapping { get => Get(false); set => Set(value); }
+        public bool LineNumbers { get => Get(true); set => Set(value); }
+        public bool LineMarkers { get => Get(true); set => Set(value); }
+        public bool CodeFolding { get => Get(false); set => Set(value); }
+        public bool ControlCharacters { get => Get(false); set => Set(value); }
         public bool UseModes { get => Get(false); set => Set(value); }
         public bool UseParameters { get => Get(true); set => Set(value); }
-        public int FontSize { get => Get(14); set { Set(value); if (App.VM != null) App.VM.EditorOptions.FontSize = value; } }
         public string AccentColor { get => Get("Default"); set { Set(value); } }
         public string AdditionalParameters { get => Get("--autogenerate --noconsole"); set => Set(value); }
         public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
@@ -134,12 +134,12 @@ namespace ConTeXt_IDE.Models
         public string Modes { get => Get(""); set => Set(value); }
         public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
         public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
-        public string ShowLineNumbers { get => Get("On"); set { Set(value); if (App.VM != null) App.VM.EditorOptions.LineNumbers = Enum.Parse<LineNumbersType>(value); } }
         public string TexFileFolder { get => Get(""); set => Set(value); }
         public string TexFileName { get => Get(""); set => Set(value); }
         public string TexFilePath { get => Get(""); set => Set(value); }
+        public int FontSize { get => Get(18); set => Set(value); }
         public string Theme { get => Get("Default"); set { Set(value); if (App.VM != null) ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default); } }
-        public string Wrap { get => Get("On"); set { Set(value); if (App.VM != null) App.VM.EditorOptions.WordWrap = Enum.Parse<WordWrap>(value); } }
+
 
         
         public List<CommandGroup> CommandGroups { get => Get(new List<CommandGroup>()); set => Set(value); }
@@ -150,14 +150,9 @@ namespace ConTeXt_IDE.Models
        
         public ObservableCollection<HelpItem> HelpItemList  {  get => Get(new ObservableCollection<HelpItem>()); set => Set(value); }
 
-        [JsonIgnore]
-        public string[] ShowLineNumberOptions => Enum.GetNames<LineNumbersType>();
         
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string[] ThemeOption => Enum.GetNames<ElementTheme>();
-
-        [JsonIgnore]
-        public string[] WordWrapOptions => Enum.GetNames<WordWrap>();
     }
 
     public static class Serialize
