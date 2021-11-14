@@ -1643,7 +1643,7 @@ namespace ConTeXt_IDE
                 lang.Commands = new();
             foreach (Command command in contextcommands)
             {
-                lang.Commands.Add(new(@"\" + (command.Type == "environment" ? "start" : "") + command.Name) { Snippet = (command.Type == "environment" ? "[]\n\t\n\\stop" +command.Name : ""), Description = "Type: " + command.Type + "\nVariant: " + command.Variant + "\nCategory: " + command.Category });
+                lang.Commands.Add(new(@"\" + (command.Type == "environment" ? "start" : "") + command.Name) { Snippet = (command.Type == "environment" ? "[]\n\t\n\\stop" +command.Name : ""), Description = "Category: " + command.Category });
             }
             if (Codewriter.Language.Name == name)
                 Codewriter.Language.Commands = lang.Commands;

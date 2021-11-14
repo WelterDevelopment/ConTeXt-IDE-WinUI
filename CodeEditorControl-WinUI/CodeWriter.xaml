@@ -117,9 +117,8 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Grid Grid.Column="1"  DataContext="{x:Bind SelectedSuggestion}">
+                <Grid Grid.Column="1"  DataContext="{x:Bind SelectedSuggestion}" BorderThickness="1" BorderBrush="{ThemeResource ListBoxBorderThemeBrush}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
@@ -128,8 +127,7 @@
                             <SolidColorBrush Color="{Binding Token, Converter={StaticResource TokenToColor}}"></SolidColorBrush>
                         </TextBlock.Foreground>
                     </TextBlock>
-                    <TextBlock Text="{Binding Snippet}" Grid.Row="1"></TextBlock>
-                    <ScrollViewer VerticalContentAlignment="Top" Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+                    <ScrollViewer BorderThickness="0,1,0,0" BorderBrush="{ThemeResource ListBoxBorderThemeBrush}" VerticalContentAlignment="Top" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
                         <TextBlock Text="{Binding Description}"></TextBlock>
                     </ScrollViewer>
                 </Grid>
@@ -190,8 +188,7 @@
         <ScrollBar  x:Name="VerticalScroll" Grid.Column="1"  PointerEntered="VerticalScroll_PointerEntered"
                                     Value="0" SmallChange="10" LargeChange="10" ValueChanged="VerticalScroll_ValueChanged" IndicatorMode="MouseIndicator"
                                     Maximum="500"  Orientation="Vertical"  Scroll="VerticalScroll_Scroll"
-                                    ViewportSize="100" 
-                                    Visibility="Visible"  HorizontalAlignment="Right"/>
+                                    ViewportSize="100" Visibility="Visible" HorizontalAlignment="Right"/>
 
         <xaml:CanvasControl Grid.Column="1" x:Name="CanvasScrollbarMarkers" Draw="CanvasScrollbarMarkers_Draw" IsHitTestVisible="False" Margin="{Binding Source={ThemeResource ScrollBarSize}, Converter={StaticResource WidthToThickness} }" />
 

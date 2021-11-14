@@ -1833,6 +1833,7 @@ namespace CodeEditorControl_WinUI
 				Language lang = Language;
 				await Task.Run(() =>
 				{
+					int tabcount = Lines[place.iLine].Indents;
 					foreach (string line in text.Split('\n', StringSplitOptions.None))
 					{
 						if (i == 0)
@@ -1841,7 +1842,7 @@ namespace CodeEditorControl_WinUI
 						}
 						else
 						{
-							Lines.Insert(place.iLine + i, new Line(lang) { LineNumber = place.iLine + 1 + i, LineText = line, IsUnsaved = true });
+							Lines.Insert(place.iLine + i, new Line(lang) { LineNumber = place.iLine + 1 + i, LineText = string.Concat(Enumerable.Repeat("\t", tabcount)) + line, IsUnsaved = true });
 						}
 						i++;
 					}

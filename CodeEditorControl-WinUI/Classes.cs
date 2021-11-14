@@ -143,7 +143,8 @@ namespace CodeEditorControl_WinUI
             FoldingPairs = new()
             {
                 new SyntaxFolding() { RegexStart = /*language=regex*/ @"\\(start).+?\b", RegexEnd = /*language=regex*/ @"\\(stop).+?\b" },
-            }
+            },
+            CommandTriggerCharacters = new[] { '\\' },
         };
     }
 
