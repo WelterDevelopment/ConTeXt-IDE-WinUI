@@ -1,5 +1,7 @@
 # ConTeXt IDE
-This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C# 9 / .NET 5 with the Project Reunion 0.5 framework using only controls from the UI library WinUI 3. In the future, it *might* be possible to turn this into a .NET MAUI app that runs cross-platform on Windows, MacOS and (highly unlikely) also on Linux.
+This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C# 9 / .NET 5 with the Windows App SDK (Project Reunion) 0.8 framework using only controls from the UI library WinUI 3. In the future, it *might* be possible to turn this into a .NET MAUI app that runs cross-platform on Windows, MacOS and (highly unlikely) also on Linux.
+
+![Screenshot 2021-11-14 191518](https://user-images.githubusercontent.com/13318246/141693303-d20e71cf-e98b-4f00-a83c-f454da1ea86c.png)
 
 ## Usage
 
@@ -7,12 +9,12 @@ This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C
 The app can be installed via the Microsoft store on x64 devices with Windows 10 version 17763 and up: <a href='https://www.microsoft.com/store/apps/9NN9Q389TTJR?cid=storebadge&ocid=badge'><img src='https://developer.microsoft.com/store/badges/images/English_get_L.png' alt='English badge' height=20 /></a>
 
 ### Known bugs and missing features
-Bugs and Limitations that are directly caused by the current implementation of Project Reunion 0.5:
+Bugs and Limitations that are directly caused by the current implementation of Project Reunion 0.8:
 - No app lifecycle methods (open files from the Windows Explorer, check for unsaved files on app closing, ...)
 - No windowing (The pdf output cannot be undocked from the app)
 - Graphic glitches with the new WebView2 control (weird and random thin white borders at the top and left edges; suddenly occuring thick margins at the bottom and right edges)
-- The ribbon is not part of the window's title bar. The titlebar's color cannot be changed. The Minimize/Maximize/Close buttons look different from the buttons the system is using.
-- The context menu of the Application Log (RichtTextBlock) shows white text when the dark theme is applied in the system settings and the white theme is applied in the app.
+- The ribbon is not part of the window's title bar. The Minimize/Maximize/Close buttons look different from the buttons the system is using.
+- The context menu of the Application Log (RichTextBlock) shows white text when the dark theme is applied in the system settings and the white theme is applied in the app.
 
 All these Issues will get fixed in ~Q4 2021
 
@@ -43,28 +45,6 @@ Pull requests are always appreciated. The IDE is pretty basic right now. More fu
    - The UI should deeply integrate to the design of Windows 10 with its theming and accent colors.
    - The ribbon (basically a TabView) should be as self-explinatory as possible. It should not look overpopulated. Everything needs to be indicated by suitable icons.
 
-### Project structure
-```
-ConTeXt-IDE
-│   ConTeXt-IDE.sln  
-│
-└───ConTeXt-IDE.Desktop
-│   │   ...
-│   │
-│   └───ConTeXt-IDE.Desktop
-│   |      ...
-│   └───ConTeXt-IDE.Desktop_Package
-│          ...
-│   
-└───ConTeXt-IDE.Shared
-|      ...
-│   
-└───MonacoEditorComponent
-|      ...
-│   
-```
-Everything UI-related is in the "ConTeXt-IDE.Shared" folder. This might make the porting to .NET MAUI quite easy. 
-
 ### ToDo
 If you want to contribute changes, here are some points that come to mind:
 
@@ -75,7 +55,6 @@ If you want to contribute changes, here are some points that come to mind:
 - Graphical implementation of every compiler parameter that is possible (for a parameter list see https://wiki.contextgarden.net/Context)
 
 #### Code cleanup
-- The PDF.JS viewer is currently located in ConTeXt-IDE.Shared (folders "Build" and "web"). Thats quite a mess and the viewer should be wraped in a WebView2-based WinUI3-control like MonacoEditorComponent
-- MonacoEditorComponent is copied from https://github.com/hawkerm/monaco-editor-uwp/pull/32 and the containing monaco-editor folder is copied from https://www.npmjs.com/package/monaco-editor/v/0.20.0. I tweaked the monaco-editor 20.0 to be able to get syntax highlighting for context (see ConTeXt-IDE-WinUI\MonacoEditorComponent\monaco-editor\min\vs\basic-languages\context\context.js). Registering the context language should be done outside of MonacoEditorComponent so that it is more easy to update monaco-editor.
+- The PDF.JS viewer is currently located in ConTeXt-IDE.Shared (folders "Build" and "web"). Thats quite a mess and the viewer should be wraped in a WebView2-based WinUI3-control 
 - The whole code looks quite messy (CodeMaid is not ready for Project Reunion and I'm too lazy to organize my classes...).
 - Lots of zombie code and fiddly workarounds.
