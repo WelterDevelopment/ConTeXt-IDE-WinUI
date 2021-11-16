@@ -41,7 +41,7 @@ namespace ConTeXt_IDE
     {
         private ViewModel VM { get; } = App.VM;
 
-        public Color SystemAccentColor = (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+        
 
         public MainPage()
         {
@@ -141,10 +141,11 @@ namespace ConTeXt_IDE
             {
                 VM.Default.DistributionInstalled = true;
             }
-
+            InitializeCommandReference();
             await VM.Startup();
             FirstStart();
             OnProtocolActivated(Windows.ApplicationModel.AppInstance.GetActivatedEventArgs());
+           
         }
 
         public void OnProtocolActivated(IActivatedEventArgs args)
@@ -272,6 +273,13 @@ namespace ConTeXt_IDE
         {
             NewFolder((sender as FrameworkElement).DataContext as FileItem);
         }
+
+        private void ColorsFlyout_Opening(object sender, object e)
+        {
+            VM.SystemAccentColor = (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+        }
+
+
         private async void NewFolder(FileItem fileItem)
         {
             try
@@ -521,7 +529,7 @@ namespace ConTeXt_IDE
             }
         }
 
-        string[] LanguagesToOpen = { ".tex", ".lua", ".md", ".html", ".xml", ".log", ".js", ".json", ".xml", ".mkiv", ".mkii", ".mkxl", ".mkvi" };
+        string[] LanguagesToOpen = { ".tex", "csv", ".lua", ".txt", ".md", ".html", ".htm", ".xml", ".log", ".js", ".json", ".xml", ".mkiv", ".mkii", ".mkxl", ".mkvi" };
         string[] BitmapsToOpen = { ".png", ".bmp", ".jpg", ".gif", ".tif", ".ico", ".svg" };
 
         private async void FileItemTapped(object sender, TappedRoutedEventArgs e)
@@ -1396,8 +1404,17 @@ namespace ConTeXt_IDE
 
         private void ColorReset_Click(object sender, RoutedEventArgs e)
         {
-            VM.AccentColor = VM.AccentColors.Find(x => x.Color == (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent));
-            SetColor(VM.AccentColor);
+            if (VM.AccentColors.Any(x => x.Color == VM.SystemAccentColor))
+            {
+                VM.AccentColor = VM.AccentColors.First(x => x.Color == VM.SystemAccentColor);
+                SetColor(VM.AccentColor);
+            }
+            else
+            {
+                VM.AccentColor =null;
+                SetColor(new("Default", VM.SystemAccentColor));
+            }
+            
             VM.Default.AccentColor = "Default";
         }
 

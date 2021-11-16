@@ -34,6 +34,9 @@ namespace ConTeXt_IDE.Shared.Models
                 },
                 CommandTriggerCharacters = new[] { '\\' },
                 OptionsTriggerCharacters = new[] { '[' },
+                NestedLanguages = new() {
+                    new() { InnerLanguage = "Lua", RegexStart = /*language=regex*/ @"\\startlua(code)?\b", RegexEnd = /*language=regex*/ @"\\stoplua(code)?\b" }
+                },
             },
 
             new("Lua")
@@ -80,7 +83,64 @@ namespace ConTeXt_IDE.Shared.Models
                 {
                     
                 },
-            }
+            },
+            new("Markdown")
+            {
+                FoldingPairs = new()
+                {
+
+                },
+                RegexTokens = new()
+                {
+                    { Token.Environment, /*language=regex*/ @"^\s*?#+? .*" },
+                    { Token.Keyword, /*language=regex*/ @"^[\w ]*?(?=>)" },
+                    { Token.Command, /*language=regex*/ @"</?.+?/?>" },
+                    { Token.Function, /*language=regex*/ @"\[.*?\]" },
+                    { Token.Comment, /*language=regex*/ @"^\s*?> .*" },
+                    { Token.Array, /*language=regex*/ @"^\s*?- .*" },
+                    { Token.Symbol, /*language=regex*/ @"[:=<>,.!?&%+\|\-*\/\^~;´`]" },
+                    { Token.Bracket, /*language=regex*/ @"[\[\]\(\)\{\}]" },
+                    { Token.Number, /*language=regex*/ @"0[xX][0-9a-fA-F]*|-?\d*\.\d+([eE][\-+]?\d+)?|-?\d+?" },
+                },
+                WordTokens = new()
+                {
+
+                },
+            },
+            new("Xml")
+            {
+                FoldingPairs = new()
+                {
+
+                },
+                RegexTokens = new()
+                {
+                    { Token.Command, /*language=regex*/ @"</?.+?/?>" },
+                    { Token.String, /*language=regex*/ "\\\".*?\\\"|'.*?'" },
+                    { Token.Symbol, /*language=regex*/ @"[:=<>,.!?&%+\|\-*\/\^~;´`]" },
+                    { Token.Bracket, /*language=regex*/ @"[\[\]\(\)\{\}]" },
+                    { Token.Number, /*language=regex*/ @"0[xX][0-9a-fA-F]*|-?\d*\.\d+([eE][\-+]?\d+)?|-?\d+?" },
+                },
+                WordTokens = new()
+                {
+
+                },
+            },
+            new("Text")
+            {
+                FoldingPairs = new()
+                {
+
+                },
+                RegexTokens = new()
+                {
+
+                },
+                WordTokens = new()
+                {
+
+                },
+            },
         };
     }
 }

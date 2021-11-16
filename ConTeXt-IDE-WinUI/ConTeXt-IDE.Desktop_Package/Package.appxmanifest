@@ -7,13 +7,13 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="3441d2e9-a312-4c0e-914c-70077821985d"
-    Publisher="CN=Welter"
-    Version="1.0.0.0" />
+    Name="7614MasterDevelopment.ConTeXtIDE"
+    Publisher="CN=F3B9189F-4D2B-4342-889D-A9D7D5A98D3A"
+    Version="1.6.6.0" />
 
   <Properties>
     <DisplayName>ConTeXt IDE</DisplayName>
-    <PublisherDisplayName>Welter</PublisherDisplayName>
+    <PublisherDisplayName>WDev</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
@@ -32,11 +32,16 @@
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
         DisplayName="ConTeXt IDE"
-        Description="Reunion08Stable (Package)"
+        Description="Simple and self-contained IDE for the ConTeXt typesetting system."
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"  Square71x71Logo="Images\SmallTile.png" Square310x310Logo="Images\LargeTile.png"/>
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"  Square71x71Logo="Images\SmallTile.png" Square310x310Logo="Images\LargeTile.png" ShortName="ConTeXt IDE">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square310x310Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile >
         <uap:SplashScreen Image="Images\SplashScreen.png" />
       </uap:VisualElements>
     </Application>

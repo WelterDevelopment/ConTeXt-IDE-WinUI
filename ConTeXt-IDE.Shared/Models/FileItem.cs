@@ -58,7 +58,7 @@ namespace ConTeXt_IDE.Models
 
         public string FileFolder { get => Get(""); set => Set(value); }
 
-        public string FileLanguage { get => Get("ConTeXt"); set { Set(value); Language = FileLanguages.LanguageList.First(x => x.Name == value); } }
+        public string FileLanguage { get => Get("Text"); set { Set(value); Language = FileLanguages.LanguageList.FirstOrDefault(x => x.Name == value); } }
 
         public Language Language { get => Get<Language>(); set => Set(value); }
 
@@ -93,21 +93,24 @@ namespace ConTeXt_IDE.Models
                 case ".mkxl": return "ConTeXt";
                 case ".mkvi": return "ConTeXt";
                 case ".lua": return "Lua";
-                case ".json": return "javascript";
-                case ".js": return "javascript";
-                case ".r": return "r";
-                case ".py": return "python";
-                case ".md": return "markdown";
-                case ".html": return "html";
-                case ".xml": return "xml";
-                case ".yaml": return "yaml";
-                case ".ts": return "typescript";
+                case ".json": return "Text";
+                case ".js": return "Text";
+                case ".r": return "Text";
+                case ".py": return "Text";
+                case ".md": return "Markdown";
+                case ".htm": return "Xml";
+                case ".html": return "Xml";
+                case ".xml": return "Xml";
+                case ".yaml": return "Xml";
+                case ".ts": return "Text";
                 case ".log": return "Log";
                 case ".png": return "bitmap";
                 case ".bmp": return "bitmap";
                 case ".svg": return "vector";
+                case ".txt": return "vector";
+                case ".csv": return "Text";
                 default:
-                    return "misc";
+                    return "Text";
             }
         }
     }

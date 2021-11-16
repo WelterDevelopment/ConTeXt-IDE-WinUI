@@ -89,8 +89,6 @@ namespace ConTeXt_IDE
                 palette.Accent = setting.AccentColorLow;
                 App.Current.Resources.MergedDictionaries.Add(palette);
 
-                //StorageFolder localFolder = ApplicationData.Current.LocalFolder;
-                // RequestedTheme = VM.Default.Theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
 
             }
             catch (Exception ex)

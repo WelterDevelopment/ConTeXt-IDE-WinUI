@@ -34,7 +34,7 @@
 			<models:MyTreeViewItem Tapped="FileItemTapped" Margin="0,0,0,0" ToolTipService.ToolTip="{Binding FileName}" >
 				<models:MyTreeViewItem.ContextFlyout>
 					<MenuFlyout Placement="Bottom">
-						<MenuFlyoutItem Visibility="{Binding FileLanguage, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>
+						<MenuFlyoutItem Visibility="{Binding  Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>
 						<MenuFlyoutItem x:Name="SetRoot" Icon="Favorite" Click="SetRoot_Click" Visibility="{Binding Converter={StaticResource SetRootVisibility}}" IsEnabled="{Binding IsRoot, Converter={StaticResource BoolInverter}}" Text="Set as Main File"></MenuFlyoutItem>
 						<MenuFlyoutItem x:Name="Delete" Icon="Delete" Click="Delete_Click" IsEnabled="{Binding IsRoot, Converter={StaticResource BoolInverter}}" Text="Delete"></MenuFlyoutItem>
 						<MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
@@ -177,7 +177,7 @@
 			<RowDefinition Height="Auto"></RowDefinition>
 			<RowDefinition Height="*"></RowDefinition>
 		</Grid.RowDefinitions>
-		<TabView Grid.Row="0" Foreground="White" IsAddTabButtonVisible="False" CanDragTabs="False" CanReorderTabs="False"  TabWidthMode="SizeToContent" x:Name="MainRibbon" >
+		<TabView Grid.Row="0" Foreground="White" IsAddTabButtonVisible="False" CanDragTabs="False" CanReorderTabs="False" TabWidthMode="SizeToContent" x:Name="MainRibbon" >
 			<TabView.Background>
 				<SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
 			</TabView.Background>
@@ -266,28 +266,26 @@
 							</StackPanel>
 
 							<StackPanel Orientation="Horizontal" Spacing="0">
-								<Button x:Name="Root" CornerRadius="{x:Bind Current.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=right}" Visibility="{Binding CurrentProject.RootFile, Converter={StaticResource StringToVisibility}}" ToolTipService.ToolTip="Save all &amp; Compile root file" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}"  Click="Btncompileroot_Click" >
-									<Button.Content>
-										<StackPanel Orientation="Horizontal">
-											<FontIcon Glyph="&#xF5B0;"></FontIcon>
-											<TextBlock Text="Root" VerticalAlignment="Center" ></TextBlock>
-										</StackPanel>
-									</Button.Content>
-								</Button>
-								<Grid Visibility="{Binding CurrentFileItem.FileLanguage, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}">
-									<Button x:Name="Current" CornerRadius="{x:Bind Root.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=left}" Visibility="{Binding IsFileItemLoaded, Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Save &amp; Compile current file"   Click="Btncompile_Click" >
-										<Button.Content>
-											<StackPanel Orientation="Horizontal">
-												<SymbolIcon Symbol="Play"></SymbolIcon>
-												<TextBlock  Text="Current" VerticalAlignment="Center" ></TextBlock>
-											</StackPanel>
-										</Button.Content>
-                                        <Button.KeyboardAccelerators>
-                                            <KeyboardAccelerator Modifiers="Control" Key="Enter"/>
-                                        </Button.KeyboardAccelerators>
-                                    </Button>
-								</Grid>
-							</StackPanel>
+                                <Button x:Name="Root" BorderThickness="{x:Bind Current.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToBorderThickness}, ConverterParameter=right}" CornerRadius="{x:Bind Current.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=right}" Visibility="{Binding CurrentProject.RootFile, Converter={StaticResource StringToVisibility}}" ToolTipService.ToolTip="Save all &amp; Compile root file" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}"  Click="Btncompileroot_Click" >
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <FontIcon Glyph="&#xF5B0;"></FontIcon>
+                                            <TextBlock Text="Root" VerticalAlignment="Center" ></TextBlock>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <Button x:Name="Current"  CornerRadius="{x:Bind Root.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=left}" Visibility="{Binding CurrentFileItem, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Save &amp; Compile current file"   Click="Btncompile_Click" >
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <SymbolIcon Symbol="Play"></SymbolIcon>
+                                            <TextBlock  Text="Current" VerticalAlignment="Center" ></TextBlock>
+                                        </StackPanel>
+                                    </Button.Content>
+                                    <Button.KeyboardAccelerators>
+                                        <KeyboardAccelerator Modifiers="Control" Key="Enter"/>
+                                    </Button.KeyboardAccelerators>
+                                </Button>
+                            </StackPanel>
 
 							<Border Style="{StaticResource Separator}" ></Border>
 
@@ -543,13 +541,13 @@
 										<FontIcon Glyph="&#xE70D;"></FontIcon>
 									</Button.Content>
 									<Button.Flyout>
-										<Flyout x:Name="ColorsFlyout" Placement="Bottom">
+                                        <Flyout x:Name="ColorsFlyout" Opening="ColorsFlyout_Opening" Placement="Bottom">
 											<StackPanel Orientation="Vertical">
 												<Button VerticalAlignment="Center" x:Name="ColorReset" Click="ColorReset_Click">
 													<StackPanel Orientation="Horizontal">
 														<Rectangle VerticalAlignment="Stretch" Height="26" Width="26" HorizontalAlignment="Stretch" >
 															<Rectangle.Fill>
-																<SolidColorBrush Color="{x:Bind SystemAccentColor}" ></SolidColorBrush>
+																<SolidColorBrush Color="{Binding SystemAccentColor}" ></SolidColorBrush>
 															</Rectangle.Fill>
 														</Rectangle>
 														<TextBlock Text="Use system accent color"></TextBlock>
@@ -949,7 +947,7 @@
 									<TabViewItem ToolTipService.ToolTip="{Binding FileName, Mode=OneWay}" IsClosable="{Binding IsPinned, Mode=OneWay, Converter={StaticResource BoolInverter}}">
 										<TabViewItem.ContextFlyout>
 											<MenuFlyout>
-												<MenuFlyoutItem Visibility="{Binding FileLanguage, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>
+												<MenuFlyoutItem Visibility="{Binding Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>
 												<MenuFlyoutItem x:Name="SetRoot" Icon="Favorite" Click="SetRoot_Click" Visibility="{Binding Converter={StaticResource SetRootVisibility}}" IsEnabled="{Binding IsRoot, Converter={StaticResource BoolInverter}}" Text="Set as Main File"></MenuFlyoutItem>
 												<MenuFlyoutItem x:Name="Pin" IsEnabled="False" Icon="Pin" Click="Pin_Click" Text="Toggle pin"></MenuFlyoutItem>
 												<MenuFlyoutItem x:Name="Save" Icon="Save" Click="Save_Click" IsEnabled="{Binding IsChanged}" Text="Save"></MenuFlyoutItem>
@@ -1046,7 +1044,7 @@
 					</Button>
 				</Grid>
 			</Grid>
-			<Grid x:Name="DocumentationGrid" Grid.Column="3" Width="400" Style="{StaticResource GridCell}" Padding="0" Visibility="{Binding Default.ShowCommandReference, Mode=OneWay}">
+			<Grid x:Name="DocumentationGrid" Grid.Column="3" Width="450" Style="{StaticResource GridCell}" Padding="0" Visibility="{Binding Default.ShowCommandReference, Mode=OneWay}">
 				<ListView Visibility="Visible" ShowsScrollingPlaceholders="False" Background="Transparent" x:Name="DocumentationView"  SelectionMode="Single" IsItemClickEnabled="False" ItemsSource="{Binding Source={StaticResource cvs}}" SelectedItem="{Binding SelectedCommand, Mode=TwoWay}" SelectedIndex="-1" >
 					<animations:Implicit.ShowAnimations >
 						<animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
@@ -1297,10 +1295,8 @@
 					<TextBlock Style="{ThemeResource BodyTextBlockStyle}" Text="by wdev (wdev@outlook.de)"></TextBlock>
 					<TextBlock Style="{ThemeResource BodyTextBlockStyle}" Text="This application is not related to Pragma ADE"></TextBlock>
 					<TextBlock Style="{ThemeResource BodyTextBlockStyle}" FontSize="20" Text="Dependencies and references"></TextBlock>
-					<HyperlinkButton Content="LuaMetaTeX (Pragma ADE)" NavigateUri="http://www.pragma-ade.nl/"></HyperlinkButton>
-					<HyperlinkButton Content="monaco-editor (Microsoft Corporation)" NavigateUri="https://github.com/Microsoft/monaco-editor"></HyperlinkButton>
-					<HyperlinkButton Content="MonacoEditorComponent (hawkerm)" NavigateUri="https://github.com/hawkerm/monaco-editor-uwp"></HyperlinkButton>
-					<HyperlinkButton Content="PDF.js (Mozilla)" NavigateUri="https://github.com/mozilla/pdf.js/"></HyperlinkButton>
+                    <HyperlinkButton Content="LuaMetaTeX (Pragma ADE)" NavigateUri="http://www.pragma-ade.nl/"></HyperlinkButton>
+                    <HyperlinkButton Content="PDF.js (Mozilla)" NavigateUri="https://github.com/mozilla/pdf.js/"></HyperlinkButton>
 					<Button Click="Disclaimer_Click" Content="Show legal disclaimer" Margin="0,10,0,0"></Button>
 					<WebView2 Visibility="Collapsed"  x:Name="DisclaimerView" Height="5000" Loaded="DisclaimerView_Loaded"></WebView2>
 				</StackPanel>

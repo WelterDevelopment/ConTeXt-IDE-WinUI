@@ -489,7 +489,8 @@
             <helpers:SetRootVisibility x:Key="SetRootVisibility" />
             <helpers:FileTypeToVisibility x:Key="FileTypeToVisibility" />
             <helpers:VisibilityToCornerRadius x:Key="VisibilityToCornerRadius" />
-            
+            <helpers:VisibilityToBorderThickness x:Key="VisibilityToBorderThickness" />
+
             <ResourceDictionary.ThemeDictionaries>
 
                 <ResourceDictionary x:Key="Default">

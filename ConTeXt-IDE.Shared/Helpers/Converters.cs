@@ -285,7 +285,10 @@ namespace ConTeXt_IDE.Helpers
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return ((string)value).ToLower() == ((string)parameter).ToLower() ? Visibility.Visible : Visibility.Collapsed;
+            if (value == null)
+                return Visibility.Collapsed;
+            else
+            return ((FileItem)value).FileLanguage.ToLower() == ((string)parameter).ToLower() ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

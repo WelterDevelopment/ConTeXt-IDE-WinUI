@@ -37,8 +37,12 @@ namespace ConTeXt_IDE.ViewModels
                 FileItems.CollectionChanged += FileItems_CollectionChanged1;
 
 
-                if (Default.AccentColor == "Default")
-                    AccentColor = AccentColors.Find(x => x.Color == (new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent));
+                if (Default.AccentColor == "Default") {
+                    if (AccentColors.Any(x => x.Color == SystemAccentColor))
+                        AccentColor = AccentColors.Find(x => x.Color == SystemAccentColor);
+                    else
+                        AccentColor = new AccentColor("Default",SystemAccentColor);
+                }
                 else
                     AccentColor = AccentColors.Find(x => x.Name == Default.AccentColor);
 
@@ -131,7 +135,9 @@ namespace ConTeXt_IDE.ViewModels
 
         public ObservableCollection<Helpfile> HelpFiles { get; } = new ObservableCollection<Helpfile>() {
             new Helpfile() { FriendlyName = "Manual", FileName = "ma-cb-en.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\manuals\" },
-            new Helpfile() { FriendlyName = "Commands", FileName = "setup-en.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\qrcs\" },
+            new Helpfile() { FriendlyName = "Command Reference", FileName = "setup-en.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\qrcs\" },
+             new Helpfile() { FriendlyName = "LuaMetaTeX (engine)", FileName = "luametatex.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\manuals\" },
+             new Helpfile() { FriendlyName = "LuaMetaFun (MetaPost library)", FileName = "luametafun.pdf", Path = @"\tex\texmf-context\doc\context\documents\general\manuals\" },
         };
 
         
@@ -205,6 +211,7 @@ namespace ConTeXt_IDE.ViewModels
         };
 
         public AccentColor AccentColor { get => Get<AccentColor>(); set { Set(value); } }
+        public Color SystemAccentColor { get => Get((new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent)); set => Set(value); }
 
         public bool IsError { get => Get(false); set => Set(value); }
 

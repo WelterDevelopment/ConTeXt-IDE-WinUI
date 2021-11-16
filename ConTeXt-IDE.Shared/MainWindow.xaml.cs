@@ -147,23 +147,31 @@ namespace ConTeXt_IDE
         }
         private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!VM.Default.EvergreenInstalled)
+            try
             {
-                string RegKey = System.Environment.Is64BitOperatingSystem ? @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" : @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
-                var version = Registry.GetValue(RegKey, "pv", null);
-                VM.Default.EvergreenInstalled = version != null && !string.IsNullOrWhiteSpace(version?.ToString());
+                if (!VM.Default.EvergreenInstalled)
+                {
+                    string RegKey = System.Environment.Is64BitOperatingSystem ? @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" : @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
+                    var version = Registry.GetValue(RegKey, "pv", null);
+                    VM.Default.EvergreenInstalled = version != null && !string.IsNullOrWhiteSpace(version?.ToString());
+                }
             }
+            catch { }
 
-            if (VM.Default.EvergreenInstalled)
+            try
             {
-                VM.IsIndeterminate = true;
-                RootFrame.Navigate(typeof(MainPage));
+                if (VM.Default.EvergreenInstalled)
+                {
+                    VM.IsIndeterminate = true;
+                    RootFrame.Navigate(typeof(MainPage));
+                }
+                else
+                {
+                    await Task.Delay(1000);
+                    InstallEvergreen();
+                }
             }
-            else
-            {
-                await Task.Delay(1000);
-                InstallEvergreen();
-            }
+            catch { }
         }
 
     }
