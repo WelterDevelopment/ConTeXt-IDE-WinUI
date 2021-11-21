@@ -16,9 +16,9 @@
                     <CornerRadius x:Key="ControlCornerRadius">4</CornerRadius>
                 </ResourceDictionary>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <ColorPaletteResources Accent="{ThemeResource SystemAccentColor}" />
-            </ResourceDictionary.MergedDictionaries>
 
+                <!--<ColorPaletteResources Accent="{ThemeResource SystemAccentColor}" />-->
+            </ResourceDictionary.MergedDictionaries>
             <vm:ViewModel x:Key="VM"></vm:ViewModel>
             
             <CornerRadius x:Key="CornerRadius">2</CornerRadius>
@@ -495,7 +495,7 @@
 
                 <ResourceDictionary x:Key="Default">
                     <ResourceDictionary.MergedDictionaries>
-                        <!--<ColorPaletteResources  Accent="ForestGreen" BaseHigh="Yellow" BaseLow="Orange" BaseMedium="Red" BaseMediumHigh="Violet" BaseMediumLow="Blue" />-->
+                        <!--<ColorPaletteResources  Accent="ForestGreen"  BaseHigh="Yellow" BaseLow="Orange" BaseMedium="Red" BaseMediumHigh="Violet" BaseMediumLow="Blue" />-->
                         
                     </ResourceDictionary.MergedDictionaries>
                     <AcrylicBrush x:Key="MyAcrylicBrush"  TintColor="{ThemeResource AcrylicColor}"        FallbackColor="{ThemeResource AcrylicColor}"/>
@@ -504,6 +504,7 @@
                     <AcrylicBrush x:Key="LogAcrylicBrush"  TintColor="#FF383838" TintOpacity="0.9" FallbackColor="#FF383838"/>
                     <AcrylicBrush x:Key="TitlebarAcrylicBrush"  TintColor="#FF202020" TintOpacity="0.9" FallbackColor="#FF202020"/>
                     <AcrylicBrush x:Key="AccentColorAcrylicBrush"  TintColor="{ThemeResource SystemAccentColorDark1}" TintOpacity="0.7" TintLuminosityOpacity="0.5"  FallbackColor="{ThemeResource SystemAccentColorDark1}"/>
+
                     <Color x:Key="ForegroundColor">#FFFFFF</Color>
                     <Color x:Key="BackgroundColor">#000000</Color>
                     <Color x:Key="GripperColor">#555555</Color>
@@ -514,6 +515,8 @@
                     <SolidColorBrush x:Key="SystemControlBackgroundAltHighHighBrush" Color="{Binding AccentColorLowLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
                     <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{Binding AccentColorLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
 
+                    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#222"></SolidColorBrush>
+                    
                     <SolidColorBrush x:Key="WindowCaptionBackground" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
                     <SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
 
@@ -543,6 +546,8 @@
                     <SolidColorBrush x:Key="SystemControlBackgroundAltHighHighBrush" Color="{Binding AccentColorLowLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
                     <SolidColorBrush x:Key="AccentColorBrushHigh" Color="{ThemeResource SystemAccentColorDark2}"></SolidColorBrush>
                     <SolidColorBrush x:Key="AccentColorBrushLow" Color="{ThemeResource SystemAccentColorLight2}"></SolidColorBrush>
+
+                    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#EEE"></SolidColorBrush>
 
                     <SolidColorBrush x:Key="WindowCaptionBackground" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
                     <SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>

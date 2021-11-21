@@ -18,7 +18,7 @@ namespace ConTeXt_IDE.Models
 
         public string lasttexhelp { get => Get<string>(); set => Set(value); }
 
-        public int linenumber { get => Get(0); set => Set(value); }
+        public int linenumber { get => Get(1); set => Set(value); }
 
         public int luaerrorline { get => Get(0); set => Set(value); }
 

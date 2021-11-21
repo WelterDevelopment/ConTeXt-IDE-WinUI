@@ -19,6 +19,12 @@ namespace ConTeXt_IDE.Models
             Directory = directory;
             Name = name;
             Folder = folder;
+            PropertyChanged += Project_PropertyChanged;
+        }
+
+        private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            App.VM?.Default?.SaveSettings();
         }
 
         [JsonIgnore]
@@ -45,7 +51,7 @@ namespace ConTeXt_IDE.Models
                     }
 
                     App.VM.Log("Root file changed to " + RootFile);
-                    App.VM.Default.SaveSettings();
+                    
                 }
             }
         }
@@ -57,5 +63,42 @@ namespace ConTeXt_IDE.Models
             get => Get(new ObservableCollection<Mode>() { new Mode() { Name = "print", IsSelected = false }, new Mode() { Name = "screen", IsSelected = false }, new Mode() { Name = "draft", IsSelected = false }, });
             set => Set(value);
         }
+
+        public ObservableCollection<Mode> Environments
+        {
+            get => Get(new ObservableCollection<Mode>() { new Mode() { Name = "env_thesis", IsSelected = false }, });
+            set => Set(value);
+        }
+
+        public FileItem GetFileItemByName(FileItem folder, string filename)
+        {
+            FileItem fileItem = null;
+            foreach (FileItem fi in folder.Children)
+            {
+                if (fi.Type == FileItem.ExplorerItemType.Folder)
+                {
+                    if (fileItem == null)
+                        fileItem = GetFileItemByName(fi, filename);
+                }
+                else if (fi.Type == FileItem.ExplorerItemType.File)
+                {
+                    if (fi.FileName == filename)
+                    {
+                        fileItem = fi;
+                    }
+                }
+            }
+            return fileItem;
+        }
+
+        public string AdditionalParameters { get => Get(""); set => Set(value); }
+        public bool UseAutoGenerate { get => Get(true); set => Set(value); }
+        public bool UseNoConsole { get => Get(true); set => Set(value); }
+        public bool UseNonStopMode { get => Get(true); set => Set(value); }
+        public bool UseInterface { get => Get(false); set => Set(value); }
+        public string Interface { get => Get("en"); set => Set(value); }
+        public bool UseModes { get => Get(false); set => Set(value); }
+        public bool UseEnvironments { get => Get(false); set => Set(value); }
+        public bool UseParameters { get => Get(false); set => Set(value); }
     }
 }

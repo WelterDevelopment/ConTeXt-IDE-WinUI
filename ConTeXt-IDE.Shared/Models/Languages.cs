@@ -11,6 +11,7 @@ namespace ConTeXt_IDE.Shared.Models
         {
             new("ConTeXt")
             {
+                LineComment = "%",
                 RegexTokens = new()
                 {
                     { Token.Math, /*language=regex*/ @"\$.*?\$" },
@@ -21,8 +22,8 @@ namespace ConTeXt_IDE.Shared.Models
                     { Token.Array, /*language=regex*/ @"\\(b|e)(T)(C|Ds?|H|N|Rs?|X|Y)\b|(\\\\|\\AR|\\DR|\\DC|\\DL|\\NI|\\NR|\\NC|\\HL|\\VL|\\FR|\\MR|\\LR|\\SR|\\TB|\\NB|\\NN|\\FL|\\ML|\\LL|\\TL|\\BL)\b" },
                     { Token.Environment, /*language=regex*/ @"\\(start|stop).+?\b" },
                     { Token.Reference, /*language=regex*/ @"(\b|#*?)\w+?:\#*?\w+?\b|\\ref\b" },
-                    { Token.Comment, /*language=regex*/ @"\%.*" },
                     { Token.Bracket, /*language=regex*/ @"(?<!\\)(\[|\]|\(|\)|\{|\})" },
+                    { Token.Comment, /*language=regex*/ @"\%.*" },
                 },
                 WordTokens = new()
                 {

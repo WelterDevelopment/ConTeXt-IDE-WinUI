@@ -18,9 +18,9 @@ namespace ConTeXt_IDE.Models
         public static Settings FromJson(string json) => JsonConvert.DeserializeObject<Settings>(json);
 
         [JsonIgnore]
-        public static Settings Default { get; } = GetSettings();
+        public static Settings Default { get;  } = GetSettings();
 
-        public static Settings RestoreSettings()
+        public static void RestoreSettings()
         {
             string file = "settings.json";
             var storageFolder = ApplicationData.Current.LocalFolder;
@@ -29,8 +29,6 @@ namespace ConTeXt_IDE.Models
             {
                 File.Delete(settingsPath);
             }
-
-            return GetSettings();
         }
 
         private static Settings GetSettings()
@@ -73,6 +71,7 @@ namespace ConTeXt_IDE.Models
                     new ObservableCollection<HelpItem>()
                         {
                             new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
+                            new HelpItem() { ID = "Environments", Title = "ConTeXt Environments", Text = "Select any number of environments (usually one). Use this compiler parameter *instead* the corresponding \n'\\environment[<EnvironmentName>]'\n commands.", Shown = false },
                             new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
                         };
                 }
@@ -119,15 +118,15 @@ namespace ConTeXt_IDE.Models
         public bool SuggestFontSwitches { get => Get(true); set => Set(value); }
         public bool SuggestPrimitives { get => Get(true); set => Set(value); }
         public bool SuggestStartStop { get => Get(true); set => Set(value); }
+
         public bool TextWrapping { get => Get(false); set => Set(value); }
         public bool LineNumbers { get => Get(true); set => Set(value); }
         public bool LineMarkers { get => Get(true); set => Set(value); }
         public bool CodeFolding { get => Get(false); set => Set(value); }
         public bool ControlCharacters { get => Get(false); set => Set(value); }
-        public bool UseModes { get => Get(false); set => Set(value); }
-        public bool UseParameters { get => Get(true); set => Set(value); }
+       
         public string AccentColor { get => Get("Default"); set { Set(value); } }
-        public string AdditionalParameters { get => Get("--autogenerate --noconsole"); set => Set(value); }
+       
         public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
         public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
         public string LastActiveProject { get => Get(""); set => Set(value); }
@@ -138,7 +137,13 @@ namespace ConTeXt_IDE.Models
         public string TexFileName { get => Get(""); set => Set(value); }
         public string TexFilePath { get => Get(""); set => Set(value); }
         public int FontSize { get => Get(18); set => Set(value); }
-        public string Theme { get => Get("Default"); set { Set(value); if (App.VM != null) ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default); } }
+        public string Theme { get => Get("Default"); set {
+                Set(value); 
+                if (App.VM != null) 
+                    ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default);
+                if (App.MainPage != null)
+                    App.MainPage.SetColor(null,false);
+            } }
 
 
         

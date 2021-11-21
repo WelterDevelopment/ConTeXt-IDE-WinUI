@@ -11,12 +11,12 @@
     <Grid>
         <StackPanel>
             <ListView x:FieldModifier="public" x:Name="TempList" SelectionMode="Single" ItemsSource="{x:Bind templateSelections}" SelectedIndex="1">
-                <ListView.ItemContainerStyle>
+                <!--<ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}">
                         </Setter>
                     </Style>
-                </ListView.ItemContainerStyle>
+                </ListView.ItemContainerStyle>-->
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Content}" ></TextBlock>

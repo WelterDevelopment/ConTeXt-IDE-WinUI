@@ -1,5 +1,6 @@
 ﻿using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -23,12 +24,38 @@ namespace ConTeXt_IDE
     {
       
         private ViewModel VM { get; } = App.VM;
+        public AppWindow AW { get; set; }
+        public bool IsCustomizationSupported { get; set; } = false;
         public MainWindow()
         {
             InitializeComponent();
-            ExtendsContentIntoTitleBar = true;
-            SetTitleBar(CustomDragRegion);
-            Title = "ConTeXt IDE";
+            IsCustomizationSupported = AppWindowTitleBar.IsCustomizationSupported();
+            
+            if (IsCustomizationSupported)
+            {
+                AW = GetAppWindowForCurrentWindow();
+                AW.TitleBar.ExtendsContentIntoTitleBar = true;
+                CustomDragRegion.Height = 22;
+                AW.Title = "ConTeXt IDE";
+
+                // AW.TitleBar.SetDragRectangles(new[] { new Windows.Graphics.RectInt32(0, 0, 500, 500) });
+            }
+            else
+            {
+                ExtendsContentIntoTitleBar = true;
+                CustomDragRegion.Height = 28;
+                SetTitleBar(CustomDragRegion);
+                Title = "ConTeXt IDE";
+            }
+            
+            
+        }
+
+        private AppWindow GetAppWindowForCurrentWindow()
+        {
+            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            WindowId myWndId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+            return AppWindow.GetFromWindowId(myWndId);
         }
 
         public static bool CheckForInternetConnection(int timeoutMs = 5000, string url = "https://www.google.com/")

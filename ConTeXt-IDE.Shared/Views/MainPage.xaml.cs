@@ -1,10 +1,12 @@
-﻿using ConTeXt_IDE.Helpers;
+﻿using CodeEditorControl_WinUI;
+using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
 using ConTeXt_IDE.Shared.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -23,6 +25,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Xml;
 using System.Xml.Serialization;
 using Windows.ApplicationModel;
@@ -41,7 +44,7 @@ namespace ConTeXt_IDE
     {
         private ViewModel VM { get; } = App.VM;
 
-        
+       
 
         public MainPage()
         {
@@ -54,7 +57,7 @@ namespace ConTeXt_IDE
                 VM.Default.PropertyChanged += Default_PropertyChanged;
 
                 //SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
-
+                
                 TB_Version.Text = string.Format("Version: {0}.{1}.{2}.{3}",
                          Package.Current.Id.Version.Major,
                          Package.Current.Id.Version.Minor,
@@ -73,10 +76,18 @@ namespace ConTeXt_IDE
                     }
                 }
                 VM.FileActivatedEvents.Clear();
+
+                MenuSave.Command = new RelayCommand(() => { Btnsave_Click(null, null); });
+                MenuCompile.Command = new RelayCommand(() => { Btncompile_Click(null, null); });
+                MenuSave.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.S, Modifiers = VirtualKeyModifiers.Control });
+                MenuCompile.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control });
+                Binding myBinding = new Binding();
+                myBinding.Path = new("CurrentFileItem.IsTexFile");
+                MenuCompile.SetBinding(MenuFlyoutItem.IsEnabledProperty, myBinding);
             }
             catch (Exception ex)
             {
-                App.VM.InfoMessage(true, "Exception", ex.Message, InfoBarSeverity.Error);
+                App.VM?.InfoMessage(true, "Exception", ex.Message, InfoBarSeverity.Error);
             }
         }
 
@@ -85,8 +96,10 @@ namespace ConTeXt_IDE
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            InitializeCommandReference();
-            //SetColor(null, false);
+            
+            
+
+            SetColor(null, false);
         }
 
         public async void FirstStart()
@@ -107,8 +120,49 @@ namespace ConTeXt_IDE
 
         private async void DisclaimerView_Loaded(object sender, RoutedEventArgs e)
         {
-            var storageFile = await StorageFile.GetFileFromApplicationUriAsync(new System.Uri("ms-appx:///web/About.html"));
-            (sender as WebView2).Source = new System.Uri(storageFile.Path);
+            try
+            {
+                var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", "web", @"About.html");
+                StorageFile storageFile;
+
+                if (File.Exists(p))
+                {
+                    storageFile = await StorageFile.GetFileFromPathAsync(p);
+                }
+                else
+                {
+                    storageFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///web/About.html"));
+                }
+
+                (sender as WebView2).Source = new System.Uri(storageFile.Path);
+            }
+            catch (Exception ex)
+            {
+                VM.Log(ex.Message);
+            }
+        }
+       
+        private MenuFlyoutItem MenuSave = new MenuFlyoutItem() { Text = "Save", Icon = new SymbolIcon() { Symbol = Symbol.Save } };
+        private MenuFlyoutItem MenuCompile = new MenuFlyoutItem() { Text = "Compile", Icon = new SymbolIcon() { Symbol = Symbol.Play } };
+
+        private async void Codewriter_Loaded(object sender, RoutedEventArgs e)
+        {
+            CodeWriter cw = sender as CodeWriter;
+
+            VM.Codewriter = cw;
+
+            if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Save"; else return false; }))
+                cw.Action_Add(MenuSave);
+
+            if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }))
+                cw.Action_Add(MenuCompile);
+
+            if (VM.CurrentFileItem.IsTexFile)
+                cw.UpdateSuggestions();
+
+            cw.ScrollToLine(VM.CurrentFileItem.CurrentLine.iLine);
+            cw.Focus(FocusState.Keyboard);
+
         }
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)
@@ -123,7 +177,7 @@ namespace ConTeXt_IDE
                 VM.IsPaused = false;
                 VM.InfoMessage(true, "Installing", "Extracting the ConTeXt Distribution to the app's package Folder", InfoBarSeverity.Informational);
                 await Task.Run(async () => { InstallSuccessful = await InstallContext(); });
-
+                //InstallSuccessful = await InstallContext();
                 if (InstallSuccessful)
                 {
                     VM.Default.DistributionInstalled = true;
@@ -144,8 +198,8 @@ namespace ConTeXt_IDE
             InitializeCommandReference();
             await VM.Startup();
             FirstStart();
-            OnProtocolActivated(Windows.ApplicationModel.AppInstance.GetActivatedEventArgs());
-           
+            // OnProtocolActivated(Windows.ApplicationModel.AppInstance.GetActivatedEventArgs());
+
         }
 
         public void OnProtocolActivated(IActivatedEventArgs args)
@@ -182,8 +236,27 @@ namespace ConTeXt_IDE
 
         private async void PDFReader_Loaded(object sender, RoutedEventArgs e)
         {
-            var storageFile = await StorageFile.GetFileFromApplicationUriAsync(new System.Uri("ms-appx:///web/viewer.html"));
-            (sender as WebView2).Source = new System.Uri(storageFile.Path);
+            try
+            {
+                var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", "web", @"viewer.html");
+                StorageFile storageFile;
+
+
+                if (File.Exists(p))
+                {
+                    storageFile = await StorageFile.GetFileFromPathAsync(p);
+                }
+                else
+                {
+                    storageFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///web/viewer.html"));
+                }
+
+                (sender as WebView2).Source = new System.Uri(storageFile.Path);
+            }
+            catch (Exception ex)
+            {
+                VM.Log(ex.Message);
+            }
         }
 
         private void PDFReader_CoreWebView2Initialized(WebView2 sender, CoreWebView2InitializedEventArgs args)
@@ -546,14 +619,15 @@ namespace ConTeXt_IDE
                 }
                 else if (BitmapsToOpen.Contains(type))
                 {
-                    var tip = new TeachingTip() { Title = fileitem.FileName, Target = (FrameworkElement)sender, PreferredPlacement = TeachingTipPlacementMode.RightTop, IsLightDismissEnabled = true, IsOpen = false };
-                    var content = new Grid() { Background = new SolidColorBrush(Colors.LightGray) };
-                    content.Children.Add(new Image() { Source = await LoadImage((StorageFile)fileitem.File), });
-                    tip.HeroContent = content;
-                    tip.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
-                    RootGrid.Children.Add(tip);
+                    await Launcher.LaunchFileAsync(fileitem.File as StorageFile);
+                    //var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = fileitem.FileName, Target = (FrameworkElement)sender, PreferredPlacement = TeachingTipPlacementMode.RightTop, IsLightDismissEnabled = true, IsOpen = true };
+                    //var content = new Grid() { Background = new SolidColorBrush(Colors.LightGray) };
+                    //content.Children.Add(new Image() { Source = await LoadImage((StorageFile)fileitem.File), });
+                    //tip.HeroContent = content;
+                    //tip.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
+                    //RootGrid.Children.Add(tip);
 
-                    tip.IsOpen = true;
+                    //tip.IsOpen = true;
                 }
                 else if (type == ".pdf")
                 {
@@ -604,7 +678,7 @@ namespace ConTeXt_IDE
                     string[] modes = new string[] { };
                     if (App.VM.CurrentProject != null)
                         modes = App.VM.CurrentProject.Modes.Where(x => x.IsSelected).Select(x => x.Name).ToArray();
-                    if (modes.Length > 0 && App.VM.Default.UseModes)
+                    if (modes.Length > 0 && App.VM.CurrentProject.UseModes)
                         App.VM.Default.Modes = string.Join(",", modes);
                     else App.VM.Default.Modes = "";
 
@@ -623,12 +697,7 @@ namespace ConTeXt_IDE
                     {
                         filetocompile = fileToCompile ?? App.VM.CurrentFileItem;
                     }
-                    string logtext = "Compiling " + filetocompile.File.Name;
-                    if (modes.Length > 0 && App.VM.Default.UseModes)
-                        logtext += "; with modes: " + App.VM.Default.Modes;
-                    if (App.VM.Default.AdditionalParameters.Trim().Length > 0 && App.VM.Default.UseParameters)
-                        logtext += "; with parameters: " + App.VM.Default.AdditionalParameters;
-                    App.VM.Log(logtext);
+                    
                     App.VM.Default.TexFileFolder = filetocompile.FileFolder;
                     App.VM.Default.TexFileName = filetocompile.FileName;
                     App.VM.Default.TexFilePath = filetocompile.File.Path;
@@ -637,7 +706,27 @@ namespace ConTeXt_IDE
 
                     try
                     {
-                        await Task.Run(async () => { await Compile(); });
+                        string param = "";
+                        if (VM.Default.Modes.Length > 0)
+                            param = "--mode=" + VM.Default.Modes + " ";
+
+                        if (VM.IsProjectLoaded)
+                        {
+                            if (VM.CurrentProject.UseInterface)
+                                param += "--interface=" + VM.CurrentProject.Interface + " ";
+
+                            if (VM.CurrentProject.UseNonStopMode)
+                                param += "--nonstopmode ";
+                            if (VM.CurrentProject.UseNoConsole)
+                                param += "--noconsole ";
+                            if (VM.CurrentProject.UseParameters)
+                                param += VM.CurrentProject.AdditionalParameters + " ";
+                        }
+
+                        string logtext = "Running compiler job: " + "context " + param + VM.Default.TexFileName;
+                        await App.VM.Log(logtext);
+
+                        await Task.Run(async () => { await Compile(param); });
                         compileSuccessful = true;
                     }
                     catch
@@ -658,7 +747,7 @@ namespace ConTeXt_IDE
                         var error = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(App.VM.Default.TexFileName) + "-error.log");
                         if (error != null)
                         {
-                            App.VM.IsError = true;
+                            VM.IsError = true;
                             StorageFile errorfile = error as StorageFile;
                             string text = await FileIO.ReadTextAsync(errorfile);
 
@@ -670,23 +759,39 @@ namespace ConTeXt_IDE
 
                             var errormessage = JsonConvert.DeserializeObject<ConTeXtErrorMessage>(newtext);
 
-                            App.VM.Log("Compiler error: " + errormessage.lasttexerror);
-                            App.VM.ConTeXtErrorMessage = errormessage;
+                            VM.Log("Compiler error: " + errormessage.lasttexerror);
+                            VM.ConTeXtErrorMessage = errormessage;
+                            FileItem erroritem = VM.CurrentProject.GetFileItemByName(VM.CurrentProject.Directory[0],VM.ConTeXtErrorMessage.filename.Replace("./",""));
+                            if (erroritem != null)
+                            {
+                                VM.OpenFile(erroritem);
+                                await Task.Delay(500);
+                                List<SyntaxError> errors = new();
+                                try
+                                {
+                                    errors.Add(new() { SyntaxErrorType = SyntaxErrorType.Error, iLine = VM.ConTeXtErrorMessage.linenumber - 1, Title = VM.ConTeXtErrorMessage.lasttexerror });
+
+                                    VM.Codewriter.SyntaxErrors = errors;
+                                    VM.Codewriter.SelectLine(new(0, VM.ConTeXtErrorMessage.linenumber - 1));
+                                    VM.Codewriter.CenterView();
+                                }
+                                catch { }
+                            }
                         }
                         else
                         {
-                            App.VM.IsPaused = true;
-                            App.VM.IsError = false;
-                            App.VM.IsVisible = false;
+                            VM.IsPaused = true;
+                            VM.IsError = false;
+                            VM.IsVisible = false;
                         }
 
-                        if (App.VM.Default.AutoOpenPDF && error == null)
+                        if (VM.Default.AutoOpenPDF && error == null)
                         {
-                            StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(App.VM.Default.TexFileName) + ".pdf") as StorageFile;
+                            StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(VM.Default.TexFileName) + ".pdf") as StorageFile;
                             if (pdfout != null)
                             {
-                                App.VM.Log("Opening " + System.IO.Path.GetFileNameWithoutExtension(App.VM.Default.TexFileName) + ".pdf");
-                                if (App.VM.Default.InternalViewer)
+                                VM.Log("Opening " + System.IO.Path.GetFileNameWithoutExtension(VM.Default.TexFileName) + ".pdf");
+                                if (VM.Default.InternalViewer)
                                 {
                                     await OpenPDF(pdfout);
                                 }
@@ -717,7 +822,7 @@ namespace ConTeXt_IDE
                             }
                         }
                     }
-                    Codewriter.Focus(FocusState.Keyboard);
+                    VM.Codewriter.Focus(FocusState.Keyboard);
                 }
                 catch (Exception f)
                 {
@@ -725,6 +830,8 @@ namespace ConTeXt_IDE
                 }
             App.VM.IsSaving = false;
         }
+
+       
 
         private async Task<bool> OpenPDF(StorageFile pdfout)
         {
@@ -756,14 +863,14 @@ namespace ConTeXt_IDE
         {
             FileItem fi = (sender as FrameworkElement).DataContext as FileItem;
             await VM.SaveAll();
-            Codewriter.Save();
+            VM.Codewriter.Save();
             CompileTex(false, fi);
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             await VM.Save((sender as FrameworkElement).DataContext as FileItem);
-            Codewriter.Save();
+            VM.Codewriter.Save();
         }
 
         private async Task<bool> InstallContext()
@@ -771,13 +878,27 @@ namespace ConTeXt_IDE
             try
             {
                 var storageFolder = ApplicationData.Current.LocalFolder;
-                VM.Default.ContextDistributionPath = storageFolder.Path;
-                StorageFile zipfile = await StorageFile.GetFileFromApplicationUriAsync(new System.Uri("ms-appx:///context-mswin.zip"));
-                ZipFile.ExtractToDirectory(zipfile.Path, ApplicationData.Current.LocalFolder.Path, true);
+                VM.Default.ContextDistributionPath = storageFolder.Path; 
+
+                var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", @"context-mswin.zip");
+
+                StorageFile zipfile;
+
+                if (File.Exists(p)) {
+                    zipfile = await StorageFile.GetFileFromPathAsync(p);
+                }
+                else
+                {
+                    zipfile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///context-mswin.zip"));
+                }
+
+                ZipFile.ExtractToDirectory(zipfile.Path, storageFolder.Path, true);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex.Message);
+                App.write(ex.Message + "\n" + ex.StackTrace);
                 return false;
             }
         }
@@ -796,7 +917,7 @@ namespace ConTeXt_IDE
                 return @"\texmf-mswin";
         }
 
-        public async Task<bool> Compile()
+        public async Task<bool> Compile(string param)
         {
             Process p = new Process();
             ProcessStartInfo info = new ProcessStartInfo(@"C:\Windows\System32\cmd.exe")
@@ -819,9 +940,7 @@ namespace ConTeXt_IDE
             //using (StreamReader sr = p.StandardOutput)
             using (StreamWriter sw = p.StandardInput)
             {
-                string param = "";
-                if (VM.Default.Modes.Length > 0)
-                    param = "--mode=" + VM.Default.Modes + " ";
+                
 
                 sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " " + param + VM.Default.TexFileName);
 
@@ -896,17 +1015,21 @@ namespace ConTeXt_IDE
 
         public void ShowTeachingTip(string ID, object Target)
         {
-            var helpItem = VM.Default.HelpItemList[VM.Default.HelpItemList.IndexOf(VM.Default.HelpItemList.First(x => x.ID == ID))];
-            if (!helpItem.Shown)
+            return; // Teaching Tips are busted in WinAppSDK 1.0
+            if (VM.Default.HelpItemList.Any(x => x.ID == ID))
             {
-                var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = helpItem.Title, Target = (FrameworkElement)Target, PreferredPlacement = TeachingTipPlacementMode.Right, IsLightDismissEnabled = false, IsOpen = false };
-                if (!string.IsNullOrWhiteSpace(helpItem.Subtitle))
-                    tip.Subtitle = helpItem.Subtitle;
-                tip.Content = new TextBlock() { TextWrapping = TextWrapping.WrapWholeWords, Text = helpItem.Text };
-                RootGrid.Children.Add(tip);
-                tip.IsOpen = true;
-                helpItem.Shown = true;
-                VM.Default.SaveSettings();
+                var helpItem = VM.Default.HelpItemList[VM.Default.HelpItemList.IndexOf(VM.Default.HelpItemList.First(x => x.ID == ID))];
+                if (!helpItem.Shown)
+                {
+                    var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = helpItem.Title, Target = (FrameworkElement)Target, PreferredPlacement = TeachingTipPlacementMode.Right, IsLightDismissEnabled = false, IsOpen = false };
+                    if (!string.IsNullOrWhiteSpace(helpItem.Subtitle))
+                        tip.Subtitle = helpItem.Subtitle;
+                    tip.Content = new TextBlock() { TextWrapping = TextWrapping.WrapWholeWords, Text = helpItem.Text };
+                    RootGrid.Children.Add(tip);
+                    tip.IsOpen = true;
+                    helpItem.Shown = true;
+                    VM.Default.SaveSettings();
+                }
             }
         }
 
@@ -1222,32 +1345,53 @@ namespace ConTeXt_IDE
         private async void Btncompile_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
-            Codewriter.Save();
+            VM.Codewriter.Save();
             CompileTex();
         }
 
         private async void Btncompileroot_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
-            Codewriter.Save();
+            VM.Codewriter.Save();
             CompileTex(true);
+        }
+
+
+        private void Undo_Click(object sender, RoutedEventArgs e)
+        {
+            VM.Codewriter.TextAction_Undo();
+            VM.Codewriter.Focus( FocusState.Keyboard);
         }
 
         private async void Btnsave_Click(object sender, RoutedEventArgs e)
         {
             await VM.Save();
-            Codewriter.Save();
+            VM.Codewriter.Save();
         }
 
         private async void btnsaveall_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
-            Codewriter.Save();
+            VM.Codewriter.Save();
         }
 
         private void Modes_Click(object sender, RoutedEventArgs e)
         {
             ShowTeachingTip("Modes", sender);
+        }
+
+        private void Environments_Click(object sender, RoutedEventArgs e)
+        {
+            ShowTeachingTip("Environments", sender);
+        }
+        private void Restore_Click(object sender, RoutedEventArgs e)
+        {
+            StorageApplicationPermissions.MostRecentlyUsedList.Clear();
+            VM.Default.ProjectList.Clear();
+            Settings.RestoreSettings();
+            Unload_Click(null,null);
+            
+           
         }
 
         private async void addMode_Click(object sender, RoutedEventArgs e)
@@ -1266,10 +1410,33 @@ namespace ConTeXt_IDE
             }
         }
 
+        private async void addEnvironment_Click(object sender, RoutedEventArgs e)
+        {
+            Mode mode = new Mode();
+            string name = "";
+            var cd = new ContentDialog() { XamlRoot = XamlRoot, Title = "Add environment", PrimaryButtonText = "Ok", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+            TextBox tb = new TextBox() { Text = name };
+            cd.Content = tb;
+            if (await cd.ShowAsync() == ContentDialogResult.Primary)
+            {
+                mode.IsSelected = true;
+                mode.Name = tb.Text;
+                VM.CurrentProject.Environments.Add(mode);
+                VM.Default.SaveSettings();
+            }
+        }
+
         private void RemoveMode_Click(object sender, RoutedEventArgs e)
         {
             Mode m = (sender as FrameworkElement).DataContext as Mode;
             VM.CurrentProject.Modes.Remove(m);
+            VM.Default.SaveSettings();
+        }
+
+        private void RemoveEnvironment_Click(object sender, RoutedEventArgs e)
+        {
+            Mode m = (sender as FrameworkElement).DataContext as Mode;
+            VM.CurrentProject.Environments.Remove(m);
             VM.Default.SaveSettings();
         }
 
@@ -1353,14 +1520,21 @@ namespace ConTeXt_IDE
             }
         }
 
-        private void SetColor(AccentColor accentColor = null, bool reload = true)
+        public void SetColor(AccentColor accentColor = null, bool reload = true)
         {
             var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
             if (accentColor != null) setting.AccentColor = accentColor.Color;
             ColorPaletteResources palette = new ColorPaletteResources();
             palette.Accent = setting.AccentColorLow;
             App.Current.Resources.MergedDictionaries.Add(palette);
-            ReloadPageTheme(this.RequestedTheme);
+            if (reload)
+                ReloadPageTheme(this.RequestedTheme);
+            if (App.mainWindow.IsCustomizationSupported)
+            {
+                App.mainWindow.AW.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                App.mainWindow.AW.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+                App.mainWindow.AW.TitleBar.ButtonHoverBackgroundColor = setting.AccentColor;
+            }
         }
 
         private ColorPaletteResources FindColorPaletteResourcesForTheme(string theme)
@@ -1662,9 +1836,9 @@ namespace ConTeXt_IDE
             {
                 lang.Commands.Add(new(@"\" + (command.Type == "environment" ? "start" : "") + command.Name) { Snippet = (command.Type == "environment" ? "[]\n\t\n\\stop" +command.Name : ""), Description = "Category: " + command.Category });
             }
-            if (Codewriter.Language.Name == name)
-                Codewriter.Language.Commands = lang.Commands;
-            Codewriter.UpdateSuggestions();            
+            if (VM.Codewriter?.Language?.Name == name)
+                VM.Codewriter.Language.Commands = lang.Commands;
+            VM.Codewriter?.UpdateSuggestions();            
         }
 
         private void GroupList_ItemClick(object sender, ItemClickEventArgs e)
@@ -1730,6 +1904,24 @@ namespace ConTeXt_IDE
                    select item;
         }
 
- 
+        private async void Btn_Clear_Click(object sender, RoutedEventArgs e)
+        {
+            VM.IsSaving = true;
+            await VM.ClearProject(VM.CurrentProject);
+            VM.IsSaving = false;
+        }
+
+        private void Btn_CloseError_Click(object sender, RoutedEventArgs e)
+        {
+            VM.IsError = false;
+            VM.IsVisible = false;
+        }
+
+        private async void Codewriter_ErrorOccured(object sender, ErrorEventArgs e)
+        {
+            Exception ex = e.GetException();
+            await  VM.Log ($"Editor Message: {ex.Message}");
+                await VM.Log($"\t {ex.StackTrace}");
+        }
     }
 }

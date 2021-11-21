@@ -22,7 +22,6 @@ namespace ConTeXt_IDE
         {
             this.InitializeComponent();
         }
-        ViewModel vm = App.VM;
 
         public ObservableCollection<TemplateSelection> templateSelections = new ObservableCollection<TemplateSelection>() {
          new TemplateSelection(){ Content = "Hello World (MWE)", Tag = "mwe", IsSelected = false},
@@ -31,11 +30,5 @@ namespace ConTeXt_IDE
           new TemplateSelection(){ Content = "Project structure for a thesis", Tag = "projthes", IsSelected = false}
         };
 
-
-
-        private void BGRadioButton_Checked(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

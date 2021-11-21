@@ -6,18 +6,21 @@
     xmlns:controls="using:ConTeXt_IDE"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
-    
+     
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" >
 
 
     <Grid HorizontalAlignment="Stretch" DataContext="{x:Bind VM}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="28"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions> 
         <Grid Visibility="Visible" Grid.Row="0"   x:Name="CustomDragRegion"  IsHitTestVisible="False">
+            <Grid.Background>
+                <SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
+            </Grid.Background>
             <!--<TextBlock Text="ConTeXt IDE" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ForegroundColor}"/>-->
                 <!--<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
             <StackPanel  Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">

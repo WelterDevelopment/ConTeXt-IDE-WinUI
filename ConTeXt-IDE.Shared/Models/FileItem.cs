@@ -23,6 +23,7 @@ namespace ConTeXt_IDE.Models
             if (file != null && file is StorageFile)
                 FileLanguage = GetFileType(((StorageFile)file).FileType);
             IsLogFile = false;
+            
         }
 
         public enum ExplorerItemType { Folder, File, ProjectRootFolder };
@@ -58,7 +59,7 @@ namespace ConTeXt_IDE.Models
 
         public string FileFolder { get => Get(""); set => Set(value); }
 
-        public string FileLanguage { get => Get("Text"); set { Set(value); Language = FileLanguages.LanguageList.FirstOrDefault(x => x.Name == value); } }
+        public string FileLanguage { get => Get("Text"); set { Set(value); Language = FileLanguages.LanguageList.FirstOrDefault(x => x.Name == value); IsTexFile = value == "ConTeXt"; } }
 
         public Language Language { get => Get<Language>(); set => Set(value); }
 
@@ -66,7 +67,9 @@ namespace ConTeXt_IDE.Models
 
         public bool IsChanged { get => Get(false); set => Set(value); }
 
-        public int CurrentLine { get => Get(1); set => Set(value); }
+        public bool IsTexFile { get => Get(false); set => Set(value); }
+
+        public Place CurrentLine { get => Get(new Place(0,0)); set => Set(value); }
 
         public bool IsExpanded { get => Get(false); set => Set(value); }
 
@@ -93,6 +96,7 @@ namespace ConTeXt_IDE.Models
                 case ".mkxl": return "ConTeXt";
                 case ".mkvi": return "ConTeXt";
                 case ".lua": return "Lua";
+                case ".tuc": return "Lua";
                 case ".json": return "Text";
                 case ".js": return "Text";
                 case ".r": return "Text";

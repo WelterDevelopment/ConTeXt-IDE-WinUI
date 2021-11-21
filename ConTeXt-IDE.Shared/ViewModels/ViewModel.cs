@@ -15,6 +15,7 @@ using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Background;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
+using Windows.Storage.Search;
 using Windows.UI;
 
 namespace ConTeXt_IDE.ViewModels
@@ -105,6 +106,8 @@ namespace ConTeXt_IDE.ViewModels
         public string Blocks { get => Get<string>(); set => Set(value); }
 
         public bool InfoOpen { get => Get(false); set => Set(value); }
+        public bool CanUndo { get => Get(false); set => Set(value); }
+        public ObservableCollection<EditAction> EditActionHistory { get => Get(new ObservableCollection<EditAction>()); set => Set(value); }
         public string InfoTitle { get => Get(""); set => Set(value); }
         public string InfoText { get => Get(""); set => Set(value); }
         public InfoBarSeverity InfoSeverity { get => Get(InfoBarSeverity.Informational); set => Set(value); }
@@ -245,7 +248,8 @@ namespace ConTeXt_IDE.ViewModels
 
         public ObservableCollection<ContextCommand> ContextCommands { get => Get(new ObservableCollection<ContextCommand>()); set => Set(value); }
 
-        
+        public List<string> InterfaceList { get => Get(new List<string>() { "en", "nl", "de", "it", "fr", "cs", "ro", "gb" }); set => Set(value); }
+       
 
         public StorageItemMostRecentlyUsedList RecentAccessList { get => Get<StorageItemMostRecentlyUsedList>(); set => Set(value); }
 
@@ -268,6 +272,7 @@ namespace ConTeXt_IDE.ViewModels
             }
         }
         private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf" };
+        private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf" };
         private async Task DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
         {
             try
@@ -335,6 +340,8 @@ namespace ConTeXt_IDE.ViewModels
             return m.Split(';').Select(x => x.Split('=')).ToDictionary(x => x[0], x => x[1]);
         }
 
+        public CodeWriter Codewriter { get => Get<CodeWriter>(); set=>Set(value); }
+
         public async void OpenFile(FileItem File, bool ProjectLoad = false)
         {
             try
@@ -386,12 +393,60 @@ namespace ConTeXt_IDE.ViewModels
             }
         }
 
+        public async void ClearWorkspace(StorageFolder f)
+        {
+            foreach (StorageFolder folder in await f.GetFoldersAsync())
+            {
+                ClearWorkspace(folder);
+            }
+            foreach (StorageFile item in await f.GetFilesAsync())
+            {
+                if (auxillaryWords.Contains(item.FileType))
+                {
+                    if (FileItems.Any(x => x.FileName == item.Name)) 
+                        FileItems.Remove(FileItems.First(x => x.FileName == item.Name)); 
+                    await item.DeleteAsync();
+                }
+                else if (item.FileType == ".pdf")
+                {
+                    string filename = item.Name;
+                    bool iscompiledpdf = (filename.StartsWith("project_") | filename.StartsWith("prd_") | filename.StartsWith("c_") | filename.StartsWith("env_") | filename.StartsWith("p-") | filename.StartsWith("t-"));
+                    if (iscompiledpdf)
+                        await item.DeleteAsync();
+                }
+            }
+        }
+
+        public async Task ClearProject(Project proj)
+        {
+            try
+            {
+                StorageFolder f = await StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(proj.Name);
+
+                ClearWorkspace(f);
+
+                await Log($"Project {proj.Name} cleared.");
+            }
+            catch (Exception ex)
+            {
+                InfoMessage(true, "Error", ex.Message, InfoBarSeverity.Error);
+            }
+        }
+
         public async Task LoadProject(Project proj)
         {
             try
             {
                 FileItems?.Clear();
-                var f = await StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(proj.Name);
+                StorageFolder f = await StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(proj.Name);
+
+                var options = new QueryOptions() { FolderDepth = FolderDepth.Deep };
+               // options.ApplicationSearchFilter = "*.tex";
+                var queryresult = f.CreateFileQueryWithOptions(options);
+
+                queryresult.ContentsChanged += Queryresult_ContentsChanged; // this never fires. Why?
+
+                await queryresult.GetFilesAsync();
 
                 var list = Default.ProjectList.Where(x => x.Name == f.Name);
 
@@ -430,6 +485,12 @@ namespace ConTeXt_IDE.ViewModels
             {
                 InfoMessage(true, "Error", ex.Message, InfoBarSeverity.Error);
             }
+        }
+
+        private void Queryresult_ContentsChanged(Windows.Storage.Search.IStorageQueryResultBase sender, object args)
+        {
+            //sender.ContentsChanged -= Queryresult_ContentsChanged;
+            //LoadProject(CurrentProject);
         }
 
         public async Task Startup()

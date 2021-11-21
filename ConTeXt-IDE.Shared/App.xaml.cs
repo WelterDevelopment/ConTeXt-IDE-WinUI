@@ -18,7 +18,7 @@ namespace ConTeXt_IDE
 
     {
         public static ViewModel VM { get; set; }
-        public static MainWindow m_window;
+        public static MainWindow mainWindow;
 
         private const string MutexName = "##||ConTeXt_IDE||##";
         private Mutex _mutex;
@@ -45,7 +45,7 @@ namespace ConTeXt_IDE
             }
         }
 
-        async void write(string stringtowrite)
+       public static async void write(string stringtowrite)
         {
             StorageFolder sf = ApplicationData.Current.LocalFolder;
             var file = await sf.CreateFileAsync("Error-Log.txt", CreationCollisionOption.OpenIfExists);
@@ -54,6 +54,7 @@ namespace ConTeXt_IDE
 
         private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
+            write("Unhandled app exception:" + e.Message + " - " + e.Exception.StackTrace);
             VM?.Log("Unhandled app exception:" +  e.Message);
         }
 
@@ -66,8 +67,8 @@ namespace ConTeXt_IDE
                 Application.Current.Exit();
                 return;
             }
-            m_window = new MainWindow();
-            m_window.Activate();
+            mainWindow = new MainWindow();
+            mainWindow.Activate();
 
         }
 
