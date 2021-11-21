@@ -1,7 +1,7 @@
 # ConTeXt IDE
 This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C# 9 / .NET 5 with the Windows App SDK (Project Reunion) 0.8 framework using only controls from the UI library WinUI 3. In the future, it *might* be possible to turn this into a .NET MAUI app that runs cross-platform on Windows, MacOS and (highly unlikely) also on Linux.
 
-![Screenshot 2021-11-14 191518](https://user-images.githubusercontent.com/13318246/141693303-d20e71cf-e98b-4f00-a83c-f454da1ea86c.png)
+![Screenshot_App](https://user-images.githubusercontent.com/13318246/142768950-b1c3c307-8247-49cd-8033-31b2efda5535.png)
 
 ## Usage
 
