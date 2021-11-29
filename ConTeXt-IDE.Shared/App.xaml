@@ -11,37 +11,11 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary >
-                    <CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
-                    <CornerRadius x:Key="ControlCornerRadius">4</CornerRadius>
-                </ResourceDictionary>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-
-                <!--<ColorPaletteResources Accent="{ThemeResource SystemAccentColor}" />-->
             </ResourceDictionary.MergedDictionaries>
+            
             <vm:ViewModel x:Key="VM"></vm:ViewModel>
             
-            <CornerRadius x:Key="CornerRadius">2</CornerRadius>
-
-            <Style TargetType="TextBox">
-                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
-                <Setter Property="Foreground" Value="{ThemeResource ButtonForeground}" />
-                <Setter Property="BorderThickness" Value="{ThemeResource ButtonRevealBorderThemeThickness}" />
-                <Setter Property="Background" Value="{StaticResource ButtonBackgroundThemeBrush}"></Setter>
-                <Setter Property="BorderBrush" Value="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"></Setter>
-            </Style>
-
-            <Style TargetType="NumberBox">
-                <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-                <Setter Property="VerticalContentAlignment" Value="Stretch"></Setter>
-                <Setter Property="Margin" Value="0"></Setter>
-                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
-                <Setter Property="Foreground" Value="{ThemeResource ButtonForeground}" />
-                <Setter Property="BorderThickness" Value="{ThemeResource ButtonRevealBorderThemeThickness}" />
-                <Setter Property="Background" Value="{StaticResource SystemControlBackgroundBaseLowRevealBackgroundBrush}"></Setter>
-                <Setter Property="BorderBrush" Value="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"></Setter>
-            </Style>
-
             <Style TargetType="StackPanel">
                 <Setter Property="Orientation" Value="Horizontal"></Setter>
                 <Setter Property="Spacing" Value="6"></Setter>
@@ -49,6 +23,10 @@
 
             <Style TargetType="FontIcon">
                 <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}"></Setter>
+                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
+            </Style>
+            <Style TargetType="SymbolIcon">
+                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
             </Style>
 
             <Style TargetType="Grid" x:Key="GridCell">
@@ -57,14 +35,14 @@
                 <Setter Property="RowSpacing" Value="6"></Setter>
                 <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-                <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundAltHighHighBrush}" ></Setter>
+                <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorBase}" ></Setter>
             </Style>
 
             <Style TargetType="toolkit:GridSplitter" x:Key="RowSplitter">
                 <Setter Property="Height" Value="6"></Setter>
                 <Setter Property="ResizeBehavior" Value="PreviousAndNext"></Setter>
                 <Setter Property="CursorBehavior" Value="ChangeOnSplitterHover"></Setter>
-                <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundAltHighBrush}"></Setter>
+                <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary}"></Setter>
                 <Setter Property="GripperForeground" Value="{ThemeResource ForegroundLightColor}"></Setter>
                 <Setter Property="FocusVisualPrimaryBrush" Value="DarkGray"></Setter>
                 <Setter Property="FocusVisualSecondaryBrush" Value="DarkGray"></Setter>
@@ -75,7 +53,7 @@
                 <Setter Property="Width" Value="6"></Setter>
                 <Setter Property="ResizeBehavior" Value="PreviousAndNext"></Setter>
                 <Setter Property="CursorBehavior" Value="ChangeOnSplitterHover"></Setter>
-                <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundAltHighBrush}"></Setter>
+                <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary}"></Setter>
                 <Setter Property="GripperForeground" Value="{ThemeResource ForegroundLightColor}"></Setter>
                 <Setter Property="FocusVisualPrimaryBrush" Value="DarkGray"></Setter>
                 <Setter Property="FocusVisualSecondaryBrush" Value="DarkGray"></Setter>
@@ -85,202 +63,45 @@
             <Style x:Key="Separator" TargetType="Border">
                 <Setter Property="BorderThickness" Value="1,0,0,0"></Setter>
                 <Setter Property="Margin" Value="4,4,4,4"></Setter>
-                <Setter Property="BorderBrush" Value="{ThemeResource ForegroundLightColor}"></Setter>
+                <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
             </Style>
 
-            <Style TargetType="Button">
+            <CornerRadius x:Key="CornerRadius" >4</CornerRadius>
+            <CornerRadius x:Key="CornerRadiusRight">0,4,4,0</CornerRadius>
+            <CornerRadius x:Key="CornerRadiusLeft">4,0,0,4</CornerRadius>
+
+            <Style  TargetType="DropDownButton" >
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-                <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-                <Setter Property="HorizontalAlignment" Value="Left"></Setter>
-                <Setter Property="HorizontalContentAlignment" Value="Center"></Setter>
-                <Setter Property="Background" Value="{ThemeResource ButtonBackgroundThemeBrush}" />
-                <Setter Property="Foreground" Value="{ThemeResource ButtonForeground}" />
-                <Setter Property="BorderThickness" Value="{ThemeResource ButtonRevealBorderThemeThickness}" />
-                <Setter Property="Padding" Value="{ThemeResource ButtonPadding}" />
-                <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
-                <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}" />
-                <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
-                <Setter Property="FocusVisualMargin" Value="-3" />
                 <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
-                <Setter Property="BorderBrush" Value="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"></Setter>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="Button">
-                            <ContentPresenter x:Name="ContentPresenter"
-                                  Background="{TemplateBinding Background}"
-                                  BackgroundSizing="{TemplateBinding BackgroundSizing}"
-                                  BorderBrush="{TemplateBinding BorderBrush}"
-                                  BorderThickness="{TemplateBinding BorderThickness}"
-                                  Content="{TemplateBinding Content}"
-                                  ContentTemplate="{TemplateBinding ContentTemplate}"
-                                  ContentTransitions="{TemplateBinding ContentTransitions}"
-                                  CornerRadius="{TemplateBinding CornerRadius}"
-                                  Padding="{TemplateBinding Padding}"
-                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                  AutomationProperties.AccessibilityView="Raw">
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroup x:Name="CommonStates">
-                                        <VisualState x:Name="Normal">
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Duration="0:0:0.0" Storyboard.TargetName="ContentPresenter" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="PointerOver">
-                                            <Storyboard>
-                                                <ColorAnimation Duration="0:0:0.0" Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="(ContentPresenter.Background).(SolidColorBrush.Color)" To="{ThemeResource SystemChromeHighColor}"/>
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Pressed">
-                                            <Storyboard>
-                                                <ColorAnimation Duration="0:0:0.0" Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="(ContentPresenter.Background).(SolidColorBrush.Color)" To="{ThemeResource SystemChromeLowColor}"/>
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Disabled">
-                                            <VisualState.Setters>
-                                                <Setter Target="ContentPresenter.Background" Value="{ThemeResource ButtonBackgroundDisabled}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ButtonForegroundDisabled}" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateManager.VisualStateGroups>
-                            </ContentPresenter>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
             </Style>
-
-            <!--<Style TargetType="ListViewItem">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        
-                    </Setter.Value>
-                </Setter>
-            </Style>-->
-
-            <Style TargetType="ToggleButton" BasedOn="{StaticResource ToggleButtonRevealStyle}">
+            <Style  TargetType="Button" >
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-                <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-                <Setter Property="HorizontalAlignment" Value="Left"></Setter>
-                <Setter Property="HorizontalContentAlignment" Value="Center"></Setter>
                 <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
-                <Setter Property="Foreground" Value="{ThemeResource ButtonForegroundThemeBrush}"></Setter>
-                <Setter Property="Background" Value="{ThemeResource ButtonBackgroundThemeBrush}"></Setter>
-                <Setter Property="BorderBrush" Value="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"></Setter>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ToggleButton">
-                            <ContentPresenter x:Name="ContentPresenter"
-                                  Background="{TemplateBinding Background}"
-                                  BackgroundSizing="{TemplateBinding BackgroundSizing}"
-                                  BorderBrush="{TemplateBinding BorderBrush}"
-                                  BorderThickness="{TemplateBinding BorderThickness}"
-                                  Content="{TemplateBinding Content}"
-                                  ContentTemplate="{TemplateBinding ContentTemplate}"
-                                  ContentTransitions="{TemplateBinding ContentTransitions}"
-                                  CornerRadius="{TemplateBinding CornerRadius}"
-                                  Padding="{TemplateBinding Padding}"
-                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                  AutomationProperties.AccessibilityView="Raw">
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroup x:Name="CommonStates">
-                                        <VisualState x:Name="Normal">
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="PointerOver">
-                                            <Storyboard>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBackgroundPointerOver}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource SystemControlForegroundBaseMediumLowBrush}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ForegroundColor}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="ContentPresenter" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Pressed">
-                                            <Storyboard>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBackgroundPressed}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBorderBrushPressed}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonForegroundPressed}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Disabled">
-                                            <Storyboard>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBackgroundDisabled}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonForegroundDisabled}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBorderBrushDisabled}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Checked">
-                                            <VisualState.Setters>
-                                                <Setter Target="ContentPresenter.Background" Value="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}, Mode=OneWay}"></Setter>
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                        <VisualState x:Name="CheckedPointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Target="ContentPresenter.Background" Value="{Binding AccentColor, Source={StaticResource AccentColorSetting}, Mode=OneWay}"></Setter>
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                        <VisualState x:Name="CheckedPressed">
-                                            <Storyboard>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBackgroundCheckedPressed}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonForegroundCheckedPressed}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBorderBrushCheckedPressed}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <PointerDownThemeAnimation Storyboard.TargetName="ContentPresenter" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="CheckedDisabled">
-                                            <Storyboard>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Background">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBackgroundCheckedDisabled}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonForegroundCheckedDisabled}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
-                                                    <DiscreteObjectKeyFrame Value="{ThemeResource ToggleButtonBorderBrushCheckedDisabled}" />
-                                                </ObjectAnimationUsingKeyFrames>
-                                            </Storyboard>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateManager.VisualStateGroups>
-                            </ContentPresenter>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
+            </Style>
+            <Style  TargetType="ToggleButton">
+                <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
+                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
+            </Style>
+            <Style  TargetType="ToggleSplitButton">
+                <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
+                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
             </Style>
             <Style TargetType="ComboBox" >
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-                <Setter Property="MinWidth" Value="50"></Setter>
-                <Setter Property="Background" Value="{StaticResource SystemControlBackgroundBaseLowRevealBackgroundBrush}"></Setter>
                 <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
+                <Setter Property="MinWidth" Value="50"></Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
+            </Style>
+
+            <Style TargetType="NumberBox" >
+                <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
+                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
+                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
             </Style>
 
             <Style TargetType="TextBlock" x:Key="RibbonTextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
@@ -297,14 +118,13 @@
             </Style>
 
             <Style TargetType="ScrollViewer" x:Key="RibbonView">
-                <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundAltHighBrush}"></Setter>
+                <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary }"></Setter>
                 <Setter Property="Height" Value="48"></Setter>
                 <Setter Property="Padding" Value="6,6,6,6"></Setter>
                 <Setter Property="HorizontalScrollMode" Value="Enabled"></Setter>
                 <Setter Property="HorizontalScrollBarVisibility" Value="Hidden"></Setter>
                 <Setter Property="VerticalScrollMode" Value="Disabled"></Setter>
                 <Setter Property="VerticalScrollBarVisibility" Value="Disabled"></Setter>
-               
             </Style>
 
             <Style TargetType="StackPanel" x:Key="RibbonContent">
@@ -325,153 +145,13 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-
-            <Style TargetType="ToggleButton" x:Key="ToggleButtonRevealStyle">
-                <Setter Property="Background" Value="{ThemeResource ToggleButtonRevealBackground}" />
-                <Setter Property="Foreground" Value="{ThemeResource ToggleButtonForeground}" />
-                <Setter Property="BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrush}" />
-                <Setter Property="BorderThickness" Value="{ThemeResource ToggleButtonRevealBorderThemeThickness}" />
-                <Setter Property="Padding" Value="{ThemeResource ButtonPadding}" />
-                <Setter Property="HorizontalAlignment" Value="Left" />
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
-                <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}" />
-                <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
-                <Setter Property="FocusVisualMargin" Value="-3" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ToggleButton">
-                            <Grid x:Name="RootGrid" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
-                                <VisualStateManager.VisualStateGroups>
-                                    <VisualStateGroup x:Name="CommonStates">
-                                        <VisualState x:Name="Normal">
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="PointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.(RevealBrush.State)" Value="PointerOver" />
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundPointerOver}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushPointerOver}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundPointerOver}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Pressed">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.(RevealBrush.State)" Value="Pressed" />
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundPressed}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushPressed}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundPressed}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerDownThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="Disabled">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundDisabled}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushDisabled}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundDisabled}" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                        <VisualState x:Name="Checked">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundChecked}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushChecked}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ForegroundColor }" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="CheckedPointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.(RevealBrush.State)" Value="PointerOver" />
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundCheckedPointerOver}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushCheckedPointerOver}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedPointerOver}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="CheckedPressed">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.(RevealBrush.State)" Value="Pressed" />
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundCheckedPressed}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushCheckedPressed}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedPressed}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerDownThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="CheckedDisabled">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundCheckedDisabled}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushCheckedDisabled}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundCheckedDisabled}" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                        <VisualState x:Name="Indeterminate">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundIndeterminate}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushIndeterminate}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundIndeterminate}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="IndeterminatePointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.(RevealBrush.State)" Value="PointerOver" />
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundIndeterminatePointerOver}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushIndeterminatePointerOver}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundIndeterminatePointerOver}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerUpThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="IndeterminatePressed">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.(RevealBrush.State)" Value="Pressed" />
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundIndeterminatePressed}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushIndeterminatePressed}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundIndeterminatePressed}" />
-                                            </VisualState.Setters>
-                                            <Storyboard>
-                                                <PointerDownThemeAnimation Storyboard.TargetName="RootGrid" />
-                                            </Storyboard>
-                                        </VisualState>
-                                        <VisualState x:Name="IndeterminateDisabled">
-                                            <VisualState.Setters>
-                                                <Setter Target="RootGrid.Background" Value="{ThemeResource ToggleButtonRevealBackgroundIndeterminateDisabled}" />
-                                                <Setter Target="ContentPresenter.BorderBrush" Value="{ThemeResource ToggleButtonRevealBorderBrushIndeterminateDisabled}" />
-                                                <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource ToggleButtonForegroundIndeterminateDisabled}" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateManager.VisualStateGroups>
-                                <ContentPresenter x:Name="ContentPresenter" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Content="{TemplateBinding Content}" ContentTransitions="{TemplateBinding ContentTransitions}" ContentTemplate="{TemplateBinding ContentTemplate}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" AutomationProperties.AccessibilityView="Raw" />
-                            </Grid>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
+            
             <helpers:AccentColorSetting x:Key="AccentColorSetting"/>
 
             <helpers:ArgumentOptionalToText x:Key="ArgumentOptionalToText"></helpers:ArgumentOptionalToText>
+            <helpers:Multiply x:Key="Multiply"></helpers:Multiply>
             <helpers:ArgumentTypeToText x:Key="ArgumentTypeToText"></helpers:ArgumentTypeToText>
             <helpers:ParameterDefaultToDecoration x:Key="ParameterDefaultToDecoration"></helpers:ParameterDefaultToDecoration>
-
             <helpers:ParameterTypeToText x:Key="ParameterTypeToText"></helpers:ParameterTypeToText>
             <helpers:CommandTypeToText x:Key="CommandTypeToText"></helpers:CommandTypeToText>
             <helpers:StringComparer x:Key="StringComparer"></helpers:StringComparer>
@@ -492,67 +172,39 @@
             <helpers:VisibilityToBorderThickness x:Key="VisibilityToBorderThickness" />
 
             <ResourceDictionary.ThemeDictionaries>
-
-                <ResourceDictionary x:Key="Default">
+                <ResourceDictionary x:Key="Dark">
                     <ResourceDictionary.MergedDictionaries>
                         <!--<ColorPaletteResources  Accent="ForestGreen"  BaseHigh="Yellow" BaseLow="Orange" BaseMedium="Red" BaseMediumHigh="Violet" BaseMediumLow="Blue" />-->
-                        
+                        <!--<ColorPaletteResources Accent="#FFBFCF36" AltHigh="#FFFFFFFF" AltLow="#FFFFFFFF" AltMedium="#FFFFFFFF" AltMediumHigh="#FFFFFFFF" AltMediumLow="#FFFFFFFF" BaseHigh="#FF000000" BaseLow="#FFCCCCCC" BaseMedium="#FF898989" BaseMediumHigh="#FF5D5D5D" BaseMediumLow="#FF737373" ChromeAltLow="#FF5D5D5D" ChromeBlackHigh="#FF000000" ChromeBlackLow="#FFCCCCCC" ChromeBlackMedium="#FF5D5D5D" ChromeBlackMediumLow="#FF898989" ChromeDisabledHigh="#FFCCCCCC" ChromeDisabledLow="#FF898989" ChromeGray="#FF737373" ChromeHigh="#FFCCCCCC" ChromeLow="#FFECECEC" ChromeMedium="#FFE6E6E6" ChromeMediumLow="#FFECECEC" ChromeWhite="#FFFFFFFF" ListLow="#FFE6E6E6" ListMedium="#FFCCCCCC" />-->
                     </ResourceDictionary.MergedDictionaries>
-                    <AcrylicBrush x:Key="MyAcrylicBrush"  TintColor="{ThemeResource AcrylicColor}"        FallbackColor="{ThemeResource AcrylicColor}"/>
-                    <AcrylicBrush x:Key="ContentAcrylicBrush" TintColor="#FF444444" TintOpacity="1" TintLuminosityOpacity="1" FallbackColor="#FF444444"/>
-                    <AcrylicBrush x:Key="ItemAcrylicBrush"  TintColor="#FF222222" TintOpacity="0.9" FallbackColor="#FF222222"/>
-                    <AcrylicBrush x:Key="LogAcrylicBrush"  TintColor="#FF383838" TintOpacity="0.9" FallbackColor="#FF383838"/>
-                    <AcrylicBrush x:Key="TitlebarAcrylicBrush"  TintColor="#FF202020" TintOpacity="0.9" FallbackColor="#FF202020"/>
-                    <AcrylicBrush x:Key="AccentColorAcrylicBrush"  TintColor="{ThemeResource SystemAccentColorDark1}" TintOpacity="0.7" TintLuminosityOpacity="0.5"  FallbackColor="{ThemeResource SystemAccentColorDark1}"/>
+
+                    <Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
+                    <Color x:Key="SystemAccentColorDark2" >DarkGray</Color>
 
                     <Color x:Key="ForegroundColor">#FFFFFF</Color>
                     <Color x:Key="BackgroundColor">#000000</Color>
-                    <Color x:Key="GripperColor">#555555</Color>
                     <Color x:Key="ForegroundLightColor">#DDEEEEEE</Color>
-                    <Color x:Key="AcrylicColor">#444444</Color>
-                    <SolidColorBrush x:Key="AccentColorBrushHigh" Color="{ThemeResource SystemAccentColorLight2}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="AccentColorBrushLow" Color="{ThemeResource SystemAccentColorDark2}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="SystemControlBackgroundAltHighHighBrush" Color="{Binding AccentColorLowLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{Binding AccentColorLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
 
-                    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#222"></SolidColorBrush>
-                    
-                    <SolidColorBrush x:Key="WindowCaptionBackground" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
-                    <SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
-
-                    <StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>
+                    <!--<StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>-->
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="HighContrast">
-                    <SolidColorBrush x:Key="MyAcrylicBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <Color x:Key="ForegroundColor">#FFFFFF</Color>
+                    <Color x:Key="BackgroundColor">#000000</Color>
+                    <Color x:Key="ForegroundLightColor">#FFFFFF</Color>
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
-                    <!--<ResourceDictionary.MergedDictionaries>
-                        <ColorPaletteResources  Accent="{ThemeResource SystemAccentColor}"  />
-                    </ResourceDictionary.MergedDictionaries>-->
-                    <AcrylicBrush x:Key="MyAcrylicBrush"  TintColor="{ThemeResource AcrylicColor}"   TintOpacity="1" FallbackColor="{ThemeResource AcrylicColor}"/>
-                    <AcrylicBrush x:Key="ContentAcrylicBrush"  TintColor="#FFDDDDDD" TintOpacity="1" TintLuminosityOpacity="1" FallbackColor="#FFDDDDDD"/>
-                    <AcrylicBrush x:Key="ItemAcrylicBrush"  TintColor="#FF222222" TintOpacity="0.9" FallbackColor="#FF222222"/>
-                    <AcrylicBrush x:Key="LogAcrylicBrush"  TintColor="#FFA3A3A3" TintOpacity="0.9" FallbackColor="#FFA3A3A3"/>
-                    <AcrylicBrush x:Key="TitlebarAcrylicBrush"  TintColor="#FF9F9F9F" TintOpacity="0.9" FallbackColor="#FF9F9F9F"/>
-                    <AcrylicBrush x:Key="AccentColorAcrylicBrush"  TintColor="{ThemeResource SystemAccentColorDark1}" TintOpacity="0.85" TintLuminosityOpacity="0.7" FallbackColor="{ThemeResource SystemAccentColorDark1}"/>
+                    <ResourceDictionary.MergedDictionaries>
+                        <!--<ColorPaletteResources  Accent="Blue"  />-->
+                    </ResourceDictionary.MergedDictionaries>
+
+                    <Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
+                    <Color x:Key="SystemAccentColorDark1" >DarkGray</Color>
+
                     <Color x:Key="ForegroundColor">#000000</Color>
                     <Color x:Key="BackgroundColor">#FFFFFF</Color>
-                    <Color x:Key="GripperColor">#EEEEEE</Color>
                     <Color x:Key="ForegroundLightColor">#DD111111</Color>
-                    <Color x:Key="AcrylicColor">#DDDDDD</Color>
-                    <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{Binding AccentColorLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="SystemControlBackgroundAltHighHighBrush" Color="{Binding AccentColorLowLowLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="AccentColorBrushHigh" Color="{ThemeResource SystemAccentColorDark2}"></SolidColorBrush>
-                    <SolidColorBrush x:Key="AccentColorBrushLow" Color="{ThemeResource SystemAccentColorLight2}"></SolidColorBrush>
-
-                    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#EEE"></SolidColorBrush>
-
-                    <SolidColorBrush x:Key="WindowCaptionBackground" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
-                    <SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"/>
-
-                    <StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>
                     
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>

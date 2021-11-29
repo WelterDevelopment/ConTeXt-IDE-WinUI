@@ -3,6 +3,7 @@ using CodeEditorControl_WinUI;
 using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Shared.Models;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
@@ -32,7 +33,7 @@ namespace ConTeXt_IDE.Models
 
         public ObservableCollection<FileItem> Children { get => Get(new ObservableCollection<FileItem>()); set => Set(value); }
 
-        public ObservableCollection<OutlineItem> OutlineItems { get => Get(new ObservableCollection<OutlineItem>()); set => Set(value); }
+       
 
         public int Level { get => Get(0); set => Set(value); }
 
@@ -69,7 +70,22 @@ namespace ConTeXt_IDE.Models
 
         public bool IsTexFile { get => Get(false); set => Set(value); }
 
-        public Place CurrentLine { get => Get(new Place(0,0)); set => Set(value); }
+        public Place CurrentLine
+        {
+            get => Get(new Place(0, 0));
+            set
+            {
+                if (CurrentLine.iLine != value.iLine)
+                {
+                    if (App.VM?.OutlineItems?.Count > 0)
+                    {
+                        App.VM.SelectedOutlineItem = App.VM?.OutlineItems.Where(x => value.iLine + 1 >= x.Row).LastOrDefault();
+                        
+                    }
+                }
+                Set(value);
+            }
+        }
 
         public bool IsExpanded { get => Get(false); set => Set(value); }
 
@@ -84,6 +100,8 @@ namespace ConTeXt_IDE.Models
         public string LastSaveFileContent { get => Get(""); set => Set(value); }
 
         public ExplorerItemType Type { get => Get(ExplorerItemType.File); set => Set(value); }
+
+
 
 
         public static string GetFileType(string ext)

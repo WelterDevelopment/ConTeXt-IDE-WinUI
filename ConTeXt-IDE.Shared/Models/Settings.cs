@@ -107,9 +107,9 @@ namespace ConTeXt_IDE.Models
         public bool InternalViewer { get => Get(true); set => Set(value); }
         public bool MultiInstance { get => Get(false); set => Set(value); }
         public bool ShowLog { get => Get(false); set => Set(value); }
+        public bool ShowCompilerOutput { get => Get(false); set => Set(value); }
         public bool ShowOutline { get => Get(true); set => Set(value); }
         public bool ShowProjectPane { get => Get(true); set => Set(value); }
-        public bool ShowProjects { get => Get(true); set => Set(value); }
         public bool ShowCommandReference { get => Get(false); set => Set(value); }
         public bool StartWithLastActiveProject { get => Get(true); set => Set(value); }
         public bool StartWithLastOpenFiles { get => Get(false); set => Set(value); }
@@ -130,19 +130,14 @@ namespace ConTeXt_IDE.Models
         public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
         public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
         public string LastActiveProject { get => Get(""); set => Set(value); }
-        public string Modes { get => Get(""); set => Set(value); }
         public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
         public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
-        public string TexFileFolder { get => Get(""); set => Set(value); }
-        public string TexFileName { get => Get(""); set => Set(value); }
-        public string TexFilePath { get => Get(""); set => Set(value); }
         public int FontSize { get => Get(18); set => Set(value); }
         public string Theme { get => Get("Default"); set {
                 Set(value); 
-                if (App.VM != null) 
-                    ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).Theme = value == "Dark" ? ElementTheme.Dark : (value == "Light" ? ElementTheme.Light : ElementTheme.Default);
-                if (App.MainPage != null)
-                    App.MainPage.SetColor(null,false);
+                
+                //if (App.MainPage != null)
+                //    App.MainPage.SetColor(null, (ElementTheme)Enum.Parse(typeof(ElementTheme),value), false); ;
             } }
 
 

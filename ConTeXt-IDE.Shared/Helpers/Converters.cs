@@ -77,6 +77,19 @@ namespace ConTeXt_IDE.Helpers
         }
     }
 
+    public class Multiply : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return double.Parse(value.ToString()) * double.Parse(parameter.ToString());
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return 0;
+        }
+    }
+
     public class ParameterDefaultToDecoration : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -137,9 +150,8 @@ namespace ConTeXt_IDE.Helpers
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            string currenttext = value as string;
 
-            if (string.IsNullOrEmpty(currenttext))
+            if (value is null)
                 return Visibility.Collapsed;
             else
                 return Visibility.Visible;
@@ -378,7 +390,7 @@ namespace ConTeXt_IDE.Helpers
 
     public class VisibilityToCornerRadius : IValueConverter
     {
-        private CornerRadius connectedside = new CornerRadius(2);
+        private CornerRadius connectedside = new CornerRadius(4);
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -386,10 +398,10 @@ namespace ConTeXt_IDE.Helpers
             {
                 switch (side)
                 {
-                    case "left": connectedside = new CornerRadius(0, 2, 2, 0); break;
-                    case "right": connectedside = new CornerRadius(2, 0, 0, 2); break;
+                    case "left": connectedside = new CornerRadius(0, 4, 4, 0); break;
+                    case "right": connectedside = new CornerRadius(4, 0, 0, 4); break;
                     case "leftright": connectedside = new CornerRadius(0); break;
-                    default: connectedside = new CornerRadius(2); break;
+                    default: connectedside = new CornerRadius(4); break;
                 }
             }
             if (value is Visibility isConnected)

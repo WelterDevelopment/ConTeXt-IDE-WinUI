@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -44,7 +45,7 @@ namespace ConTeXt_IDE
     {
         private ViewModel VM { get; } = App.VM;
 
-       
+
 
         public MainPage()
         {
@@ -57,7 +58,7 @@ namespace ConTeXt_IDE
                 VM.Default.PropertyChanged += Default_PropertyChanged;
 
                 //SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
-                
+
                 TB_Version.Text = string.Format("Version: {0}.{1}.{2}.{3}",
                          Package.Current.Id.Version.Major,
                          Package.Current.Id.Version.Minor,
@@ -96,23 +97,20 @@ namespace ConTeXt_IDE
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            
-            
-
-            SetColor(null, false);
+            SetColor(VM.AccentColor, (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme),false);
         }
 
         public async void FirstStart()
         {
-            if (App.VM.Default.FirstStart)
+            if (VM.Default.FirstStart)
             {
                 ShowTeachingTip("AddProject", Btnaddproject);
-                App.VM.Default.FirstStart = false;
+                VM.Default.FirstStart = false;
             }
         }
 
         private bool loaded = false;
-       
+
         private void Edit_Unloaded(object sender, RoutedEventArgs e)
         {
             loaded = false;
@@ -141,7 +139,7 @@ namespace ConTeXt_IDE
                 VM.Log(ex.Message);
             }
         }
-       
+
         private MenuFlyoutItem MenuSave = new MenuFlyoutItem() { Text = "Save", Icon = new SymbolIcon() { Symbol = Symbol.Save } };
         private MenuFlyoutItem MenuCompile = new MenuFlyoutItem() { Text = "Compile", Icon = new SymbolIcon() { Symbol = Symbol.Play } };
 
@@ -163,9 +161,20 @@ namespace ConTeXt_IDE
             cw.ScrollToLine(VM.CurrentFileItem.CurrentLine.iLine);
             cw.Focus(FocusState.Keyboard);
 
+
+            cw.Lines.CollectionChanged += Lines_CollectionChanged;
+
         }
 
-        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        private void Lines_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (VM.Codewriter.IsInitialized && VM.CurrentFileItem.FileLanguage == "ConTeXt")
+            {
+                VM.UpdateOutline((sender as ObservableCollection<Line>).ToList(), true);
+            }
+        }
+
+            private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             string file = @"tex\texmf-mswin\bin\context.exe";
             var storageFolder = ApplicationData.Current.LocalFolder;
@@ -198,6 +207,7 @@ namespace ConTeXt_IDE
             InitializeCommandReference();
             await VM.Startup();
             FirstStart();
+
             // OnProtocolActivated(Windows.ApplicationModel.AppInstance.GetActivatedEventArgs());
 
         }
@@ -270,21 +280,21 @@ namespace ConTeXt_IDE
 
         #region Page Close
 
-        // // This comes back in Project Reuinion 1.0
-        //private async void MainPage_CloseRequested(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
-        //{
-        //    var deferral = e.GetDeferral();
-        //    bool unsaved = App.VM.FileItems.Any(x => x.IsChanged);
-        //    if (unsaved)
-        //    {
-        //        var save = new ContentDialog() { XamlRoot = XamlRoot, Title = "Do you want to save the open unsaved files before closing?", PrimaryButtonText = "Yes", SecondaryButtonText = "No", DefaultButton = ContentDialogButton.Primary };
-        //        if (await save.ShowAsync() == ContentDialogResult.Primary)
-        //        {
-        //            await App.VM.SaveAll();
-        //        }
-        //    }
-        //    deferral.Complete();
-        //}
+        public async Task<bool> MainPage_CloseRequested()
+        {
+            bool unsaved = VM.FileItems.Any(x => x.IsChanged);
+            if (unsaved)
+            {
+                var save = new ContentDialog() { XamlRoot = XamlRoot, CloseButtonText = "Cancel", Title = "Do you want to save the open unsaved files before closing?", PrimaryButtonText = "Yes", SecondaryButtonText = "No", DefaultButton = ContentDialogButton.Primary };
+                var result = await save.ShowAsync();
+                if (result == ContentDialogResult.Primary)
+                {
+                    await VM.SaveAll();
+                }
+                return result == ContentDialogResult.None;
+            }
+            return false;
+        }
 
         #endregion
 
@@ -426,20 +436,20 @@ namespace ConTeXt_IDE
                 if (result == ContentDialogResult.Primary)
                 {
                     name = tb.Text;
-                    var folder = App.VM.CurrentProject.Folder;
+                    var folder = VM.CurrentProject.Folder;
                     if (await folder.TryGetItemAsync(name) == null)
                     {
                         var subfolder = await folder.CreateFolderAsync(name);
                         var fi = new FileItem(subfolder) { Type = FileItem.ExplorerItemType.Folder };
-                        App.VM.CurrentProject.Directory[0].Children.Insert(0, fi);
+                        VM.CurrentProject.Directory[0].Children.Insert(0, fi);
                     }
                     else
-                        App.VM.Log(name + " does already exist.");
+                        VM.Log(name + " does already exist.");
                 }
             }
             catch (Exception ex)
             {
-                App.VM.Log("Exception on adding Folder: " + ex.Message);
+                VM.Log("Exception on adding Folder: " + ex.Message);
             }
         }
 
@@ -447,7 +457,7 @@ namespace ConTeXt_IDE
         {
             try
             {
-                await Launcher.LaunchFolderAsync(App.VM.CurrentProject.Folder);
+                await Launcher.LaunchFolderAsync(VM.CurrentProject.Folder);
             }
             catch (Exception ex)
             {
@@ -460,7 +470,7 @@ namespace ConTeXt_IDE
             try
             {
                 var fi = (FileItem)(sender as FrameworkElement).DataContext;
-                RemoveItem(App.VM.CurrentProject.Directory, fi);
+                RemoveItem(VM.CurrentProject.Directory, fi);
                 VM.FileItems.Remove(fi);
                 string type = fi.File is StorageFile ? "File" : "Folder";
                 await fi.File.DeleteAsync();
@@ -514,7 +524,7 @@ namespace ConTeXt_IDE
             var res = await cd.ShowAsync();
             if (res == ContentDialogResult.Primary)
             {
-                App.VM.Log($"Renaming {type.ToString().ToLower()} {startstring} to {tb.Text}");
+                VM.Log($"Renaming {type.ToString().ToLower()} {startstring} to {tb.Text}");
                 return tb.Text;
             }
             else
@@ -556,17 +566,17 @@ namespace ConTeXt_IDE
 
         private async void FileCopy(DragEventArgs e)
         {
-            if (e.DataView.Contains(StandardDataFormats.StorageItems) && App.VM.IsProjectLoaded)
+            if (e.DataView.Contains(StandardDataFormats.StorageItems) && VM.IsProjectLoaded)
             {
                 IReadOnlyList<IStorageItem> items = await e.DataView.GetStorageItemsAsync();
                 foreach (StorageFile file in items)
                 {
                     var fi = new FileItem(file);
-                    App.VM.CurrentProject.Directory.Add(fi);
+                    VM.CurrentProject.Directory.Add(fi);
 
-                    if (Path.GetDirectoryName(file.Path) != Path.GetDirectoryName(App.VM.CurrentProject.Folder.Path))
+                    if (Path.GetDirectoryName(file.Path) != Path.GetDirectoryName(VM.CurrentProject.Folder.Path))
                     {
-                        await file.CopyAsync(App.VM.CurrentProject.Folder, file.Name, NameCollisionOption.GenerateUniqueName);
+                        await file.CopyAsync(VM.CurrentProject.Folder, file.Name, NameCollisionOption.GenerateUniqueName);
                         fi.FileFolder = Path.GetDirectoryName(file.Path);
                     }
                 }
@@ -585,7 +595,7 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.Log("Error on TreeView_DragItemsStarting: " + ex.Message);
+                VM.Log("Error on TreeView_DragItemsStarting: " + ex.Message);
             }
         }
 
@@ -597,7 +607,7 @@ namespace ConTeXt_IDE
                 foreach (StorageFile file in items)
                 {
                     var fileitem = new FileItem(file) { };
-                    App.VM.OpenFile(fileitem);
+                    VM.OpenFile(fileitem);
                 }
             }
         }
@@ -615,7 +625,7 @@ namespace ConTeXt_IDE
                 string type = ((StorageFile)fileitem.File).FileType.ToLower();
                 if (LanguagesToOpen.Contains(type))
                 {
-                    App.VM.OpenFile(fileitem);
+                    VM.OpenFile(fileitem);
                 }
                 else if (BitmapsToOpen.Contains(type))
                 {
@@ -651,7 +661,8 @@ namespace ConTeXt_IDE
             if (ei.Level == 0)
             {
                 ei.IsRoot = true;
-                App.VM.CurrentProject.RootFile = ei.FileName;
+                VM.CurrentRootItem = ei;
+                VM.CurrentProject.RootFile = ei.FileName;
             }
             else
             {
@@ -665,68 +676,77 @@ namespace ConTeXt_IDE
 
         public async void CompileTex(bool compileRoot = false, FileItem fileToCompile = null)
         {
-            if (!App.VM.IsSaving)
+            if (!VM.IsSaving)
                 try
                 {
-                    App.VM.IsError = false;
-                    App.VM.IsPaused = false;
-                    App.VM.IsVisible = true;
-                    App.VM.IsSaving = true;
+                    VM.IsError = false;
+                    VM.IsPaused = false;
+                    VM.IsVisible = true;
+                    VM.IsSaving = true;
 
                     //await Task.Delay(500);
 
                     string[] modes = new string[] { };
-                    if (App.VM.CurrentProject != null)
-                        modes = App.VM.CurrentProject.Modes.Where(x => x.IsSelected).Select(x => x.Name).ToArray();
-                    if (modes.Length > 0 && App.VM.CurrentProject.UseModes)
-                        App.VM.Default.Modes = string.Join(",", modes);
-                    else App.VM.Default.Modes = "";
+                    string[] environments = new string[] { };
+
+                    string modesstring = "";
+                    string environmentsstring = "";
+                    if (VM.CurrentProject != null) 
+                    {
+                        modes = VM.CurrentProject.Modes.Where(x => x.IsSelected).Select(x => x.Name).ToArray();
+                        environments = VM.CurrentProject.Environments.Where(x => x.IsSelected).Select(x => x.Name).ToArray();
+                    }
+                    if (modes.Length > 0)
+                       modesstring = string.Join(",", modes);
+                    if (environments.Length > 0)
+                        environmentsstring = string.Join(",", environments);
+
 
                     FileItem filetocompile = null;
                     if (compileRoot)
                     {
                         FileItem[] root = new FileItem[] { };
-                        if (App.VM.CurrentProject != null)
-                            root = App.VM.CurrentProject.Directory.FirstOrDefault()?.Children?.Where(x => x.IsRoot)?.ToArray();
+                        if (VM.CurrentProject != null)
+                            root = VM.CurrentProject.Directory.FirstOrDefault()?.Children?.Where(x => x.IsRoot)?.ToArray();
                         if (root != null && root.Length > 0)
                             filetocompile = root.FirstOrDefault();
                         else
-                            filetocompile = fileToCompile ?? App.VM.CurrentFileItem;
+                            filetocompile = fileToCompile ?? VM.CurrentFileItem;
                     }
                     else
                     {
-                        filetocompile = fileToCompile ?? App.VM.CurrentFileItem;
+                        filetocompile = fileToCompile ?? VM.CurrentFileItem;
                     }
-                    
-                    App.VM.Default.TexFileFolder = filetocompile.FileFolder;
-                    App.VM.Default.TexFileName = filetocompile.FileName;
-                    App.VM.Default.TexFilePath = filetocompile.File.Path;
+
 
                     bool compileSuccessful = false;
 
                     try
                     {
                         string param = "";
-                        if (VM.Default.Modes.Length > 0)
-                            param = "--mode=" + VM.Default.Modes + " ";
-
+                       
                         if (VM.IsProjectLoaded)
                         {
-                            if (VM.CurrentProject.UseInterface)
-                                param += "--interface=" + VM.CurrentProject.Interface + " ";
+                            if (!string.IsNullOrWhiteSpace(modesstring))
+                                param += "--mode=" + modesstring + " ";
+                            if (!string.IsNullOrWhiteSpace(environmentsstring))
+                                param += "--envionment=" + environmentsstring + " ";
 
                             if (VM.CurrentProject.UseNonStopMode)
                                 param += "--nonstopmode ";
                             if (VM.CurrentProject.UseNoConsole)
                                 param += "--noconsole ";
+
+                            if (VM.CurrentProject.UseInterface)
+                                param += "--interface=" + VM.CurrentProject.Interface + " ";                            
                             if (VM.CurrentProject.UseParameters)
                                 param += VM.CurrentProject.AdditionalParameters + " ";
                         }
 
-                        string logtext = "Running compiler job: " + "context " + param + VM.Default.TexFileName;
-                        await App.VM.Log(logtext);
+                        string logtext = "Running compiler job: " + "context " + param + filetocompile.FileName;
+                        VM.Log(logtext);
 
-                        await Task.Run(async () => { await Compile(param); });
+                        await Task.Run(async () => { await Compile(filetocompile.FileFolder, filetocompile.FileName, param); });
                         compileSuccessful = true;
                     }
                     catch
@@ -737,14 +757,14 @@ namespace ConTeXt_IDE
                     if (compileSuccessful)
                     {
                         string local = ApplicationData.Current.LocalFolder.Path;
-                        string curFile = Path.GetFileName(App.VM.Default.TexFilePath);
+                        string curFile = Path.GetFileName(filetocompile.File.Path);
                         string filewithoutext = Path.GetFileNameWithoutExtension(curFile);
                         string curPDF = filewithoutext + ".pdf";
-                        string curPDFPath = Path.Combine(App.VM.Default.TexFilePath, curPDF);
+                        string curPDFPath = Path.Combine(filetocompile.File.Path, curPDF);
                         string newPathToFile = Path.Combine(local, curPDF);
-                        StorageFolder currFolder = await StorageFolder.GetFolderFromPathAsync(App.VM.Default.TexFileFolder);
+                        StorageFolder currFolder = await StorageFolder.GetFolderFromPathAsync(filetocompile.FileFolder);
 
-                        var error = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(App.VM.Default.TexFileName) + "-error.log");
+                        var error = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(filetocompile.FileName) + "-error.log");
                         if (error != null)
                         {
                             VM.IsError = true;
@@ -761,19 +781,22 @@ namespace ConTeXt_IDE
 
                             VM.Log("Compiler error: " + errormessage.lasttexerror);
                             VM.ConTeXtErrorMessage = errormessage;
-                            FileItem erroritem = VM.CurrentProject.GetFileItemByName(VM.CurrentProject.Directory[0],VM.ConTeXtErrorMessage.filename.Replace("./",""));
+                            string errorfilename = VM.ConTeXtErrorMessage.filename;
+                            if (errorfilename.Contains('/'))
+                                errorfilename = errorfilename.Remove(0, errorfilename.LastIndexOf('/') +1);
+                            FileItem erroritem = VM.CurrentProject.GetFileItemByName(VM.CurrentProject.Directory[0], errorfilename);
                             if (erroritem != null)
                             {
                                 VM.OpenFile(erroritem);
-                                await Task.Delay(500);
+                                await Task.Delay(1000);
                                 List<SyntaxError> errors = new();
                                 try
                                 {
                                     errors.Add(new() { SyntaxErrorType = SyntaxErrorType.Error, iLine = VM.ConTeXtErrorMessage.linenumber - 1, Title = VM.ConTeXtErrorMessage.lasttexerror });
 
                                     VM.Codewriter.SyntaxErrors = errors;
-                                    VM.Codewriter.SelectLine(new(0, VM.ConTeXtErrorMessage.linenumber - 1));
-                                    VM.Codewriter.CenterView();
+                                    VM.Codewriter?.SelectLine(new(0, VM.ConTeXtErrorMessage.linenumber - 1));
+                                    VM.Codewriter?.CenterView();
                                 }
                                 catch { }
                             }
@@ -787,10 +810,10 @@ namespace ConTeXt_IDE
 
                         if (VM.Default.AutoOpenPDF && error == null)
                         {
-                            StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(VM.Default.TexFileName) + ".pdf") as StorageFile;
+                            StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".pdf") as StorageFile;
                             if (pdfout != null)
                             {
-                                VM.Log("Opening " + System.IO.Path.GetFileNameWithoutExtension(VM.Default.TexFileName) + ".pdf");
+                                VM.Log("Opening " + System.IO.Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".pdf");
                                 if (VM.Default.InternalViewer)
                                 {
                                     await OpenPDF(pdfout);
@@ -802,36 +825,36 @@ namespace ConTeXt_IDE
                             }
                         }
 
-                        if (App.VM.Default.AutoOpenLOG)
+                        if (VM.Default.AutoOpenLOG)
                         {
-                            if ((App.VM.Default.AutoOpenLOGOnlyOnError && error != null) | !App.VM.Default.AutoOpenLOGOnlyOnError)
+                            if ((VM.Default.AutoOpenLOGOnlyOnError && error != null) | !VM.Default.AutoOpenLOGOnlyOnError)
                             {
-                                StorageFile logout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(App.VM.Default.TexFileName) + ".log") as StorageFile;
+                                StorageFile logout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".log") as StorageFile;
                                 if (logout != null)
                                 {
                                     FileItem logFile = new FileItem(logout) { };
-                                    App.VM.OpenFile(logFile);
+                                    VM.OpenFile(logFile);
                                 }
                             }
-                            else if (App.VM.Default.AutoOpenLOGOnlyOnError && error == null)
+                            else if (VM.Default.AutoOpenLOGOnlyOnError && error == null)
                             {
-                                if (App.VM.FileItems.Any(x => x.IsLogFile))
+                                if (VM.FileItems.Any(x => x.IsLogFile))
                                 {
-                                    App.VM.FileItems.Remove(App.VM.FileItems.First(x => x.IsLogFile));
+                                    VM.FileItems.Remove(VM.FileItems.First(x => x.IsLogFile));
                                 }
                             }
                         }
                     }
-                    VM.Codewriter.Focus(FocusState.Keyboard);
+                    VM.Codewriter?.Focus(FocusState.Keyboard);
                 }
                 catch (Exception f)
                 {
-                    App.VM.Log("Exception at compile: " + f.Message);
+                    VM.Log("Exception at compile: " + f.Message);
                 }
-            App.VM.IsSaving = false;
+            VM.IsSaving = false;
         }
 
-       
+
 
         private async Task<bool> OpenPDF(StorageFile pdfout)
         {
@@ -862,15 +885,16 @@ namespace ConTeXt_IDE
         private async void Compile_Click(object sender, RoutedEventArgs e)
         {
             FileItem fi = (sender as FrameworkElement).DataContext as FileItem;
+
             await VM.SaveAll();
-            VM.Codewriter.Save();
+            VM.Codewriter?.Save();
             CompileTex(false, fi);
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
             await VM.Save((sender as FrameworkElement).DataContext as FileItem);
-            VM.Codewriter.Save();
+            VM.Codewriter?.Save();
         }
 
         private async Task<bool> InstallContext()
@@ -878,13 +902,14 @@ namespace ConTeXt_IDE
             try
             {
                 var storageFolder = ApplicationData.Current.LocalFolder;
-                VM.Default.ContextDistributionPath = storageFolder.Path; 
+                VM.Default.ContextDistributionPath = storageFolder.Path;
 
                 var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", @"context-mswin.zip");
 
                 StorageFile zipfile;
 
-                if (File.Exists(p)) {
+                if (File.Exists(p))
+                {
                     zipfile = await StorageFile.GetFileFromPathAsync(p);
                 }
                 else
@@ -916,49 +941,42 @@ namespace ConTeXt_IDE
             else
                 return @"\texmf-mswin";
         }
-
-        public async Task<bool> Compile(string param)
+        public async Task<bool> Compile(string workingDirectory, string texFileName, string param)
         {
             Process p = new Process();
-            ProcessStartInfo info = new ProcessStartInfo(@"C:\Windows\System32\cmd.exe")
+            ProcessStartInfo info = new ProcessStartInfo()
             {
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
+                RedirectStandardInput = false,
+                RedirectStandardOutput = VM.Default.ShowCompilerOutput,
                 RedirectStandardError = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 UseShellExecute = false,
-                WorkingDirectory = VM.Default.TexFileFolder
+                WorkingDirectory = workingDirectory
             };
-            p.OutputDataReceived += (e, f) =>
-            { //VM.Log(f.Data.);
-            };
-            //p.ErrorDataReceived += (e, f) => {Log(f.Data); };
+
             p.StartInfo = info;
+            info.FileName = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe";// @"C:\Windows\System32\cmd.exe";
+            info.Arguments = " " + param + texFileName;
+
+            if (VM.Default.ShowCompilerOutput)
+                p.OutputDataReceived += (a, b) =>
+                {
+                    DispatcherQueue.TryEnqueue(async () =>
+                    {
+                        VM.Log(b.Data);
+                    });
+
+                };
+
             p.Start();
-            p.BeginOutputReadLine();
-            //using (StreamReader sr = p.StandardOutput)
-            using (StreamWriter sw = p.StandardInput)
-            {
-                
 
-                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " " + param + VM.Default.TexFileName);
-
-            }
+            if (VM.Default.ShowCompilerOutput)
+                p.BeginOutputReadLine();
 
             p.WaitForExit();
-            //string output = p.StandardOutput.ReadToEnd();
-
-            if (!File.Exists(VM.Default.TexFilePath + @"-error.log"))
-            {
-                VM.Log("Compiler process successfully compleated.");
-                return true;
-            }
-            else
-            {
-                VM.Log("Compiler process terminated with errors.");
-                return false;
-            }
+            p.Close();
+            return !File.Exists(Path.Combine(workingDirectory, Path.GetFileNameWithoutExtension(texFileName)+ @"-error.log"));
         }
 
         #endregion
@@ -976,7 +994,7 @@ namespace ConTeXt_IDE
 
                     if (await save.ShowAsync() == ContentDialogResult.Primary)
                     {
-                        await App.VM.Save(fi);
+                        await VM.Save(fi);
                     }
                 }
                 if (VM.FileItems.Contains(fi))
@@ -986,7 +1004,7 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                await VM.Log(ex.Message);
+                VM.Log(ex.Message);
             }
         }
 
@@ -1035,8 +1053,10 @@ namespace ConTeXt_IDE
 
         private void ClearLog_Click(object sender, RoutedEventArgs e)
         {
-            Log.Blocks.Clear();
-            RichTextBlockHelper.logline = 0;
+            // RichTextBlockHelper.logline = 0;
+            // Log.Blocks.Clear();
+            VM.CurrentLogLine = 0;
+            VM.LogLines.Clear();
         }
 
         private void Default_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -1044,7 +1064,7 @@ namespace ConTeXt_IDE
             switch (e.PropertyName)
             {
                 case "ShowLog":
-                    if (App.VM.Default.ShowLog)
+                    if (VM.Default.ShowLog)
                     {
                         IDEGridRow.Height = new GridLength(2, GridUnitType.Star);
                         LogGridSplitter.Height = new GridLength(6, GridUnitType.Pixel);
@@ -1058,8 +1078,8 @@ namespace ConTeXt_IDE
                     }
                     break;
 
-                case "ShowProjects":
-                    if (App.VM.Default.ShowProjects)
+                case "ShowOutline":
+                    if (VM.Default.ShowOutline)
                     {
                         ProjectsGridSplitter.Height = new GridLength(6, GridUnitType.Pixel);
                         ProjectsGridLibraryRow.Height = new GridLength(300, GridUnitType.Pixel);
@@ -1072,7 +1092,7 @@ namespace ConTeXt_IDE
                     break;
 
                 case "ShowProjectPane":
-                    if (App.VM.Default.ShowProjectPane)
+                    if (VM.Default.ShowProjectPane)
                     {
                         ContentGridSplitter.Width = new GridLength(6, GridUnitType.Pixel);
                         ContentGridProjectPaneColumn.Width = new GridLength(300, GridUnitType.Pixel);
@@ -1085,7 +1105,7 @@ namespace ConTeXt_IDE
                     break;
 
                 case "InternalViewer":
-                    if (App.VM.Default.InternalViewer)
+                    if (VM.Default.InternalViewer)
                     {
                         PDFGridSplitter.Width = new GridLength(6, GridUnitType.Pixel);
                         PDFGridColumn.Width = new GridLength(400, GridUnitType.Pixel);
@@ -1138,16 +1158,11 @@ namespace ConTeXt_IDE
                                 {
                                     StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Name, folder, "");
                                     StorageApplicationPermissions.MostRecentlyUsedList.AddOrReplace(folder.Name, folder, "");
-                                    App.VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
+                                    VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
 
-                                    App.VM.FileItemsTree.Clear();
-                                    var proj = new Project(folder.Name, folder, App.VM.FileItemsTree);
-                                    App.VM.Default.ProjectList.Add(proj);
-                                    App.VM.CurrentProject = proj;
-                                    await App.VM.GenerateTreeView(folder);
-
-                                    App.VM.Default.LastActiveProject = proj.Name;
-                                    // App.AppViewModel.UpdateRecentAccessList();
+                                    var proj = new Project(folder.Name, folder);
+                                    VM.Default.ProjectList.Add(proj);
+                                    VM.CurrentProject = proj;
                                 }
                             }
                             break;
@@ -1166,36 +1181,35 @@ namespace ConTeXt_IDE
                                     {
                                         StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Name, folder, "");
                                         StorageApplicationPermissions.MostRecentlyUsedList.AddOrReplace(folder.Name, folder, "");
-                                        App.VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
+                                        VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
                                         string root = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
                                         string path = root + @"\Templates";
+                                        if (!Directory.Exists(path))
+                                        {
+                                            path = root + @"\ConTeXt-IDE.Desktop" + @"\Templates";
+                                        }
                                         var templateFolder = await StorageFolder.GetFolderFromPathAsync(path + @"\" + project);
 
                                         await CopyFolderAsync(templateFolder, folder);
                                         string rootfile = "";
+
+                                        VM.FileItemsTree?.Clear();
+                                        var proj = new Project(folder.Name, folder);
                                         switch (project)
                                         {
                                             case "mwe": rootfile = "main.tex"; break;
                                             case "projpres": rootfile = "prd_presentation.tex"; break;
-                                            case "projthes": rootfile = "prd_thesis.tex"; break;
+                                            case "projthes": rootfile = "prd_thesis.tex"; proj.Modes.FirstOrDefault(x => x.Name == "screen").IsSelected = true; break;
                                             case "single": rootfile = "main.tex"; break;
                                             default: break;
                                         }
 
-                                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Name, folder, "");
-                                        StorageApplicationPermissions.MostRecentlyUsedList.AddOrReplace(folder.Name, folder, "");
-                                        App.VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
-
-                                        App.VM.FileItemsTree.Clear();
-                                        var proj = new Project(folder.Name, folder, App.VM.FileItemsTree);
                                         proj.RootFile = rootfile;
-                                        App.VM.Default.ProjectList.Add(proj);
-                                        App.VM.CurrentProject = proj;
-                                       await  App.VM.GenerateTreeView(folder, rootfile);
+                                      
+                                       
+                                        VM.Default.ProjectList.Add(proj);
+                                        VM.CurrentProject = proj;
 
-                                        App.VM.Default.LastActiveProject = proj.Name;
-
-                                        App.VM.OpenFile(App.VM.CurrentRootItem);
                                     }
                                 }
                             }
@@ -1207,17 +1221,29 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.Log("Exception on adding Project: " + ex.Message);
+                VM.Log("Exception on adding Project: " + ex.Message);
             }
+        }
+
+        private async void CbB_Theme_SelectionChanged(object sender, object args)
+        {
+            await Task.Delay(100);
+            SetColor(VM.AccentColor, (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme), true);
         }
 
         private void Btndeleteproject_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+
                 var proj = (sender as FrameworkElement).DataContext as Project;
+
                 StorageApplicationPermissions.MostRecentlyUsedList.Remove(proj.Name);
-                App.VM.Default.ProjectList.Remove(proj);
+                VM.Default.ProjectList.Remove(proj);
+
+                if (VM.CurrentProject == proj)
+                    VM.CurrentProject = new Project();
+
             }
             catch (Exception ex)
             {
@@ -1242,8 +1268,9 @@ namespace ConTeXt_IDE
         {
             try
             {
-                App.VM.CurrentProject = new Project();
-                App.VM.FileItems.Clear();
+                VM.CurrentProject = null;
+
+                VM.FileItems.Clear();
             }
             catch (Exception ex)
             {
@@ -1269,11 +1296,17 @@ namespace ConTeXt_IDE
         {
             if (NetworkInterface.GetIsNetworkAvailable())
             {
-                App.VM.IsSaving = true;
-                VM.InfoMessage(true, "Updating", "Your ConTeXt distribution is getting updated. This can take up to 10 minutes.", InfoBarSeverity.Informational);
+                VM.IsSaving = true;
+                VM.InfoMessage(true, "Updating", "Your ConTeXt distribution is getting updated. This can take up to 15 minutes.", InfoBarSeverity.Informational);
 
                 bool UpdateSuccessful = false;
+                bool temporarilyshowlog = !VM.Default.ShowLog;
+
+                if (temporarilyshowlog)
+                    VM.Default.ShowLog = true;
                 await Task.Run(async () => { UpdateSuccessful = await Update(); });
+                if (temporarilyshowlog)
+                    VM.Default.ShowLog = false;
 
                 if (UpdateSuccessful)
                 {
@@ -1295,37 +1328,49 @@ namespace ConTeXt_IDE
             try
             {
                 Process p = new Process();
-                p.EnableRaisingEvents = true;
-                ProcessStartInfo info = new ProcessStartInfo(@"C:\Windows\System32\cmd.exe")
+                ProcessStartInfo info = new ProcessStartInfo()
                 {
-
-                    RedirectStandardInput = true,
+                    RedirectStandardInput = false,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
+                    RedirectStandardError = false,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     UseShellExecute = false,
                     WorkingDirectory = VM.Default.ContextDistributionPath
                 };
-                p.OutputDataReceived += (e, f) =>
-                {// VM.Log(f.Data);
-                };
+
                 p.StartInfo = info;
+
+                info.FileName = "cmd";
+                info.Arguments = "/C install.bat";
+                //sw.WriteLine("setx path \"%PATH%;" + VM.Default.ContextDistributionPath + @"\tex\texmf-mswin\bin" + "\"");
+
+                p.OutputDataReceived += (a, b) =>
+                {
+                    DispatcherQueue.TryEnqueue(async () =>
+                    {
+                        VM.Log(b.Data);
+                    });
+
+                };
+
                 p.Start();
                 p.BeginOutputReadLine();
 
-                using (StreamWriter sw = p.StandardInput)
-                {
-                    sw.WriteLine(@"install.bat --modules=all");
-                    //sw.WriteLine("setx path \"%PATH%;" + VM.Default.ContextDistributionPath + @"\tex\texmf-mswin\bin" + "\"");
-                }
                 p.WaitForExit();
+                p.Close();
+
                 return true;
             }
             catch
             {
                 return false;
             }
+        }
+
+        private void LsV_OutlineItems_SelectionChanged(object sender, SelectionChangedEventArgs args)
+        {
+            (sender as ListView).ScrollIntoView(args.AddedItems?.FirstOrDefault());
         }
 
         private async void Rate_Click(object sender, RoutedEventArgs e)
@@ -1345,34 +1390,34 @@ namespace ConTeXt_IDE
         private async void Btncompile_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
-            VM.Codewriter.Save();
+            VM.Codewriter?.Save();
             CompileTex();
         }
 
         private async void Btncompileroot_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
-            VM.Codewriter.Save();
+            VM.Codewriter?.Save();
             CompileTex(true);
         }
 
 
         private void Undo_Click(object sender, RoutedEventArgs e)
         {
-            VM.Codewriter.TextAction_Undo();
-            VM.Codewriter.Focus( FocusState.Keyboard);
+            VM.Codewriter?.TextAction_Undo();
+            VM.Codewriter?.Focus(FocusState.Keyboard);
         }
 
         private async void Btnsave_Click(object sender, RoutedEventArgs e)
         {
             await VM.Save();
-            VM.Codewriter.Save();
+            VM.Codewriter?.Save();
         }
 
         private async void btnsaveall_Click(object sender, RoutedEventArgs e)
         {
             await VM.SaveAll();
-            VM.Codewriter.Save();
+            VM.Codewriter?.Save();
         }
 
         private void Modes_Click(object sender, RoutedEventArgs e)
@@ -1389,9 +1434,9 @@ namespace ConTeXt_IDE
             StorageApplicationPermissions.MostRecentlyUsedList.Clear();
             VM.Default.ProjectList.Clear();
             Settings.RestoreSettings();
-            Unload_Click(null,null);
-            
-           
+            Unload_Click(null, null);
+
+
         }
 
         private async void addMode_Click(object sender, RoutedEventArgs e)
@@ -1405,8 +1450,8 @@ namespace ConTeXt_IDE
             {
                 mode.IsSelected = true;
                 mode.Name = tb.Text;
-                App.VM.CurrentProject.Modes.Add(mode);
-                App.VM.Default.SaveSettings();
+                VM.CurrentProject.Modes.Add(mode);
+                VM.Default.SaveSettings();
             }
         }
 
@@ -1450,10 +1495,10 @@ namespace ConTeXt_IDE
             {
                 var hf = e.ClickedItem as Helpfile;
                 var lsf = ApplicationData.Current.LocalFolder;
-                App.VM.Log("Opening " + lsf.Path + hf.Path + hf.FileName);
+                VM.Log("Opening " + lsf.Path + hf.Path + hf.FileName);
                 var sf = await StorageFile.GetFileFromPathAsync(lsf.Path + hf.Path + hf.FileName);
 
-                if (App.VM.Default.HelpPDFInInternalViewer)
+                if (VM.Default.HelpPDFInInternalViewer)
                 {
                     await OpenPDF(sf);
                 }
@@ -1462,7 +1507,20 @@ namespace ConTeXt_IDE
             }
             catch (Exception ex)
             {
-                App.VM.Log("Exception on Help Item Click: " + ex.Message);
+                VM.Log("Exception on Help Item Click: " + ex.Message);
+            }
+        }
+
+        private void LsV_OutlineItems_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            try
+            {
+                VM.Codewriter?.SelectLine(new(0, (e.ClickedItem as OutlineItem).Row - 1));
+                VM.Codewriter?.CenterView();
+            }
+            catch (Exception ex)
+            {
+                VM.Log("Exception on Outline Item Click: " + ex.Message);
             }
         }
 
@@ -1515,25 +1573,35 @@ namespace ConTeXt_IDE
         {
             if (e.ClickedItem is AccentColor accentColor)
             {
-                SetColor(accentColor);
+                SetColor(accentColor,RequestedTheme, true);
                 VM.Default.AccentColor = accentColor.Name;
             }
         }
 
-        public void SetColor(AccentColor accentColor = null, bool reload = true)
+        public void SetColor(AccentColor accentColor = null, ElementTheme theme = ElementTheme.Dark, bool reload = true)
         {
             var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
-            if (accentColor != null) setting.AccentColor = accentColor.Color;
-            ColorPaletteResources palette = new ColorPaletteResources();
-            palette.Accent = setting.AccentColorLow;
-            App.Current.Resources.MergedDictionaries.Add(palette);
+            if (accentColor != null)
+            {
+                setting.Theme = theme;
+                setting.AccentColor = accentColor.Color;
+                Application.Current.Resources["SystemAccentColor"] = accentColor.Color;
+                Application.Current.Resources["SystemAccentColorLight2"] = setting.AccentColorLow;
+                Application.Current.Resources["SystemAccentColorDark1"] = setting.AccentColorLow.ChangeColorBrightness(0.1f);
+
+            }
+
+            // App.Current.Resources.MergedDictionaries.Add(palette);
             if (reload)
-                ReloadPageTheme(this.RequestedTheme);
+            {
+                ReloadPageTheme(RequestedTheme);
+            }
             if (App.mainWindow.IsCustomizationSupported)
             {
                 App.mainWindow.AW.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
                 App.mainWindow.AW.TitleBar.ButtonBackgroundColor = Colors.Transparent;
                 App.mainWindow.AW.TitleBar.ButtonHoverBackgroundColor = setting.AccentColor;
+                App.mainWindow.AW.TitleBar.ButtonForegroundColor = RequestedTheme == ElementTheme.Light ? Colors.Black : Colors.White;
             }
         }
 
@@ -1563,11 +1631,11 @@ namespace ConTeXt_IDE
         }
         private async void ReloadPageTheme(ElementTheme startTheme)
         {
-            if (this.RequestedTheme == ElementTheme.Dark)
+            if (VM.Default.Theme == "Dark")
                 VM.Default.Theme = "Light";
-            else if (this.RequestedTheme == ElementTheme.Light)
+            else if (VM.Default.Theme == "Light")
                 VM.Default.Theme = "Default";
-            else if (this.RequestedTheme == ElementTheme.Default)
+            else if (VM.Default.Theme == "Default")
                 VM.Default.Theme = "Dark";
 
             //await Task.Delay(5000);
@@ -1585,10 +1653,10 @@ namespace ConTeXt_IDE
             }
             else
             {
-                VM.AccentColor =null;
+                VM.AccentColor = null;
                 SetColor(new("Default", VM.SystemAccentColor));
             }
-            
+
             VM.Default.AccentColor = "Default";
         }
 
@@ -1718,35 +1786,38 @@ namespace ConTeXt_IDE
         private async Task<bool> Generate()
         {
             Process p = new Process();
-            ProcessStartInfo info = new ProcessStartInfo(@"C:\Windows\System32\cmd.exe")
+            ProcessStartInfo info = new ProcessStartInfo()
             {
-                RedirectStandardInput = true,
+                RedirectStandardInput = false,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 UseShellExecute = false,
-                WorkingDirectory = VM.Default.ContextDistributionPath
+                WorkingDirectory = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin"
             };
-            //p.OutputDataReceived += (e, f) =>
-            //{ //VM.Log(f.Data.);
-            //};
-            //p.ErrorDataReceived += (e, f) => {Log(f.Data); };
             p.StartInfo = info;
+            info.FileName = "context";
+            info.Arguments = "--make --generate";
+
+            p.OutputDataReceived += (a, b) =>
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    VM.Log(b.Data);
+                });
+
+            };
+
             p.Start();
             p.BeginOutputReadLine();
-            //using (StreamReader sr = p.StandardOutput)
-            using (StreamWriter sw = p.StandardInput)
-            {
-                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --make ");
-                sw.WriteLine(VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe" + " --generate ");
-
-            }
 
             p.WaitForExit();
 
-            return p.ExitCode == 0;
+            int exit = p.ExitCode;
+            p.Close();
 
+            return exit == 0;
         }
 
         #endregion
@@ -1771,7 +1842,7 @@ namespace ConTeXt_IDE
                             {
                                 Command newcommand = (Command)instancecommand.Clone();
                                 newcommand.Name = command?.Value;
-                                commands.Insert(commands.IndexOf(instancecommand),newcommand);
+                                commands.Insert(commands.IndexOf(instancecommand), newcommand);
                             }
                             commands.Remove(instancecommand);
                         }
@@ -1784,7 +1855,7 @@ namespace ConTeXt_IDE
                         if (command?.Arguments?.ArgumentsList != null)
                         {
                             int i = 0;
-                            foreach (Argument argument in command?.Arguments?.ArgumentsList)
+                            foreach (Models.Argument argument in command?.Arguments?.ArgumentsList)
                             {
                                 if (argument != null)
                                 {
@@ -1832,13 +1903,62 @@ namespace ConTeXt_IDE
             var lang = FileLanguages.LanguageList.First(x => x.Name == name);
             if (lang.Commands == null)
                 lang.Commands = new();
-            foreach (Command command in contextcommands)
+            lang.Commands.Clear();
+            if (VM.Default.SuggestCommands)
+                foreach (Command command in contextcommands)
+                {
+                    string snippet = "";
+                    string commandname = @"\" + (command.Type == "environment" ? "start" : "") + command.Name;
+                    if (command.Type == "environment")
+                    {
+                        if (!VM.Default.SuggestStartStop)
+                            break;
+                        if (command.Name == "section")
+                            snippet = "[title={}]\n\t\n\\stop" + command.Name;
+                        else
+                            snippet = "\n\t\n\\stop" + command.Name;
+                    }
+                    IntelliSense intelliSense = new(commandname) { Snippet = snippet, Description = "Category: " + command.Category, IntelliSenseType = IntelliSenseType.Command };
+                    if (VM.Default.SuggestArguments && command.Arguments?.ArgumentsList != null)
+                        foreach (var item in command.Arguments?.ArgumentsList)
+                        {
+                            if (item is Assignments assignments)
+                            {
+                                intelliSense.ArgumentsList.Add(new()
+                                {
+                                    Delimiters = assignments?.Delimiters,
+                                    IntelliSenseType = IntelliSenseType.Argument,
+                                    Name = assignments?.Inherit?.Name,
+                                    Parameters = assignments?.Parameter?.Select(x => new CodeEditorControl_WinUI.Parameter() { Name = x.Name, Description = "Type: " + x.Constant?.FirstOrDefault()?.Type, Constant = x.Constant?.Select(x => new CodeEditorControl_WinUI.Constant() { Type = x.Type }).ToList() }).ToList(),
+                                });
+                            }
+                        }
+                    //intelliSense.ArgumentsList = command.Arguments?.ArgumentsList?.Select(x=> x is Assignments assignments ? new CodeEditorControl_WinUI.() { Delimiters = x.Delimiters, List = x.List, Name = assignments.Inherit?.Name, } : null ).ToList();
+                    lang.Commands.Add(intelliSense);
+                }
+            if (VM.Default.SuggestPrimitives)
             {
-                lang.Commands.Add(new(@"\" + (command.Type == "environment" ? "start" : "") + command.Name) { Snippet = (command.Type == "environment" ? "[]\n\t\n\\stop" +command.Name : ""), Description = "Category: " + command.Category });
+                string[] primitives = new string[] { "year", "xtokspre", "xtoksapp", "xspaceskip", "xleaders", "xdef", "write", "wordboundary", "widowpenalty", "widowpenalties", "wd", "vtop", "vss", "vsplit", "vskip", "vsize", "vrule", "vpack", "voffset", "vfuzz", "vfilneg", "vfill", "vfil", "vcenter", "vbox", "vbadness", "valign", "vadjust", "useimageresource", "useboxresource", "uppercase", "unvcopy", "unvbox", "unskip", "unpenalty", "unless", "unkern", "uniformdeviate", "unhcopy", "unhbox", "underline", "uchyph", "uccode", "tracingstats", "tracingscantokens", "tracingrestores", "tracingparagraphs", "tracingpages", "tracingoutput", "tracingonline", "tracingnesting", "tracingmacros", "tracinglostchars", "tracingifs", "tracinggroups", "tracingfonts", "tracingcommands", "tracingassigns", "tpack", "topskip", "topmarks", "topmark", "tolerance", "tokspre", "toksdef", "toksapp", "toks", "time", "thinmuskip", "thickmuskip", "the", "textstyle", "textfont", "textdirection", "textdir", "tagcode", "tabskip", "synctex", "suppressprimitiveerror", "suppressoutererror", "suppressmathparerror", "suppresslongerror", "suppressifcsnameerror", "suppressfontnotfounderror", "string", "splittopskip", "splitmaxdepth", "splitfirstmarks", "splitfirstmark", "splitdiscards", "splitbotmarks", "splitbotmark", "special", "span", "spaceskip", "spacefactor", "skipdef", "skip", "skewchar", "showtokens", "showthe", "showlists", "showifs", "showgroups", "showboxdepth", "showboxbreadth", "showbox", "show", "shipout", "shapemode", "sfcode", "setrandomseed", "setlanguage", "setfontid", "setbox", "scrollmode", "scriptstyle", "scriptspace", "scriptscriptstyle", "scriptscriptfont", "scriptfont", "scantokens", "scantextokens", "savingvdiscards", "savinghyphcodes", "savepos", "saveimageresource", "savecatcodetable", "saveboxresource", "rpcode", "romannumeral", "rightskip", "rightmarginkern", "righthyphenmin", "rightghost", "right", "relpenalty", "relax", "readline", "read", "randomseed", "raise", "radical", "quitvmode", "pxdimen", "protrusionboundary", "protrudechars", "primitive", "prevgraf", "prevdepth", "pretolerance", "prerelpenalty", "prehyphenchar", "preexhyphenchar", "predisplaysize", "predisplaypenalty", "predisplaygapfactor", "predisplaydirection", "prebinoppenalty", "posthyphenchar", "postexhyphenchar", "postdisplaypenalty", "penalty", "pdfximage", "pdfxformresources", "pdfxformname", "pdfxformmargin", "pdfxformattr", "pdfxform", "pdfvorigin", "pdfvariable", "pdfuniqueresname", "pdfuniformdeviate", "pdftrailerid", "pdftrailer", "pdftracingfonts", "pdfthreadmargin", "pdfthread", "pdftexversion", "pdftexrevision", "pdftexbanner", "pdfsuppressptexinfo", "pdfsuppressoptionalinfo", "pdfstartthread", "pdfstartlink", "pdfsetrandomseed", "pdfsetmatrix", "pdfsavepos", "pdfsave", "pdfretval", "pdfrestore", "pdfreplacefont", "pdfrefximage", "pdfrefxform", "pdfrefobj", "pdfrecompress", "pdfrandomseed", "pdfpxdimen", "pdfprotrudechars", "pdfprimitive", "pdfpkresolution", "pdfpkmode", "pdfpkfixeddpi", "pdfpagewidth", "pdfpagesattr", "pdfpageresources", "pdfpageref", "pdfpageheight", "pdfpagebox", "pdfpageattr", "pdfoutput", "pdfoutline", "pdfomitcidset", "pdfomitcharset", "pdfobjcompresslevel", "pdfobj", "pdfnormaldeviate", "pdfnoligatures", "pdfnames", "pdfminorversion", "pdfmapline", "pdfmapfile", "pdfmajorversion", "pdfliteral", "pdflinkmargin", "pdflastypos", "pdflastxpos", "pdflastximagepages", "pdflastximage", "pdflastxform", "pdflastobj", "pdflastlink", "pdflastlinedepth", "pdflastannot", "pdfinsertht", "pdfinfoomitdate", "pdfinfo", "pdfinclusionerrorlevel", "pdfinclusioncopyfonts", "pdfincludechars", "pdfimageresolution", "pdfimagehicolor", "pdfimagegamma", "pdfimageapplygamma", "pdfimageaddfilename", "pdfignoreunknownimages", "pdfignoreddimen", "pdfhorigin", "pdfglyphtounicode", "pdfgentounicode", "pdfgamma", "pdffontsize", "pdffontobjnum", "pdffontname", "pdffontexpand", "pdffontattr", "pdffirstlineheight", "pdffeedback", "pdfextension", "pdfendthread", "pdfendlink", "pdfeachlineheight", "pdfeachlinedepth", "pdfdraftmode", "pdfdestmargin", "pdfdest", "pdfdecimaldigits", "pdfcreationdate", "pdfcopyfont", "pdfcompresslevel", "pdfcolorstackinit", "pdfcolorstack", "pdfcatalog", "pdfannot", "pdfadjustspacing", "pausing", "patterns", "parskip", "parshapelength", "parshapeindent", "parshapedimen", "parshape", "parindent", "parfillskip", "pardirection", "pardir", "par", "pagewidth", "pagetotal", "pagetopoffset", "pagestretch", "pageshrink", "pagerightoffset", "pageleftoffset", "pageheight", "pagegoal", "pagefilstretch", "pagefillstretch", "pagefilllstretch", "pagediscards", "pagedirection", "pagedir", "pagedepth", "pagebottomoffset", "overwithdelims", "overline", "overfullrule", "over", "outputpenalty", "outputmode", "outputbox", "output", "outer", "or", "openout", "openin", "omit", "numexpr", "number", "nullfont", "nulldelimiterspace", "novrule", "nospaces", "normalyear", "normalxtokspre", "normalxtoksapp", "normalxspaceskip", "normalxleaders", "normalxdef", "normalwrite", "normalwordboundary", "normalwidowpenalty", "normalwidowpenalties", "normalwd", "normalvtop", "normalvss", "normalvsplit", "normalvskip", "normalvsize", "normalvrule", "normalvpack", "normalvoffset", "normalvfuzz", "normalvfilneg", "normalvfill", "normalvfil", "normalvcenter", "normalvbox", "normalvbadness", "normalvalign", "normalvadjust", "normaluseimageresource", "normaluseboxresource", "normaluppercase", "normalunvcopy", "normalunvbox", "normalunskip", "normalunpenalty", "normalunless", "normalunkern", "normaluniformdeviate", "normalunhcopy", "normalunhbox", "normalunexpanded", "normalunderline", "normaluchyph", "normaluccode", "normaltracingstats", "normaltracingscantokens", "normaltracingrestores", "normaltracingparagraphs", "normaltracingpages", "normaltracingoutput", "normaltracingonline", "normaltracingnesting", "normaltracingmacros", "normaltracinglostchars", "normaltracingifs", "normaltracinggroups", "normaltracingfonts", "normaltracingcommands", "normaltracingassigns", "normaltpack", "normaltopskip", "normaltopmarks", "normaltopmark", "normaltolerance", "normaltokspre", "normaltoksdef", "normaltoksapp", "normaltoks", "normaltime", "normalthinmuskip", "normalthickmuskip", "normalthe", "normaltextstyle", "normaltextfont", "normaltextdirection", "normaltextdir", "normaltagcode", "normaltabskip", "normalsynctex", "normalsuppressprimitiveerror", "normalsuppressoutererror", "normalsuppressmathparerror", "normalsuppresslongerror", "normalsuppressifcsnameerror", "normalsuppressfontnotfounderror", "normalstring", "normalsplittopskip", "normalsplitmaxdepth", "normalsplitfirstmarks", "normalsplitfirstmark", "normalsplitdiscards", "normalsplitbotmarks", "normalsplitbotmark", "normalspecial", "normalspan", "normalspaceskip", "normalspacefactor", "normalskipdef", "normalskip", "normalskewchar", "normalshowtokens", "normalshowthe", "normalshowlists", "normalshowifs", "normalshowgroups", "normalshowboxdepth", "normalshowboxbreadth", "normalshowbox", "normalshow", "normalshipout", "normalshapemode", "normalsfcode", "normalsetrandomseed", "normalsetlanguage", "normalsetfontid", "normalsetbox", "normalscrollmode", "normalscriptstyle", "normalscriptspace", "normalscriptscriptstyle", "normalscriptscriptfont", "normalscriptfont", "normalscantokens", "normalscantextokens", "normalsavingvdiscards", "normalsavinghyphcodes", "normalsavepos", "normalsaveimageresource", "normalsavecatcodetable", "normalsaveboxresource", "normalrpcode", "normalromannumeral", "normalrightskip", "normalrightmarginkern", "normalrighthyphenmin", "normalrightghost", "normalright", "normalrelpenalty", "normalrelax", "normalreadline", "normalread", "normalrandomseed", "normalraise", "normalradical", "normalquitvmode", "normalpxdimen", "normalprotrusionboundary", "normalprotrudechars", "normalprotected", "normalprimitive", "normalprevgraf", "normalprevdepth", "normalpretolerance", "normalprerelpenalty", "normalprehyphenchar", "normalpreexhyphenchar", "normalpredisplaysize", "normalpredisplaypenalty", "normalpredisplaygapfactor", "normalpredisplaydirection", "normalprebinoppenalty", "normalposthyphenchar", "normalpostexhyphenchar", "normalpostdisplaypenalty", "normalpenalty", "normalpdfximage", "normalpdfxformresources", "normalpdfxformname", "normalpdfxformmargin", "normalpdfxformattr", "normalpdfxform", "normalpdfvorigin", "normalpdfvariable", "normalpdfuniqueresname", "normalpdfuniformdeviate", "normalpdftrailerid", "normalpdftrailer", "normalpdftracingfonts", "normalpdfthreadmargin", "normalpdfthread", "normalpdftexversion", "normalpdftexrevision", "normalpdftexbanner", "normalpdfsuppressptexinfo", "normalpdfsuppressoptionalinfo", "normalpdfstartthread", "normalpdfstartlink", "normalpdfsetrandomseed", "normalpdfsetmatrix", "normalpdfsavepos", "normalpdfsave", "normalpdfretval", "normalpdfrestore", "normalpdfreplacefont", "normalpdfrefximage", "normalpdfrefxform", "normalpdfrefobj", "normalpdfrecompress", "normalpdfrandomseed", "normalpdfpxdimen", "normalpdfprotrudechars", "normalpdfprimitive", "normalpdfpkresolution", "normalpdfpkmode", "normalpdfpkfixeddpi", "normalpdfpagewidth", "normalpdfpagesattr", "normalpdfpageresources", "normalpdfpageref", "normalpdfpageheight", "normalpdfpagebox", "normalpdfpageattr", "normalpdfoutput", "normalpdfoutline", "normalpdfomitcidset", "normalpdfomitcharset", "normalpdfobjcompresslevel", "normalpdfobj", "normalpdfnormaldeviate", "normalpdfnoligatures", "normalpdfnames", "normalpdfminorversion", "normalpdfmapline", "normalpdfmapfile", "normalpdfmajorversion", "normalpdfliteral", "normalpdflinkmargin", "normalpdflastypos", "normalpdflastxpos", "normalpdflastximagepages", "normalpdflastximage", "normalpdflastxform", "normalpdflastobj", "normalpdflastlink", "normalpdflastlinedepth", "normalpdflastannot", "normalpdfinsertht", "normalpdfinfoomitdate", "normalpdfinfo", "normalpdfinclusionerrorlevel", "normalpdfinclusioncopyfonts", "normalpdfincludechars", "normalpdfimageresolution", "normalpdfimagehicolor", "normalpdfimagegamma", "normalpdfimageapplygamma", "normalpdfimageaddfilename", "normalpdfignoreunknownimages", "normalpdfignoreddimen", "normalpdfhorigin", "normalpdfglyphtounicode", "normalpdfgentounicode", "normalpdfgamma", "normalpdffontsize", "normalpdffontobjnum", "normalpdffontname", "normalpdffontexpand", "normalpdffontattr", "normalpdffirstlineheight", "normalpdffeedback", "normalpdfextension", "normalpdfendthread", "normalpdfendlink", "normalpdfeachlineheight", "normalpdfeachlinedepth", "normalpdfdraftmode", "normalpdfdestmargin", "normalpdfdest", "normalpdfdecimaldigits", "normalpdfcreationdate", "normalpdfcopyfont", "normalpdfcompresslevel", "normalpdfcolorstackinit", "normalpdfcolorstack", "normalpdfcatalog", "normalpdfannot", "normalpdfadjustspacing", "normalpausing", "normalpatterns", "normalparskip", "normalparshapelength", "normalparshapeindent", "normalparshapedimen", "normalparshape", "normalparindent", "normalparfillskip", "normalpardirection", "normalpardir", "normalpar", "normalpagewidth", "normalpagetotal", "normalpagetopoffset", "normalpagestretch", "normalpageshrink", "normalpagerightoffset", "normalpageleftoffset", "normalpageheight", "normalpagegoal", "normalpagefilstretch", "normalpagefillstretch", "normalpagefilllstretch", "normalpagediscards", "normalpagedirection", "normalpagedir", "normalpagedepth", "normalpagebottomoffset", "normaloverwithdelims", "normaloverline", "normaloverfullrule", "normalover", "normaloutputpenalty", "normaloutputmode", "normaloutputbox", "normaloutput", "normalouter", "normalor", "normalopenout", "normalopenin", "normalomit", "normalnumexpr", "normalnumber", "normalnullfont", "normalnulldelimiterspace", "normalnovrule", "normalnospaces", "normalnormaldeviate", "normalnonstopmode", "normalnonscript", "normalnolimits", "normalnoligs", "normalnokerns", "normalnoindent", "normalnohrule", "normalnoexpand", "normalnoboundary", "normalnoalign", "normalnewlinechar", "normalmutoglue", "normalmuskipdef", "normalmuskip", "normalmultiply", "normalmuexpr", "normalmskip", "normalmoveright", "normalmoveleft", "normalmonth", "normalmkern", "normalmiddle", "normalmessage", "normalmedmuskip", "normalmeaning", "normalmaxdepth", "normalmaxdeadcycles", "normalmathsurroundskip", "normalmathsurroundmode", "normalmathsurround", "normalmathstyle", "normalmathscriptsmode", "normalmathscriptcharmode", "normalmathscriptboxmode", "normalmathrulethicknessmode", "normalmathrulesmode", "normalmathrulesfam", "normalmathrel", "normalmathpunct", "normalmathpenaltiesmode", "normalmathord", "normalmathoption", "normalmathopen", "normalmathop", "normalmathnolimitsmode", "normalmathitalicsmode", "normalmathinner", "normalmathflattenmode", "normalmatheqnogapstep", "normalmathdisplayskipmode", "normalmathdirection", "normalmathdir", "normalmathdelimitersmode", "normalmathcode", "normalmathclose", "normalmathchoice", "normalmathchardef", "normalmathchar", "normalmathbin", "normalmathaccent", "normalmarks", "normalmark", "normalmag", "normalluatexversion", "normalluatexrevision", "normalluatexbanner", "normalluafunctioncall", "normalluafunction", "normalluaescapestring", "normalluadef", "normalluacopyinputnodes", "normalluabytecodecall", "normalluabytecode", "normallpcode", "normallowercase", "normallower", "normallooseness", "normallong", "normallocalrightbox", "normallocalleftbox", "normallocalinterlinepenalty", "normallocalbrokenpenalty", "normallinepenalty", "normallinedirection", "normallinedir", "normallimits", "normalletterspacefont", "normalletcharcode", "normallet", "normalleqno", "normalleftskip", "normalleftmarginkern", "normallefthyphenmin", "normalleftghost", "normalleft", "normalleaders", "normallccode", "normallateluafunction", "normallatelua", "normallastypos", "normallastxpos", "normallastskip", "normallastsavedimageresourcepages", "normallastsavedimageresourceindex", "normallastsavedboxresourceindex", "normallastpenalty", "normallastnodetype", "normallastnamedcs", "normallastlinefit", "normallastkern", "normallastbox", "normallanguage", "normalkern", "normaljobname", "normalinterlinepenalty", "normalinterlinepenalties", "normalinteractionmode", "normalinsertpenalties", "normalinsertht", "normalinsert", "normalinputlineno", "normalinput", "normalinitcatcodetable", "normalindent", "normalimmediateassignment", "normalimmediateassigned", "normalimmediate", "normalignorespaces", "normalignoreligaturesinfont", "normalifx", "normalifvoid", "normalifvmode", "normalifvbox", "normaliftrue", "normalifprimitive", "normalifpdfprimitive", "normalifpdfabsnum", "normalifpdfabsdim", "normalifodd", "normalifnum", "normalifmmode", "normalifinner", "normalifincsname", "normalifhmode", "normalifhbox", "normaliffontchar", "normaliffalse", "normalifeof", "normalifdim", "normalifdefined", "normalifcsname", "normalifcondition", "normalifcat", "normalifcase", "normalifabsnum", "normalifabsdim", "normalif", "normalhyphenpenaltymode", "normalhyphenpenalty", "normalhyphenchar", "normalhyphenationmin", "normalhyphenationbounds", "normalhyphenation", "normalht", "normalhss", "normalhskip", "normalhsize", "normalhrule", "normalhpack", "normalholdinginserts", "normalhoffset", "normalhjcode", "normalhfuzz", "normalhfilneg", "normalhfill", "normalhfil", "normalhbox", "normalhbadness", "normalhangindent", "normalhangafter", "normalhalign", "normalgtokspre", "normalgtoksapp", "normalgluetomu", "normalgluestretchorder", "normalgluestretch", "normalglueshrinkorder", "normalglueshrink", "normalglueexpr", "normalglobaldefs", "normalglobal", "normalglet", "normalgleaders", "normalgdef", "normalfuturelet", "normalfutureexpandis", "normalfutureexpand", "normalformatname", "normalfontname", "normalfontid", "normalfontdimen", "normalfontcharwd", "normalfontcharic", "normalfontcharht", "normalfontchardp", "normalfont", "normalfloatingpenalty", "normalfixupboxesmode", "normalfirstvalidlanguage", "normalfirstmarks", "normalfirstmark", "normalfinalhyphendemerits", "normalfi", "normalfam", "normalexplicithyphenpenalty", "normalexplicitdiscretionary", "normalexpandglyphsinfont", "normalexpanded", "normalexpandafter", "normalexhyphenpenalty", "normalexhyphenchar", "normalexceptionpenalty", "normaleveryvbox", "normaleverypar", "normaleverymath", "normaleveryjob", "normaleveryhbox", "normaleveryeof", "normaleverydisplay", "normaleverycr", "normaletokspre", "normaletoksapp", "normalescapechar", "normalerrorstopmode", "normalerrorcontextlines", "normalerrmessage", "normalerrhelp", "normaleqno", "normalendlocalcontrol", "normalendlinechar", "normalendinput", "normalendgroup", "normalendcsname", "normalend", "normalemergencystretch", "normalelse", "normalefcode", "normaledef", "normaleTeXversion", "normaleTeXrevision", "normaleTeXminorversion", "normaleTeXVersion", "normaldvivariable", "normaldvifeedback", "normaldviextension", "normaldump", "normaldraftmode", "normaldp", "normaldoublehyphendemerits", "normaldivide", "normaldisplaywidth", "normaldisplaywidowpenalty", "normaldisplaywidowpenalties", "normaldisplaystyle", "normaldisplaylimits", "normaldisplayindent", "normaldiscretionary", "normaldirectlua", "normaldimexpr", "normaldimendef", "normaldimen", "normaldeviate", "normaldetokenize", "normaldelimitershortfall", "normaldelimiterfactor", "normaldelimiter", "normaldelcode", "normaldefaultskewchar", "normaldefaulthyphenchar", "normaldef", "normaldeadcycles", "normalday", "normalcurrentiftype", "normalcurrentiflevel", "normalcurrentifbranch", "normalcurrentgrouptype", "normalcurrentgrouplevel", "normalcsstring", "normalcsname", "normalcrcr", "normalcrampedtextstyle", "normalcrampedscriptstyle", "normalcrampedscriptscriptstyle", "normalcrampeddisplaystyle", "normalcr", "normalcountdef", "normalcount", "normalcopyfont", "normalcopy", "normalcompoundhyphenmode", "normalclubpenalty", "normalclubpenalties", "normalcloseout", "normalclosein", "normalclearmarks", "normalcleaders", "normalchardef", "normalchar", "normalcatcodetable", "normalcatcode", "normalbrokenpenalty", "normalbreakafterdirmode", "normalboxmaxdepth", "normalboxdirection", "normalboxdir", "normalbox", "normalboundary", "normalbotmarks", "normalbotmark", "normalbodydirection", "normalbodydir", "normalbinoppenalty", "normalbelowdisplayskip", "normalbelowdisplayshortskip", "normalbegingroup", "normalbegincsname", "normalbatchmode", "normalbadness", "normalautomatichyphenpenalty", "normalautomatichyphenmode", "normalautomaticdiscretionary", "normalattributedef", "normalattribute", "normalatopwithdelims", "normalatop", "normalaligntab", "normalalignmark", "normalaftergroup", "normalafterassignment", "normaladvance", "normaladjustspacing", "normaladjdemerits", "normalaccent", "normalabovewithdelims", "normalabovedisplayskip", "normalabovedisplayshortskip", "normalabove", "normalXeTeXversion", "normalUvextensible", "normalUunderdelimiter", "normalUsuperscript", "normalUsubscript", "normalUstopmath", "normalUstopdisplaymath", "normalUstartmath", "normalUstartdisplaymath", "normalUstack", "normalUskewedwithdelims", "normalUskewed", "normalUroot", "normalUright", "normalUradical", "normalUoverdelimiter", "normalUnosuperscript", "normalUnosubscript", "normalUmiddle", "normalUmathunderdelimitervgap", "normalUmathunderdelimiterbgap", "normalUmathunderbarvgap", "normalUmathunderbarrule", "normalUmathunderbarkern", "normalUmathsupsubbottommax", "normalUmathsupshiftup", "normalUmathsupshiftdrop", "normalUmathsupbottommin", "normalUmathsubtopmax", "normalUmathsubsupvgap", "normalUmathsubsupshiftdown", "normalUmathsubshiftdrop", "normalUmathsubshiftdown", "normalUmathstackvgap", "normalUmathstacknumup", "normalUmathstackdenomdown", "normalUmathspaceafterscript", "normalUmathskewedfractionvgap", "normalUmathskewedfractionhgap", "normalUmathrelrelspacing", "normalUmathrelpunctspacing", "normalUmathrelordspacing", "normalUmathrelopspacing", "normalUmathrelopenspacing", "normalUmathrelinnerspacing", "normalUmathrelclosespacing", "normalUmathrelbinspacing", "normalUmathradicalvgap", "normalUmathradicalrule", "normalUmathradicalkern", "normalUmathradicaldegreeraise", "normalUmathradicaldegreebefore", "normalUmathradicaldegreeafter", "normalUmathquad", "normalUmathpunctrelspacing", "normalUmathpunctpunctspacing", "normalUmathpunctordspacing", "normalUmathpunctopspacing", "normalUmathpunctopenspacing", "normalUmathpunctinnerspacing", "normalUmathpunctclosespacing", "normalUmathpunctbinspacing", "normalUmathoverdelimitervgap", "normalUmathoverdelimiterbgap", "normalUmathoverbarvgap", "normalUmathoverbarrule", "normalUmathoverbarkern", "normalUmathordrelspacing", "normalUmathordpunctspacing", "normalUmathordordspacing", "normalUmathordopspacing", "normalUmathordopenspacing", "normalUmathordinnerspacing", "normalUmathordclosespacing", "normalUmathordbinspacing", "normalUmathoprelspacing", "normalUmathoppunctspacing", "normalUmathopordspacing", "normalUmathopopspacing", "normalUmathopopenspacing", "normalUmathopinnerspacing", "normalUmathoperatorsize", "normalUmathopenrelspacing", "normalUmathopenpunctspacing", "normalUmathopenordspacing", "normalUmathopenopspacing", "normalUmathopenopenspacing", "normalUmathopeninnerspacing", "normalUmathopenclosespacing", "normalUmathopenbinspacing", "normalUmathopclosespacing", "normalUmathopbinspacing", "normalUmathnolimitsupfactor", "normalUmathnolimitsubfactor", "normalUmathlimitbelowvgap", "normalUmathlimitbelowkern", "normalUmathlimitbelowbgap", "normalUmathlimitabovevgap", "normalUmathlimitabovekern", "normalUmathlimitabovebgap", "normalUmathinnerrelspacing", "normalUmathinnerpunctspacing", "normalUmathinnerordspacing", "normalUmathinneropspacing", "normalUmathinneropenspacing", "normalUmathinnerinnerspacing", "normalUmathinnerclosespacing", "normalUmathinnerbinspacing", "normalUmathfractionrule", "normalUmathfractionnumvgap", "normalUmathfractionnumup", "normalUmathfractiondenomvgap", "normalUmathfractiondenomdown", "normalUmathfractiondelsize", "normalUmathconnectoroverlapmin", "normalUmathcodenum", "normalUmathcode", "normalUmathcloserelspacing", "normalUmathclosepunctspacing", "normalUmathcloseordspacing", "normalUmathcloseopspacing", "normalUmathcloseopenspacing", "normalUmathcloseinnerspacing", "normalUmathcloseclosespacing", "normalUmathclosebinspacing", "normalUmathcharslot", "normalUmathcharnumdef", "normalUmathcharnum", "normalUmathcharfam", "normalUmathchardef", "normalUmathcharclass", "normalUmathchar", "normalUmathbinrelspacing", "normalUmathbinpunctspacing", "normalUmathbinordspacing", "normalUmathbinopspacing", "normalUmathbinopenspacing", "normalUmathbininnerspacing", "normalUmathbinclosespacing", "normalUmathbinbinspacing", "normalUmathaxis", "normalUmathaccent", "normalUleft", "normalUhextensible", "normalUdelimiterunder", "normalUdelimiterover", "normalUdelimiter", "normalUdelcodenum", "normalUdelcode", "normalUchar", "normalOmegaversion", "normalOmegarevision", "normalOmegaminorversion", "normalAlephversion", "normalAlephrevision", "normalAlephminorversion", "normal ", "nonstopmode", "nonscript", "nolimits", "noligs", "nokerns", "noindent", "nohrule", "noexpand", "noboundary", "noalign", "newlinechar", "mutoglue", "muskipdef", "muskip", "multiply", "muexpr", "mskip", "moveright", "moveleft", "month", "mkern", "middle", "message", "medmuskip", "meaning", "maxdepth", "maxdeadcycles", "mathsurroundskip", "mathsurroundmode", "mathsurround", "mathstyle", "mathscriptsmode", "mathscriptcharmode", "mathscriptboxmode", "mathrulethicknessmode", "mathrulesmode", "mathrulesfam", "mathrel", "mathpunct", "mathpenaltiesmode", "mathord", "mathoption", "mathopen", "mathop", "mathnolimitsmode", "mathitalicsmode", "mathinner", "mathflattenmode", "matheqnogapstep", "mathdisplayskipmode", "mathdirection", "mathdir", "mathdelimitersmode", "mathcode", "mathclose", "mathchoice", "mathchardef", "mathchar", "mathbin", "mathaccent", "marks", "mark", "mag", "luatexversion", "luatexrevision", "luatexbanner", "luafunctioncall", "luafunction", "luaescapestring", "luadef", "luacopyinputnodes", "luabytecodecall", "luabytecode", "lpcode", "lowercase", "lower", "looseness", "long", "localrightbox", "localleftbox", "localinterlinepenalty", "localbrokenpenalty", "lineskiplimit", "lineskip", "linepenalty", "linedirection", "linedir", "limits", "letterspacefont", "letcharcode", "let", "leqno", "leftskip", "leftmarginkern", "lefthyphenmin", "leftghost", "left", "leaders", "lccode", "lateluafunction", "latelua", "lastypos", "lastxpos", "lastskip", "lastsavedimageresourcepages", "lastsavedimageresourceindex", "lastsavedboxresourceindex", "lastpenalty", "lastnodetype", "lastnamedcs", "lastlinefit", "lastkern", "lastbox", "language", "kern", "jobname", "interlinepenalty", "interlinepenalties", "interactionmode", "insertpenalties", "insertht", "insert", "inputlineno", "input", "initcatcodetable", "indent", "immediateassignment", "immediateassigned", "immediate", "ignorespaces", "ignoreligaturesinfont", "ifx", "ifvoid", "ifvmode", "ifvbox", "iftrue", "ifprimitive", "ifpdfprimitive", "ifpdfabsnum", "ifpdfabsdim", "ifodd", "ifnum", "ifmmode", "ifinner", "ifincsname", "ifhmode", "ifhbox", "iffontchar", "iffalse", "ifeof", "ifdim", "ifdefined", "ifcsname", "ifcondition", "ifcat", "ifcase", "ifabsnum", "ifabsdim", "if", "hyphenpenaltymode", "hyphenpenalty", "hyphenchar", "hyphenationmin", "hyphenationbounds", "hyphenation", "ht", "hss", "hskip", "hsize", "hrule", "hpack", "holdinginserts", "hoffset", "hjcode", "hfuzz", "hfilneg", "hfill", "hfil", "hbox", "hbadness", "hangindent", "hangafter", "halign", "gtokspre", "gtoksapp", "gluetomu", "gluestretchorder", "gluestretch", "glueshrinkorder", "glueshrink", "glueexpr", "globaldefs", "global", "gleaders", "gdef", "futurelet", "futureexpandis", "futureexpand", "formatname", "fontname", "fontid", "fontdimen", "fontcharwd", "fontcharic", "fontcharht", "fontchardp", "font", "floatingpenalty", "fixupboxesmode", "firstvalidlanguage", "firstmarks", "firstmark", "finalhyphendemerits", "fi", "fam", "explicithyphenpenalty", "explicitdiscretionary", "expandglyphsinfont", "expandafter", "exhyphenpenalty", "exhyphenchar", "exceptionpenalty", "everyvbox", "everypar", "everymath", "everyjob", "everyhbox", "everyeof", "everydisplay", "everycr", "etokspre", "etoksapp", "escapechar", "errorstopmode", "errorcontextlines", "errmessage", "errhelp", "eqno", "endlocalcontrol", "endlinechar", "endinput", "endgroup", "endcsname", "end", "emergencystretch", "else", "efcode", "edef", "eTeXversion", "eTeXrevision", "eTeXminorversion", "eTeXVersion", "dvivariable", "dvifeedback", "dviextension", "dump", "draftmode", "dp", "doublehyphendemerits", "divide", "displaywidth", "displaywidowpenalty", "displaywidowpenalties", "displaystyle", "displaylimits", "displayindent", "discretionary", "directlua", "dimexpr", "dimendef", "dimen", "detokenize", "delimitershortfall", "delimiterfactor", "delimiter", "delcode", "defaultskewchar", "defaulthyphenchar", "def", "deadcycles", "day", "currentiftype", "currentiflevel", "currentifbranch", "currentgrouptype", "currentgrouplevel", "csstring", "csname", "crcr", "crampedtextstyle", "crampedscriptstyle", "crampedscriptscriptstyle", "crampeddisplaystyle", "cr", "countdef", "count", "copyfont", "copy", "compoundhyphenmode", "clubpenalty", "clubpenalties", "closeout", "closein", "clearmarks", "cleaders", "chardef", "char", "catcodetable", "catcode", "brokenpenalty", "breakafterdirmode", "boxmaxdepth", "boxdirection", "boxdir", "box", "boundary", "botmarks", "botmark", "bodydirection", "bodydir", "binoppenalty", "belowdisplayskip", "belowdisplayshortskip", "begingroup", "begincsname", "batchmode", "baselineskip", "badness", "automatichyphenpenalty", "automatichyphenmode", "automaticdiscretionary", "attributedef", "attribute", "atopwithdelims", "atop", "aligntab", "alignmark", "aftergroup", "afterassignment", "advance", "adjustspacing", "adjdemerits", "accent", "abovewithdelims", "abovedisplayskip", "abovedisplayshortskip", "above", "XeTeXversion", "Uvextensible", "Uunderdelimiter", "Usuperscript", "Usubscript", "Ustopmath", "Ustopdisplaymath", "Ustartmath", "Ustartdisplaymath", "Ustack", "Uskewedwithdelims", "Uskewed", "Uroot", "Uright", "Uradical", "Uoverdelimiter", "Unosuperscript", "Unosubscript", "Umiddle", "Umathunderdelimitervgap", "Umathunderdelimiterbgap", "Umathunderbarvgap", "Umathunderbarrule", "Umathunderbarkern", "Umathsupsubbottommax", "Umathsupshiftup", "Umathsupshiftdrop", "Umathsupbottommin", "Umathsubtopmax", "Umathsubsupvgap", "Umathsubsupshiftdown", "Umathsubshiftdrop", "Umathsubshiftdown", "Umathstackvgap", "Umathstacknumup", "Umathstackdenomdown", "Umathspaceafterscript", "Umathskewedfractionvgap", "Umathskewedfractionhgap", "Umathrelrelspacing", "Umathrelpunctspacing", "Umathrelordspacing", "Umathrelopspacing", "Umathrelopenspacing", "Umathrelinnerspacing", "Umathrelclosespacing", "Umathrelbinspacing", "Umathradicalvgap", "Umathradicalrule", "Umathradicalkern", "Umathradicaldegreeraise", "Umathradicaldegreebefore", "Umathradicaldegreeafter", "Umathquad", "Umathpunctrelspacing", "Umathpunctpunctspacing", "Umathpunctordspacing", "Umathpunctopspacing", "Umathpunctopenspacing", "Umathpunctinnerspacing", "Umathpunctclosespacing", "Umathpunctbinspacing", "Umathoverdelimitervgap", "Umathoverdelimiterbgap", "Umathoverbarvgap", "Umathoverbarrule", "Umathoverbarkern", "Umathordrelspacing", "Umathordpunctspacing", "Umathordordspacing", "Umathordopspacing", "Umathordopenspacing", "Umathordinnerspacing", "Umathordclosespacing", "Umathordbinspacing", "Umathoprelspacing", "Umathoppunctspacing", "Umathopordspacing", "Umathopopspacing", "Umathopopenspacing", "Umathopinnerspacing", "Umathoperatorsize", "Umathopenrelspacing", "Umathopenpunctspacing", "Umathopenordspacing", "Umathopenopspacing", "Umathopenopenspacing", "Umathopeninnerspacing", "Umathopenclosespacing", "Umathopenbinspacing", "Umathopclosespacing", "Umathopbinspacing", "Umathnolimitsupfactor", "Umathnolimitsubfactor", "Umathlimitbelowvgap", "Umathlimitbelowkern", "Umathlimitbelowbgap", "Umathlimitabovevgap", "Umathlimitabovekern", "Umathlimitabovebgap", "Umathinnerrelspacing", "Umathinnerpunctspacing", "Umathinnerordspacing", "Umathinneropspacing", "Umathinneropenspacing", "Umathinnerinnerspacing", "Umathinnerclosespacing", "Umathinnerbinspacing", "Umathfractionrule", "Umathfractionnumvgap", "Umathfractionnumup", "Umathfractiondenomvgap", "Umathfractiondenomdown", "Umathfractiondelsize", "Umathconnectoroverlapmin", "Umathcodenum", "Umathcode", "Umathcloserelspacing", "Umathclosepunctspacing", "Umathcloseordspacing", "Umathcloseopspacing", "Umathcloseopenspacing", "Umathcloseinnerspacing", "Umathcloseclosespacing", "Umathclosebinspacing", "Umathcharslot", "Umathcharnumdef", "Umathcharnum", "Umathcharfam", "Umathchardef", "Umathcharclass", "Umathchar", "Umathbinrelspacing", "Umathbinpunctspacing", "Umathbinordspacing", "Umathbinopspacing", "Umathbinopenspacing", "Umathbininnerspacing", "Umathbinclosespacing", "Umathbinbinspacing", "Umathaxis", "Umathaccent", "Uleft", "Uhextensible", "Udelimiterunder", "Udelimiterover", "Udelimiter", "Udelcodenum", "Udelcode", "Uchar", "Omegaversion", "Omegarevision", "Omegaminorversion", "Alephversion", "Alephrevision", "Alephminorversion" };
+                foreach (string command in primitives.Select(x => @"\" + x))
+                {
+                    lang.Commands.Add(new IntelliSense(command) { IntelliSenseType = IntelliSenseType.Command, Token = Token.Primitive });
+                }
+            }
+            if (VM.Default.SuggestFontSwitches)
+            {
+                string[] mainstyles = new string[] { "rm", "ss", "tt" };
+                string[] fontalternatives = new string[] { "tf", "bf", "it", "sl", "bi", "bs", "sc" };
+                string[] fontsizemodifiers = new string[] { "xx", "x", "", "a", "b", "c", "d" };
+                string[] allfontswitches = mainstyles.Concat(fontalternatives.SelectMany(a => fontsizemodifiers.Select(m => a + m).ToArray()).ToArray()).ToArray();
+
+                foreach (string command in allfontswitches.Select(x => @"\" + x))
+                {
+                    lang.Commands.Add(new IntelliSense(command) { IntelliSenseType = IntelliSenseType.Command, Token = Token.Style });
+                }
             }
             if (VM.Codewriter?.Language?.Name == name)
                 VM.Codewriter.Language.Commands = lang.Commands;
-            VM.Codewriter?.UpdateSuggestions();            
+            VM.Codewriter?.UpdateSuggestions();
         }
 
         private void GroupList_ItemClick(object sender, ItemClickEventArgs e)
@@ -1920,8 +2040,12 @@ namespace ConTeXt_IDE
         private async void Codewriter_ErrorOccured(object sender, ErrorEventArgs e)
         {
             Exception ex = e.GetException();
-            await  VM.Log ($"Editor Message: {ex.Message}");
-                await VM.Log($"\t {ex.StackTrace}");
+            VM.Log($"Editor Message: {ex.Message}\n\t{ex.StackTrace}");
+        }
+
+        private void CkB_IntelliSense_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateIntelliSense("ConTeXt");
         }
     }
 }

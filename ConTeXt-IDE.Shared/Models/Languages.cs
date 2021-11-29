@@ -12,6 +12,7 @@ namespace ConTeXt_IDE.Shared.Models
             new("ConTeXt")
             {
                 LineComment = "%",
+                AutoClosingPairs = new() { { '[', ']' }, { '{', '}' }, },
                 RegexTokens = new()
                 {
                     { Token.Math, /*language=regex*/ @"\$.*?\$" },

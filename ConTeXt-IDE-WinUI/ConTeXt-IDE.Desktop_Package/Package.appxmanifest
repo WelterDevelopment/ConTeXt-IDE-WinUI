@@ -9,7 +9,7 @@
   <Identity
     Name="7614MasterDevelopment.ConTeXtIDE"
     Publisher="CN=F3B9189F-4D2B-4342-889D-A9D7D5A98D3A"
-    Version="1.7.18.0" />
+    Version="1.10.5.0" />
 
   <Properties>
     <DisplayName>ConTeXt IDE</DisplayName>
@@ -30,6 +30,15 @@
     <Application Id="App"
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
+		<Extensions>
+			<uap:Extension Category="windows.fileTypeAssociation">
+				<uap:FileTypeAssociation Name="context">
+					<uap:SupportedFileTypes>
+						<uap:FileType>.tex</uap:FileType>
+					</uap:SupportedFileTypes>
+				</uap:FileTypeAssociation>
+			</uap:Extension>
+		</Extensions>
       <uap:VisualElements
         DisplayName="ConTeXt IDE"
         Description="Simple and self-contained IDE for the ConTeXt typesetting system."

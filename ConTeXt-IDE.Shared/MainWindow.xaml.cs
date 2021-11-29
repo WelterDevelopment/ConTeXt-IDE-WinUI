@@ -37,7 +37,8 @@ namespace ConTeXt_IDE
                 AW.TitleBar.ExtendsContentIntoTitleBar = true;
                 CustomDragRegion.Height = 22;
                 AW.Title = "ConTeXt IDE";
-
+                AW.Closing += AW_Closing;
+                
                 // AW.TitleBar.SetDragRectangles(new[] { new Windows.Graphics.RectInt32(0, 0, 500, 500) });
             }
             else
@@ -49,6 +50,18 @@ namespace ConTeXt_IDE
             }
             
             
+        }
+
+        private async void AW_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+        {
+            args.Cancel = true;
+            bool canceled = false;
+            if (RootFrame.Content is MainPage MP)
+            {
+               canceled = await  MP?.MainPage_CloseRequested();
+            }
+            if (!canceled)
+            App.Current.Exit();
         }
 
         private AppWindow GetAppWindowForCurrentWindow()
@@ -74,6 +87,7 @@ namespace ConTeXt_IDE
                 return false;
             }
         }
+        
 
         private async void InstallEvergreen()
         {
@@ -170,7 +184,11 @@ namespace ConTeXt_IDE
             p.Start();
             p.WaitForExit();
 
-            return p.ExitCode == 0;
+            int exit = p.ExitCode;
+
+            p.Close();
+
+            return exit == 0;
         }
         private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
         {

@@ -5,15 +5,10 @@ using Microsoft.UI.Xaml;
 using System;
 using System.Threading;
 using Windows.Storage;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using Windows.UI.ViewManagement;
 
 namespace ConTeXt_IDE
 {
-    /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
     public partial class App : Application
 
     {
@@ -30,14 +25,9 @@ namespace ConTeXt_IDE
         {
             try
             {
-
                 this.InitializeComponent();
                 UnhandledException += App_UnhandledException;
-
                 RequestedTheme = Settings.Default.Theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
-
-               
-
             }
             catch (Exception ex)
             {
@@ -45,7 +35,7 @@ namespace ConTeXt_IDE
             }
         }
 
-       public static async void write(string stringtowrite)
+        public static async void write(string stringtowrite)
         {
             StorageFolder sf = ApplicationData.Current.LocalFolder;
             var file = await sf.CreateFileAsync("Error-Log.txt", CreationCollisionOption.OpenIfExists);
@@ -55,10 +45,10 @@ namespace ConTeXt_IDE
         private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             write("Unhandled app exception:" + e.Message + " - " + e.Exception.StackTrace);
-            VM?.Log("Unhandled app exception:" +  e.Message);
+            VM?.Log("Unhandled app exception:" + e.Message);
         }
-
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             StartUp();
             _mutex = new Mutex(true, MutexName, out createdNew);
@@ -69,10 +59,9 @@ namespace ConTeXt_IDE
             }
             mainWindow = new MainWindow();
             mainWindow.Activate();
-
         }
 
-        private  void StartUp()
+        private void StartUp()
         {
             try
             {
@@ -86,19 +75,15 @@ namespace ConTeXt_IDE
                 var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
                 setting.Theme = VM.Default.Theme == "Light" ? ElementTheme.Light : ElementTheme.Dark;
                 setting.AccentColor = VM.AccentColor.Color;
-                ColorPaletteResources palette = new ColorPaletteResources();
-                palette.Accent = setting.AccentColorLow;
-                App.Current.Resources.MergedDictionaries.Add(palette);
-
+                //ColorPaletteResources palette = new ColorPaletteResources();
+                //palette.Accent = setting.AccentColorLow;
+                //App.Current.Resources.MergedDictionaries.Add(palette);
 
             }
             catch (Exception ex)
             {
                 VM.Log("Exception on Startup: " + ex.Message);
             }
-
         }
     }
-
-  
 }

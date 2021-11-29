@@ -37,7 +37,7 @@ namespace ConTeXt_IDE.Models
 
         public string RootFile
         {
-            get => Get("");
+            get => Get<string>(null);
             set
             {
                 Set(value);
@@ -91,7 +91,7 @@ namespace ConTeXt_IDE.Models
             return fileItem;
         }
 
-        public string AdditionalParameters { get => Get(""); set => Set(value); }
+        public string AdditionalParameters { get => Get("--SomeParameter"); set => Set(value); }
         public bool UseAutoGenerate { get => Get(true); set => Set(value); }
         public bool UseNoConsole { get => Get(true); set => Set(value); }
         public bool UseNonStopMode { get => Get(true); set => Set(value); }

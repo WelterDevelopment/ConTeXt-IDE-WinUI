@@ -7,7 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
      
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" >
 
 
@@ -34,7 +34,7 @@
             </Grid>-->
         </Grid>
         <InfoBar Grid.Row="1" IsOpen="{Binding InfoOpen, Mode=TwoWay}"  Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
-        <Frame Grid.Row="2" Loaded="RootFrame_Loaded" x:FieldModifier="public" x:Name="RootFrame" ></Frame>
+        <Frame Grid.Row="2" Loaded="RootFrame_Loaded" x:FieldModifier="public" x:Name="RootFrame" Background="{ThemeResource SolidBackgroundFillColorBase}" ></Frame>
         <ProgressBar Name="Progressbar" Grid.Row="2" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Visibility="{Binding IsVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">
             <animations:Implicit.ShowAnimations>
                 <animations:OpacityAnimation Duration="0:0:0.5" From="0" To="1"></animations:OpacityAnimation>

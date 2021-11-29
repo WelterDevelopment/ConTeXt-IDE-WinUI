@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.AppService;
@@ -24,6 +25,16 @@ namespace ConTeXt_IDE.ViewModels
     {
         public ObservableCollection<FileActivatedEventArgs> FileActivatedEvents = new ObservableCollection<FileActivatedEventArgs>() { };
         public ObservableCollection<FileItem> FileItemsTree = new ObservableCollection<FileItem>();
+        public ObservableCollection<LogLine> LogLines { get => Get(new ObservableCollection<LogLine>()); set => Set(value); }
+        public ObservableCollection<OutlineItem> OutlineItems { get => Get(new ObservableCollection<OutlineItem>()); set => Set(value); }
+
+        public OutlineItem SelectedOutlineItem { get => Get<OutlineItem>(null);
+            set
+            {
+                if (value?.Title != SelectedOutlineItem?.Title)
+                    Set(value);
+            } 
+        }
 
         private string rootFile;
 
@@ -48,14 +59,6 @@ namespace ConTeXt_IDE.ViewModels
                     AccentColor = AccentColors.Find(x => x.Name == Default.AccentColor);
 
                 ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]).AccentColor = AccentColor.Color;
-                //Application.Current.Resources["SystemAccentColor"] = AccentColor.Color;
-               // ColorPaletteResources cpr = FindColorPaletteResourcesForTheme("Light");
-                //cpr.Accent = AccentColor.Color;
-
-                //var ce = new CodeEditor();
-                //EditorOptions = ce.Options;
-            
-
             }
             catch (TypeInitializationException ex)
             {
@@ -123,16 +126,145 @@ namespace ConTeXt_IDE.ViewModels
 
         public ConTeXtErrorMessage ConTeXtErrorMessage { get => Get(new ConTeXtErrorMessage()); set => Set(value); }
 
-        public FileItem CurrentFileItem { get => Get(new FileItem(null)); set { Set(value);  } }
+        public FileItem CurrentFileItem { get => Get(new FileItem(null)); 
+            set 
+            { 
+                Set(value);
+                OutlineItems.Clear();
+                if (value?.FileLanguage == "ConTeXt")
+                {
+                    UpdateOutline(value.FileContent);
+                }
+
+            } 
+        }
+
+        public async void UpdateOutline(List<Line> text = null, bool update = false)
+        {
+            if (text == null)
+                text = Codewriter.Lines.ToList();
+
+            UpdateOutline(string.Join("\n",text.Select(x=>x.LineText)), update);
+        }
+        public async void UpdateOutline(string text = null, bool update = false)
+        {
+            //await Task.Run(() =>
+            //{
+            try
+            {
+                if (text == null)
+                    text = CurrentFileItem.FileContent;
+
+                if (!update)
+                    OutlineItems.Clear();
+
+
+                string[] lines = text.Contains("\r\n") ? text.Split("\r\n", StringSplitOptions.None) : text.Split("\n", StringSplitOptions.None);
+
+                List<OutlineItem> founditems = new();
+                int row = 0;
+                int ID = 0;
+                foreach (string line in lines)
+                {
+                    row++;
+                    MatchCollection mc = Regex.Matches(line, @"\\(start)?([sub].*?)?(section|subject|part|title|chapter)(\[.*?title\s*?=\s*)(.+?)(\s*?)(\,|\])");
+
+                    if (mc.Count > 0 && mc.First().Success)
+                    {
+                        int level = CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(2).Value, "sub");
+                        string type = string.Concat(mc.First().Groups.Values.ToList().GetRange(1, 3).Select(x => x.Value)).Replace("start", "");
+                        string title = mc.First().Groups.Values.ElementAt(5).Value.Replace("{", "").Replace("}", "");
+                        if (!update)
+                            OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+                        else
+                        {
+                            founditems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+                            if (OutlineItems.Any(x => x.Title == title && x.SectionLevel == level && x.SectionType == type))
+                            {
+                                OutlineItems.First(x => x.Title == title && x.SectionLevel == level && x.SectionType == type).Row = row;
+                            }
+                            else
+                            {
+                                if (OutlineItems.FirstOrDefault(x => x.Row > row) != null)
+                                {
+                                    int index = OutlineItems.IndexOf(OutlineItems.FirstOrDefault(x => x.Row > row));
+                                    if (index < OutlineItems.Count)
+                                        OutlineItems.Insert(index, new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+                                    else
+                                        OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+                                }
+                                else
+                                    OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+                            }
+                        }
+                    }
+                }
+                if (update)
+                {
+                    foreach (var item in new List<OutlineItem>(OutlineItems))
+                    {
+                        if (!founditems.Any(x => x.Title == item.Title && x.SectionLevel == item.SectionLevel && x.SectionType == item.SectionType))
+                        {
+                            OutlineItems.Remove(item);
+                        }
+                    }
+                }
+                SelectedOutlineItem = OutlineItems.Where(x => CurrentFileItem.CurrentLine.iLine + 1 >= x.Row).LastOrDefault();
+            }
+            catch 
+            {
+
+            }
+            //});
+        }
+        public int CountOccurenceswWithinString(string text, string searchterm)
+        {
+            int wordCount = 0;
+            foreach (Match m in Regex.Matches(text, searchterm))
+            {
+                wordCount++;
+            }
+
+           return wordCount;
+        }
         public FileItem CurrentRootItem { get => Get<FileItem>(null); set => Set(value); }
 
-        public Project CurrentProject { get => Get(new Project()); set { Set(value); IsProjectLoaded = value?.Folder != null; if (value?.Folder != null) Log("Project " + value.Name + " loaded."); } }
+        public Project CurrentProject
+        {
+            get => Get(new Project());
+            set
+            {
+                if (value != null)
+                {
+                    IsProjectLoaded = value.Folder != null;
+
+                    if (value.Folder == null && value.Name != null)
+                    {
+                        StorageFolder f = StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(value.Name).AsTask().Result;
+                        value.Folder = f;
+                    }
+                    if (value.Folder != null)
+                    {
+                        FileItemsTree?.Clear();
+                        FileItems?.Clear();
+                        GenerateTreeView(value.Folder, value.RootFile);
+                        value.Directory = FileItemsTree;
+                        Default.LastActiveProject = value.Name;
+                        IsProjectLoaded = true;
+                        Log("Project " + value.Name + " loaded.");
+                    }
+                }
+                else
+                {
+                    CurrentRootItem = null;
+                    
+                    IsProjectLoaded = false;
+                }
+                Set(value);
+            }
+        }
 
         public Settings Default { get; } = Settings.Default;
-
-       
-
-
 
         public ObservableCollection<FileItem> FileItems { get => Get(new ObservableCollection<FileItem>()); set => Set(value); }
 
@@ -265,11 +397,16 @@ namespace ConTeXt_IDE.ViewModels
             {
                 FileItemsTree.Add(new FileItem(folder) { IsExpanded = true, Type = FileItem.ExplorerItemType.ProjectRootFolder });
                 await DirWalk(folder);
+                if (CurrentRootItem != null)
+                    OpenFile(CurrentRootItem);
+                // return true;
             }
             else
             {
                 Log("Operation cancelled.");
+               // return false;
             }
+            return;
         }
         private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf" };
         private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf" };
@@ -312,7 +449,7 @@ namespace ConTeXt_IDE.ViewModels
             }
             catch (Exception excpt)
             {
-                Log("Error in generating the project directory tree: " + excpt.Message);
+               Log("Error in generating the project directory tree: " + excpt.Message);
             }
         }
 
@@ -321,17 +458,20 @@ namespace ConTeXt_IDE.ViewModels
             return new FileItem(File, IsRoot) { FileContent = Content };
         }
 
-        public async Task<bool> Log(object log, string title = "Error:")
+        public int CurrentLogLine = 0;
+        public void Log(object log)
         {
             try
             {
-                Blocks = log.ToString();
-                await Task.Delay(100);
-                return true;
+                //Blocks = log.ToString();
+                CurrentLogLine++;
+                LogLines.Add(new() { Line = CurrentLogLine.ToString(), Date = DateTime.Now.ToString("HH:mm:ss"), Message = log?.ToString() });
+               // App.MainPage.Log.ItemsSource = LogLines;
+                
             }
             catch
             {
-                return false;
+               
             }
         }
 
@@ -373,7 +513,7 @@ namespace ConTeXt_IDE.ViewModels
                     {
                         FileItems.Add(File);
                         //await Task.Delay(500); // ObservableCollection.Add() is slow, so setting CurrentFileItem = File will result in an exception because FileItems is still empty. A cleaner approach is needed. 
-                        await Log("File " + File.FileName + " opened");
+                        Log("File " + File.FileName + " opened");
                     }
 
                     if (FileItems.Contains(File))
@@ -389,31 +529,42 @@ namespace ConTeXt_IDE.ViewModels
             }
             catch (Exception ex)
             {
-                await Log("Cannot open selected file: " + ex.Message);
+                 Log("Cannot open selected file: " + ex.Message);
             }
         }
 
-        public async void ClearWorkspace(StorageFolder f)
+        public async Task<bool> ClearWorkspace(StorageFolder f)
         {
-            foreach (StorageFolder folder in await f.GetFoldersAsync())
+            bool Success = true;
+            try
             {
-                ClearWorkspace(folder);
-            }
-            foreach (StorageFile item in await f.GetFilesAsync())
-            {
-                if (auxillaryWords.Contains(item.FileType))
+                foreach (StorageFolder folder in await f.GetFoldersAsync())
                 {
-                    if (FileItems.Any(x => x.FileName == item.Name)) 
-                        FileItems.Remove(FileItems.First(x => x.FileName == item.Name)); 
-                    await item.DeleteAsync();
+                    bool s = await ClearWorkspace(folder);
+                    if (!s)
+                        Success = false;
                 }
-                else if (item.FileType == ".pdf")
+                foreach (StorageFile item in await f.GetFilesAsync())
                 {
-                    string filename = item.Name;
-                    bool iscompiledpdf = (filename.StartsWith("project_") | filename.StartsWith("prd_") | filename.StartsWith("c_") | filename.StartsWith("env_") | filename.StartsWith("p-") | filename.StartsWith("t-"));
-                    if (iscompiledpdf)
+                    if (auxillaryWords.Contains(item.FileType))
+                    {
+                        if (FileItems.Any(x => x.FileName == item.Name))
+                            FileItems.Remove(FileItems.First(x => x.FileName == item.Name));
                         await item.DeleteAsync();
+                    }
+                    else if (item.FileType == ".pdf")
+                    {
+                        string filename = item.Name;
+                        bool iscompiledpdf = (filename.StartsWith("project_") | filename.StartsWith("prd_") | filename.StartsWith("c_") | filename.StartsWith("env_") | filename.StartsWith("p-") | filename.StartsWith("t-"));
+                        if (iscompiledpdf)
+                            await item.DeleteAsync();
+                    }
                 }
+                return Success;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -421,11 +572,11 @@ namespace ConTeXt_IDE.ViewModels
         {
             try
             {
-                StorageFolder f = await StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(proj.Name);
+                StorageFolder f = proj.Folder;
 
-                ClearWorkspace(f);
+                await ClearWorkspace(f);
 
-                await Log($"Project {proj.Name} cleared.");
+                 Log($"Project {proj.Name} cleared.");
             }
             catch (Exception ex)
             {
@@ -456,9 +607,6 @@ namespace ConTeXt_IDE.ViewModels
 
                     project.Folder = f;
                     FileItemsTree = new ObservableCollection<FileItem>();
-                   await  GenerateTreeView(f, proj.RootFile);
-
-                    project.Directory = FileItemsTree;
 
                     CurrentProject = project;
                 }
@@ -511,7 +659,8 @@ namespace ConTeXt_IDE.ViewModels
                         if (list != null && list.Count() == 1)
                         {
                             var project = list.FirstOrDefault();
-                            await LoadProject(project);
+                            CurrentProject = project;
+                          //await LoadProject(project);
                         }
                     }
                 }
@@ -539,21 +688,21 @@ namespace ConTeXt_IDE.ViewModels
                     {
                         if (filetosave.IsChanged)
                         {
+
                             IsSaving = true;
                             IsPaused = false;
                             string cont = filetosave.FileContent ?? " ";
                             var buffer = Windows.Security.Cryptography.CryptographicBuffer.ConvertStringToBinary(cont, Windows.Security.Cryptography.BinaryStringEncoding.Utf8);
                             await FileIO.WriteBufferAsync(CurrentFileItem.File as StorageFile, buffer);
-                            Default.TexFileName = filetosave.FileName;
-                            Default.TexFilePath = filetosave.File.Path;
-                            Default.TexFileFolder = filetosave.FileFolder;
                             filetosave.LastSaveFileContent = filetosave.FileContent;
                             filetosave.IsChanged = false;
                             IsSaving = false;
                             IsPaused = true;
                             IsVisible = false;
                             Log("File " + filetosave.File.Name + " saved");
+                            UpdateOutline(filetosave.FileContent);
                         }
+                        
                     }
                     catch (Exception ex)
                     {
@@ -585,11 +734,9 @@ namespace ConTeXt_IDE.ViewModels
                                 item.LastSaveFileContent = item.FileContent;
                                 item.IsChanged = false;
                                 Log("File " + item.File.Name + " saved");
+                                UpdateOutline(item.FileContent);
                             }
                         }
-                        Default.TexFileName = CurrentFileItem.FileName;
-                        Default.TexFilePath = CurrentFileItem.File.Path;
-                        Default.TexFileFolder = CurrentFileItem.FileFolder;
                         IsSaving = false;
                         IsPaused = true;
                         IsVisible = false;
@@ -659,5 +806,12 @@ namespace ConTeXt_IDE.ViewModels
                 IsFileItemLoaded = true;
             }
         }
+    }
+
+    public class LogLine
+    {
+        public string Line { get; set; }
+        public string Date { get; set; }
+        public string Message { get; set; }
     }
 }
