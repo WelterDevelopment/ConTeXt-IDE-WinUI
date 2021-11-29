@@ -1,7 +1,7 @@
 # ConTeXt IDE
-This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C# 9 / .NET 5 with the Windows App SDK (Project Reunion) 0.8 framework using only controls from the UI library WinUI 3. In the future, it *might* be possible to turn this into a .NET MAUI app that runs cross-platform on Windows, MacOS and (highly unlikely) also on Linux.
+This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C# 9 / .NET 6 with the Windows App SDK 1.0 framework using only controls from the UI library WinUI 3. In the future, it *might* be possible to turn this into a .NET MAUI app that runs cross-platform on Windows, MacOS and (highly unlikely) also on Linux.
 
-![Screenshot_App](https://user-images.githubusercontent.com/13318246/142768950-b1c3c307-8247-49cd-8033-31b2efda5535.png)
+![Screenshot_App](https://user-images.githubusercontent.com/13318246/143906904-052d41f8-e674-4291-aa6f-ccecd7ba8bfa.png)
 
 ## Usage
 
@@ -9,16 +9,26 @@ This is an IDE for the ConTeXt/LuaMetaTeX typesetting system. It is written in C
 The app can be installed via the Microsoft store on x64 devices with Windows 10 version 17763 and up: <a href='https://www.microsoft.com/store/apps/9NN9Q389TTJR?cid=storebadge&ocid=badge'><img src='https://developer.microsoft.com/store/badges/images/English_get_L.png' alt='English badge' height=20 /></a>
 
 ### Known bugs and missing features
-Bugs and Limitations that are directly caused by the current implementation of Project Reunion 0.8:
-- No app lifecycle methods (open files from the Windows Explorer, check for unsaved files on app closing, ...)
+Bugs and Limitations:
+- No app lifecycle methods (open files from the Windows Explorer)
 - No windowing (The pdf output cannot be undocked from the app)
-- Graphic glitches with the new WebView2 control (weird and random thin white borders at the top and left edges; suddenly occuring thick margins at the bottom and right edges)
-- The ribbon is not part of the window's title bar. The Minimize/Maximize/Close buttons look different from the buttons the system is using.
-- The context menu of the Application Log (RichTextBlock) shows white text when the dark theme is applied in the system settings and the white theme is applied in the app.
-
-All these Issues will get fixed in ~Q4 2021
+- No line wrapping
+- No code folding
 
 ### Changelog
+#### 1.10.5 (2021-11-29)
+- Serious design improvements using the new Windows 11 styled controls.
+- DropDownButtons are now easier distinguishable from Buttons and ToggleButtons
+- Theme and accent color are changeable at runtime without bugs
+- The use of the accent color is much more sensible now
+- Important bug fixes
+
+#### 1.10.4 (2021-11-28)
+- File outline: you always see in which section of your document you are working in.
+- Project dropdown instead of side panel: remove all the clutter so you can concentrate on just your tex file(s) and the pdf output.
+- Improved application log: You can now also see the console output from the context.exe compiler.
+- When you close the app and have unsaved opened files, there will be a prompt that asks you whether you want to save these files.
+
 #### 2021-06-01 (Version 1.5.0)
 - You can now install and update ConTeXt modules directly from the source (CTAN or ConTeXtGarden)
 - Added a Setting for the editor's font size
@@ -49,10 +59,8 @@ Pull requests are always appreciated. The IDE is pretty basic right now. More fu
 If you want to contribute changes, here are some points that come to mind:
 
 #### Functions
-- Ability to download, install and update ConTeXt-compatible modules from CTAN.
 - The in-app ConTeXt Templates should be fetched from a GitHub-Page at runtime.
 - App localization: Provide basic language support for Spanish, French, Italian, German, ...
-- Graphical implementation of every compiler parameter that is possible (for a parameter list see https://wiki.contextgarden.net/Context)
 
 #### Code cleanup
 - The PDF.JS viewer is currently located in ConTeXt-IDE.Shared (folders "Build" and "web"). Thats quite a mess and the viewer should be wraped in a WebView2-based WinUI3-control 
