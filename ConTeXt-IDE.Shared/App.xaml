@@ -84,8 +84,14 @@
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
                 <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
                 <Setter Property="BorderThickness" Value="1"></Setter>
+                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
             </Style>
             <Style  TargetType="ToggleSplitButton">
+                <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
+                <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
+                <Setter Property="BorderThickness" Value="1"></Setter>
+            </Style>
+            <Style  TargetType="SplitButton">
                 <Setter Property="VerticalAlignment" Value="Stretch"></Setter>
                 <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
                 <Setter Property="BorderThickness" Value="1"></Setter>
@@ -105,7 +111,7 @@
             </Style>
 
             <Style TargetType="TextBlock" x:Key="RibbonTextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
-                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
+                <!--<Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>-->
                 <Setter Property="VerticalAlignment" Value="Center"></Setter>
                 <Setter Property="TextWrapping" Value="WrapWholeWords"></Setter>
                 <Setter Property="MaxWidth" Value="200"></Setter>
@@ -113,7 +119,7 @@
             </Style>
 
             <Style TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
-                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
+                <Setter Property="Foreground" Value="{StaticResource DefaultTextForegroundThemeBrush}"></Setter>
                 <Setter Property="VerticalAlignment" Value="Center"></Setter>
             </Style>
 
@@ -165,6 +171,7 @@
             <helpers:BoolToWidthConverter x:Key="BoolToWidth" />
             <helpers:BoolToFontWeightConverter x:Key="BoolToFontWeight" />
             <helpers:BoolInverter x:Key="BoolInverter" />
+            <helpers:ListInverter x:Key="ListInverter" />
             <helpers:LevelToVisibility x:Key="LevelToVisibility" />
             <helpers:SetRootVisibility x:Key="SetRootVisibility" />
             <helpers:FileTypeToVisibility x:Key="FileTypeToVisibility" />
@@ -181,17 +188,20 @@
                     <Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
                     <Color x:Key="SystemAccentColorDark2" >DarkGray</Color>
 
-                    <Color x:Key="ForegroundColor">#FFFFFF</Color>
-                    <Color x:Key="BackgroundColor">#000000</Color>
-                    <Color x:Key="ForegroundLightColor">#DDEEEEEE</Color>
+                    <Color x:Key="ForegroundColor">#FFF</Color>
+                    <Color x:Key="BackgroundColor">#000</Color>
+                    <Color x:Key="ForegroundLightColor">#AAA</Color>
 
                     <!--<StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>-->
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="HighContrast">
-                    <Color x:Key="ForegroundColor">#FFFFFF</Color>
-                    <Color x:Key="BackgroundColor">#000000</Color>
-                    <Color x:Key="ForegroundLightColor">#FFFFFF</Color>
+                    <Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
+                    <Color x:Key="SystemAccentColorDark1" >DarkGray</Color>
+                    
+                    <Color x:Key="ForegroundColor">#FFF</Color>
+                    <Color x:Key="BackgroundColor">#000</Color>
+                    <Color x:Key="ForegroundLightColor">#FFF</Color>
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
@@ -202,9 +212,9 @@
                     <Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
                     <Color x:Key="SystemAccentColorDark1" >DarkGray</Color>
 
-                    <Color x:Key="ForegroundColor">#000000</Color>
-                    <Color x:Key="BackgroundColor">#FFFFFF</Color>
-                    <Color x:Key="ForegroundLightColor">#DD111111</Color>
+                    <Color x:Key="ForegroundColor">#000</Color>
+                    <Color x:Key="BackgroundColor">#FFF</Color>
+                    <Color x:Key="ForegroundLightColor">#555</Color>
                     
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>

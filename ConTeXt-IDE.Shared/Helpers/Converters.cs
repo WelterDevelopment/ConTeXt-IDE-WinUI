@@ -4,6 +4,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
 using Windows.UI.Text;
 
@@ -248,6 +251,29 @@ namespace ConTeXt_IDE.Helpers
                 invert = !(bool)value;
             }
             return invert;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            bool invert = true;
+            if (value is bool)
+            {
+                invert = !(bool)value;
+            }
+            return invert;
+        }
+    }
+
+    public class ListInverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+           
+            if (value is ObservableCollection<object> collection)
+            {
+                return collection.Reverse();
+            }
+            return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

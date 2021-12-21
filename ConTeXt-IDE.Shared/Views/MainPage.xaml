@@ -11,7 +11,7 @@
     mc:Ignorable="d" 
 	DataContext="{x:Bind VM}" RasterizationScale="1.0"
 	Loaded="Page_Loaded" 
-	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" Background="Transparent" x:DefaultBindMode="OneWay" >
+	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" Background="{ThemeResource SolidBackgroundFillColorBase}" x:DefaultBindMode="OneWay" >
     <Page.Resources>
         <DataTemplate x:Key="FolderTemplate" x:DataType="models:FileItem">
             <models:MyTreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" CanDrag="False" ToolTipService.ToolTip="{Binding FileName}" HorizontalContentAlignment="Left" ItemsSource="{x:Bind Children}">
@@ -171,8 +171,10 @@
         <CollectionViewSource x:Key="cvs" x:Name="cvs" IsSourceGrouped="True" />
     </Page.Resources>
 
-    <Grid x:Name="RootGrid" Background="Transparent">
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
@@ -181,7 +183,7 @@
                 <SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
             </TabView.Background>
             <TabView.TabStripHeader>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Height="28" Margin="4,0,4,-4" Spacing="" x:Name="TabStripHeader" Background="Transparent">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Height="28" Margin="4,0,4,-4" Spacing="0" x:Name="TabStripHeader" Background="Transparent">
 
                     <Button VerticalAlignment="Stretch" Padding="2"  Background="Transparent">
                         <Button.Content>
@@ -309,50 +311,54 @@
                     </TabViewItem.Header>
                     <ScrollViewer Style="{StaticResource RibbonView}">
                         <StackPanel Style="{StaticResource RibbonContent}">
-                            <StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsProjectLoaded, Mode=OneWay}">
-                                <Button Click="Undo_Click" ToolTipService.ToolTip="Undo" IsEnabled="{Binding Codewriter.CanUndo}">
-                                    <Button.Content>
-                                        <SymbolIcon Symbol="Undo"></SymbolIcon>
-                                    </Button.Content>
-                                </Button>
-                                <Button Visibility="Collapsed"  CornerRadius="{StaticResource CornerRadiusRight}"  BorderThickness="0,1,1,1"  x:Name="Undo" ToolTipService.ToolTip="Undo history" IsEnabled="{Binding Codewriter.CanUndo}" >
-                                    <Button.Content>
-                                        <FontIcon Glyph="&#xE70D;"></FontIcon>
-                                    </Button.Content>
-                                    <Button.Flyout>
-                                        <Flyout x:Name="UndoFlyout" Placement="Bottom">
-                                            <StackPanel Orientation="Vertical" Spacing="6">
-                                                <ListView SelectionMode="None" ItemsSource="{Binding Codewriter.EditActionHistory}" >
-                                                    <ListView.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid Margin="0,0,12,0">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="Auto" />
-                                                                    <ColumnDefinition Width="*" />
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock VerticalAlignment="Center" Grid.Column="0" Margin="0,0,6,0" FontSize="10" Foreground="DarkGray" >
+                            <SplitButton Visibility="{Binding IsFileItemLoaded}" x:Name="Undo" Click="Undo_Click" ToolTipService.ToolTip="Undo" IsEnabled="{Binding Codewriter.CanUndo}" >
+                                <SplitButton.Content>
+                                    <SymbolIcon Symbol="Undo"></SymbolIcon>
+                                </SplitButton.Content>
+                                <SplitButton.Flyout>
+                                    <Flyout x:Name="UndoFlyout" Placement="Bottom">
+                                        <ListView x:Name="UndoCommands" MinWidth="150" MaxWidth="300" SelectionMode="Extended" IsItemClickEnabled="True" ItemClick="UndoCommands_ItemClick" PointerExited="UndoCommands_PointerExited" ItemsSource="{Binding Codewriter.InvertedEditActionHistory}" >
+                                            <ListView.ItemContainerStyle>
+                                                <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                                                    <Setter Property="VerticalContentAlignment" Value="Stretch"></Setter>
+                                                    <Setter Property="MinHeight" Value="32"></Setter>
+                                                    <!--<Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate>
+                                                                    <ListViewItemPresenter></ListViewItemPresenter>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>-->
+                                                </Style>
+                                            </ListView.ItemContainerStyle>
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid VerticalAlignment="Stretch" PointerEntered="Grid_PointerEntered" >
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Margin="0,0,6,0" FontSize="10" Foreground="{ThemeResource ForegroundLightColor}" >
                                                                     <Run Text="{Binding EditActionType}" />
                                                                     <Run Text=":" />
-                                                                </TextBlock>
-                                                                <TextBlock Grid.Column="1" Text="{Binding TextInvolved}" TextWrapping="NoWrap" MaxLines="1" MinWidth="60" MaxWidth="250" />
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ListView.ItemTemplate>
-                                                </ListView>
-                                            </StackPanel>
-                                        </Flyout>
-                                    </Button.Flyout>
-                                </Button>
-                            </StackPanel>
+                                                        </TextBlock>
+                                                        <TextBlock VerticalAlignment="Center" Grid.Column="1" Text="{Binding TextInvolved}" TextWrapping="NoWrap" MaxLines="1" MinWidth="60" MaxWidth="250" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </Flyout>
+                                </SplitButton.Flyout>
+                            </SplitButton>
 
-                            <Border Style="{StaticResource Separator}" Visibility="{Binding IsProjectLoaded}" ></Border>
+                            <Border Style="{StaticResource Separator}" Visibility="{Binding IsFileItemLoaded}" ></Border>
 
                             <StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsFileItemLoaded}">
                                 <Button CornerRadius="{StaticResource CornerRadiusLeft}"  IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="btnsave"  Click="Btnsave_Click" ToolTipService.ToolTip="Save current file" >
                                     <Button.Content>
                                         <StackPanel Orientation="Horizontal" >
                                             <SymbolIcon Symbol="Save"></SymbolIcon>
-                                            <TextBlock Text="Save" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                            <TextBlock Text="Save" VerticalAlignment="Center" ></TextBlock>
                                         </StackPanel>
                                     </Button.Content>
                                 </Button>
@@ -529,7 +535,7 @@
                                 <ToggleButton.Content>
                                     <StackPanel Orientation="Horizontal" >
                                         <FontIcon Glyph="&#xf146;"></FontIcon>
-                                        <TextBlock  Text="Line Numbers" ></TextBlock>
+                                        <TextBlock  Text="Line numbers" ></TextBlock>
                                     </StackPanel>
                                 </ToggleButton.Content>
                             </ToggleButton>
@@ -538,7 +544,7 @@
                                 <ToggleButton.Content>
                                     <StackPanel Orientation="Horizontal" >
                                         <FontIcon Glyph="&#xe751;"></FontIcon>
-                                        <TextBlock  Text="Line Markers" ></TextBlock>
+                                        <TextBlock  Text="Line markers" ></TextBlock>
                                     </StackPanel>
                                 </ToggleButton.Content>
                             </ToggleButton>
@@ -571,7 +577,7 @@
                             </ToggleButton>-->
                             <Border Style="{StaticResource Separator}" ></Border>
 
-                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Font Size: "></TextBlock>
+                            <TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Font size: "></TextBlock>
                             <NumberBox PointerWheelChanged="Tbx_FontSize_Wheel" Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" SpinButtonPlacementMode="Inline" >  </NumberBox>
                             <!--<StackPanel Orientation="Horizontal" Spacing="0" >
                                 <TextBox InputScope="Number" BorderThickness="1,1,0,1" Text="{Binding Default.FontSize, Mode=TwoWay}" CornerRadius="0" ></TextBox>
@@ -750,7 +756,7 @@
                                     <ToggleButton.Content>
                                         <StackPanel Orientation="Horizontal" >
                                             <FontIcon Glyph="&#xe8fd;"></FontIcon>
-                                            <TextBlock  Text="Document Outline"></TextBlock>
+                                            <TextBlock  Text="Document outline"></TextBlock>
                                         </StackPanel>
                                     </ToggleButton.Content>
                                 </ToggleButton>
@@ -835,7 +841,7 @@
                                                     <DataTemplate>
                                                         <StackPanel Margin="0,0,0,6" Spacing="0">
                                                             <TextBlock Text="{Binding FriendlyName}" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
-                                                            <TextBlock Text="{Binding FileName}" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+                                                            <TextBlock Text="{Binding FileName}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource ForegroundLightColor}"></TextBlock>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </ListView.ItemTemplate>
@@ -847,7 +853,7 @@
                                     <ToggleButton.Content>
                                         <StackPanel Orientation="Horizontal" >
                                             <FontIcon Glyph="&#xE89F;"></FontIcon>
-                                            <TextBlock  Text="Open internal" ></TextBlock>
+                                            <TextBlock  Text="open internally" ></TextBlock>
                                         </StackPanel>
                                     </ToggleButton.Content>
                                 </ToggleButton>
@@ -928,8 +934,16 @@
                 </TabViewItem>
             </TabView.TabItems>
         </TabView>
-
-        <Grid Grid.Row="1" x:Name="ContentGrid" >
+        <ProgressBar Name="Progressbar" Grid.Row="1" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Background="{ThemeResource SolidBackgroundFillColorTertiary }" Visibility="{Binding IsVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">
+            <animations:Implicit.ShowAnimations>
+                <animations:OpacityAnimation Duration="0:0:0.5" From="0" To="1"></animations:OpacityAnimation>
+            </animations:Implicit.ShowAnimations>
+            <animations:Implicit.HideAnimations>
+                <animations:OpacityAnimation Duration="0:0:0.5" From="1" To="0"></animations:OpacityAnimation>
+            </animations:Implicit.HideAnimations>
+        </ProgressBar>
+        <InfoBar Grid.Row="2" IsOpen="{Binding InfoOpen, Mode=TwoWay}" Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
+        <Grid Grid.Row="3" x:Name="ContentGrid" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
@@ -1137,7 +1151,7 @@
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
                                                     <Grid >
-                                                        <codeeditor:CodeWriter  Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" ErrorOccured="Codewriter_ErrorOccured"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" IsWrappingEnabled="False" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
+                                                        <codeeditor:CodeWriter  Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" IsWrappingEnabled="False" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
                                                     </Grid>
                                                     <!--<codeeditor:CodeWriter  Loaded="Codewriter_Loaded" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=OneWay}"  Text="{Binding FileContent, Mode=OneWay}"  ></codeeditor:CodeWriter>-->
                                                     <Grid  Grid.Row="1" >
@@ -1171,7 +1185,7 @@
                             <animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
                         </animations:Implicit.ShowAnimations>
 
-                        <WebView2  FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="{Binding IsInternalViewerActive}" x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" CoreWebView2Initialized="PDFReader_CoreWebView2Initialized" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0"></WebView2>
+                        <WebView2 FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="{Binding IsInternalViewerActive}" x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" CoreWebView2Initialized="PDFReader_CoreWebView2Initialized" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0"></WebView2>
 
                     </Grid>
                 </Grid>

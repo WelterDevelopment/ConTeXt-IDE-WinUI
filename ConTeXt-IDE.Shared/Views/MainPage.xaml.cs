@@ -168,10 +168,10 @@ namespace ConTeXt_IDE
 
         private void Lines_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            if (VM.Codewriter.IsInitialized && VM.CurrentFileItem.FileLanguage == "ConTeXt")
-            {
-                VM.UpdateOutline((sender as ObservableCollection<Line>).ToList(), true);
-            }
+            //if (VM.Codewriter.IsInitialized && VM.CurrentFileItem.FileLanguage == "ConTeXt")
+            //{
+            //    VM.UpdateOutline((sender as ObservableCollection<Line>).ToList(), true);
+            //}
         }
 
             private async void Page_Loaded(object sender, RoutedEventArgs e)
@@ -274,6 +274,12 @@ namespace ConTeXt_IDE
             (sender as WebView2).CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             (sender as WebView2).CoreWebView2.Settings.AreDevToolsEnabled = false;
             (sender as WebView2).CoreWebView2.Settings.IsZoomControlEnabled = false;
+            (sender as WebView2).CoreWebView2.Settings.IsScriptEnabled = true;
+            (sender as WebView2).CoreWebView2.Settings.IsWebMessageEnabled = true;
+            (sender as WebView2).CoreWebView2.Settings.AreHostObjectsAllowed = true;
+            //(sender as WebView2).CoreWebView2.WebMessageReceived += (a,b) => { VM.Log(b.Source + " : " + b.WebMessageAsJson); };
+            //(sender as WebView2).CoreWebView2.WebResourceRequested += (a, b) => { VM.Log(b.Response.Content); };
+            //(sender as WebView2).CoreWebView2.WebResourceResponseReceived += (a, b) => { VM.Log(b.Response.ToString()); };
         }
 
         #endregion
@@ -533,11 +539,18 @@ namespace ConTeXt_IDE
 
         private void EditorTabViewDrag(object sender, DragEventArgs e)
         {
-            e.AcceptedOperation = DataPackageOperation.Link;
-            if (e.DragUIOverride != null)
+            try
             {
-                e.DragUIOverride.Caption = "Open File";
-                e.DragUIOverride.IsContentVisible = true;
+                e.AcceptedOperation = DataPackageOperation.Link;
+                if (e.DragUIOverride != null)
+                {
+                    e.DragUIOverride.Caption = "Open File";
+                    // e.DragUIOverride.IsContentVisible = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                VM.Log("Error on EditorTabViewDrag: " + ex.Message);
             }
         }
 
@@ -623,11 +636,8 @@ namespace ConTeXt_IDE
             if (fileitem.Type == FileItem.ExplorerItemType.File)
             {
                 string type = ((StorageFile)fileitem.File).FileType.ToLower();
-                if (LanguagesToOpen.Contains(type))
-                {
-                    VM.OpenFile(fileitem);
-                }
-                else if (BitmapsToOpen.Contains(type))
+                
+                if (BitmapsToOpen.Contains(type))
                 {
                     await Launcher.LaunchFileAsync(fileitem.File as StorageFile);
                     //var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = fileitem.FileName, Target = (FrameworkElement)sender, PreferredPlacement = TeachingTipPlacementMode.RightTop, IsLightDismissEnabled = true, IsOpen = true };
@@ -642,6 +652,10 @@ namespace ConTeXt_IDE
                 else if (type == ".pdf")
                 {
                     await OpenPDF((StorageFile)fileitem.File);
+                }
+                else
+                {
+                    VM.OpenFile(fileitem);
                 }
             }
             e.Handled = true;
@@ -1402,7 +1416,7 @@ namespace ConTeXt_IDE
         }
 
 
-        private void Undo_Click(object sender, RoutedEventArgs e)
+        private void Undo_Click(object sender, SplitButtonClickEventArgs e)
         {
             VM.Codewriter?.TextAction_Undo();
             VM.Codewriter?.Focus(FocusState.Keyboard);
@@ -1515,8 +1529,11 @@ namespace ConTeXt_IDE
         {
             try
             {
-                VM.Codewriter?.SelectLine(new(0, (e.ClickedItem as OutlineItem).Row - 1));
-                VM.Codewriter?.CenterView();
+                if (VM.Codewriter != null)
+                {
+                    VM.Codewriter.Selection = new(new(0, (e.ClickedItem as OutlineItem).Row - 1));
+                    VM.Codewriter.CenterView();
+                }
             }
             catch (Exception ex)
             {
@@ -2046,6 +2063,49 @@ namespace ConTeXt_IDE
         private void CkB_IntelliSense_Click(object sender, RoutedEventArgs e)
         {
             PopulateIntelliSense("ConTeXt");
+        }
+
+        private void Grid_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            try
+            {
+                var ea = ((FrameworkElement)sender).DataContext as EditAction;
+                int index = VM.Codewriter.InvertedEditActionHistory.IndexOf(ea);
+
+                UndoCommands.DeselectRange(new(index,(uint)VM.Codewriter.InvertedEditActionHistory.Count));
+                
+                UndoCommands.SelectRange(new(0, (uint)(index+1)));
+            }
+            catch(Exception ex)
+            {
+                VM.Log(ex.Message);
+            }
+        }
+
+        private void Codewriter_TextChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            VM.UpdateOutline(((CodeWriter)sender).Lines.ToList(),true);
+        }
+
+        private void UndoCommands_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            try
+            {
+                VM.Codewriter.TextAction_Undo(e.ClickedItem as EditAction);
+                if (VM.Codewriter.EditActionHistory.Count == 0)
+                {
+                    UndoFlyout.Hide();
+                }
+            }
+            catch (Exception ex)
+            {
+                VM.Log(ex.Message);
+            }
+        }
+
+        private void UndoCommands_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            UndoCommands.DeselectRange(new(0, (uint)VM.Codewriter.InvertedEditActionHistory.Count));
         }
     }
 }
