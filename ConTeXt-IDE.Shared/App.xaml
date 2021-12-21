@@ -111,7 +111,7 @@
             </Style>
 
             <Style TargetType="TextBlock" x:Key="RibbonTextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
-                <!--<Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>-->
+                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
                 <Setter Property="VerticalAlignment" Value="Center"></Setter>
                 <Setter Property="TextWrapping" Value="WrapWholeWords"></Setter>
                 <Setter Property="MaxWidth" Value="200"></Setter>
@@ -119,7 +119,7 @@
             </Style>
 
             <Style TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
-                <Setter Property="Foreground" Value="{StaticResource DefaultTextForegroundThemeBrush}"></Setter>
+                <Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
                 <Setter Property="VerticalAlignment" Value="Center"></Setter>
             </Style>
 
