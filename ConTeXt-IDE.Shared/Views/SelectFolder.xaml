@@ -1,0 +1,22 @@
+﻿<ContentDialog
+    x:Class="ConTeXt_IDE.SelectFolder"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Select a project folder"
+    SecondaryButtonText="Cancel" DefaultButton="Primary">
+    <Grid>
+        <StackPanel Orientation="Vertical" Spacing="6">
+            <TextBlock VerticalAlignment="Center" Text="{x:Bind vm.SelectedPath, Mode=TwoWay}" MinWidth="100" MaxWidth="500"></TextBlock>
+            <Button Style="{ThemeResource ButtonRevealStyle}" Click="Button_Click">
+                <StackPanel>
+                    <SymbolIcon Symbol="OpenLocal"></SymbolIcon>
+                    <TextBlock Text="Choose folder" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
+                </StackPanel> 
+            </Button>
+            
+        </StackPanel>
+    </Grid>
+</ContentDialog>
