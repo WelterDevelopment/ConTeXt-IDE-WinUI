@@ -498,7 +498,7 @@
 
 							<Border Style="{StaticResource Separator}" Visibility="{Binding IsProjectLoaded}" ></Border>
 
-							<Button  Visibility="{Binding IsProjectLoaded}"  Name="Btn_Clear"  Click="Btn_Clear_Click" ToolTipService.ToolTip="Remove auxillary files" >
+							<Button  Visibility="{Binding IsProjectLoaded}" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="Btn_Clear"  Click="Btn_Clear_Click" ToolTipService.ToolTip="Remove auxillary files" >
 								<Button.Content>
 									<StackPanel Orientation="Horizontal" >
 										<SymbolIcon Symbol="Delete"></SymbolIcon>
@@ -546,25 +546,43 @@
 								</ToggleButton.Content>
 							</ToggleButton>
 
-							<ToggleButton IsChecked="{Binding Default.ControlCharacters, Mode=TwoWay}">
+							<ToggleButton IsChecked="{Binding Default.LineMarkers, Mode=TwoWay}">
 								<ToggleButton.Content>
 									<StackPanel Orientation="Horizontal" >
-										<FontIcon Glyph="&#xe751;"></FontIcon>
+										<FontIcon Glyph="&#xE946;"></FontIcon>
 										<TextBlock  Text="Line markers" ></TextBlock>
 									</StackPanel>
 								</ToggleButton.Content>
 							</ToggleButton>
 
-							<!--<ToggleButton IsEnabled="False" IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
-                                <ToggleButton.Content>
-                                    <StackPanel Orientation="Horizontal" >
-                                        <FontIcon Glyph="&#xe8e4;"></FontIcon>
-                                        <TextBlock  Text="Text Wrapping" ></TextBlock>
-                                    </StackPanel>
-                                </ToggleButton.Content>
-                            </ToggleButton>
+							<ToggleButton IsChecked="{Binding Default.ScrollbarMarkers, Mode=TwoWay}">
+								<ToggleButton.Content>
+									<StackPanel Orientation="Horizontal" >
+										<FontIcon Glyph="&#xEA41;"></FontIcon>
+										<TextBlock  Text="Scrollbar markers" ></TextBlock>
+									</StackPanel>
+								</ToggleButton.Content>
+							</ToggleButton>
 
-                            <ToggleButton IsEnabled="False" IsChecked="{Binding Default.CodeFolding, Mode=TwoWay}">
+							<ToggleButton IsChecked="{Binding Default.ControlCharacters, Mode=TwoWay}">
+								<ToggleButton.Content>
+									<StackPanel Orientation="Horizontal" >
+										<FontIcon Glyph="&#xe751;"></FontIcon>
+										<TextBlock  Text="Control characters" ></TextBlock>
+									</StackPanel>
+								</ToggleButton.Content>
+							</ToggleButton>
+
+							<ToggleButton IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
+								<ToggleButton.Content>
+									<StackPanel Orientation="Horizontal" >
+										<FontIcon Glyph="&#xe8e4;"></FontIcon>
+										<TextBlock  Text="Text Wrapping (α)" ></TextBlock>
+									</StackPanel>
+								</ToggleButton.Content>
+							</ToggleButton>
+
+							<!--<ToggleButton IsEnabled="False" IsChecked="{Binding Default.CodeFolding, Mode=TwoWay}">
                                 <ToggleButton.Content>
                                     <StackPanel Orientation="Horizontal" >
                                         <FontIcon Glyph="&#xE974;"></FontIcon>
@@ -1169,7 +1187,7 @@
 					  CanDragTabs="True" 
 					  CanReorderTabs="True" TabItemsSource="{Binding FileItems}" SelectedItem="{Binding CurrentFileItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
 					  AllowDrop="True" TabStripDragOver="EditorTabViewDrag"  TabStripDrop="EditorTabViewDrop"  FontFamily="Segoe">
-							
+
 								<TabView.TabStripFooter>
 									<Grid DragOver="EditorTabViewDrag" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" AllowDrop="True" Drop="EditorTabViewDrop">
 									</Grid>
@@ -1212,7 +1230,7 @@
 															<RowDefinition Height="Auto" />
 														</Grid.RowDefinitions>
 														<Grid >
-															<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" TabLength="{Binding Default.TabLength, Mode=OneWay, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" IsWrappingEnabled="False" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
+															<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" TabLength="{Binding Default.TabLength, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowLineMarkers="{Binding Default.LineMarkers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers, Source={StaticResource VM}}" IsWrappingEnabled="{Binding Default.TextWrapping, Source={StaticResource VM}}" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
 														</Grid>
 														<!--<codeeditor:CodeWriter  Loaded="Codewriter_Loaded" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=OneWay}"  Text="{Binding FileContent, Mode=OneWay}"  ></codeeditor:CodeWriter>-->
 														<Grid  Grid.Row="1" MaxHeight="24" Padding="2">

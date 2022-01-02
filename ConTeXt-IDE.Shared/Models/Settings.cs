@@ -153,6 +153,7 @@ namespace ConTeXt_IDE.Models
 		public bool TextWrapping { get => Get(false); set => Set(value); }
 		public bool LineNumbers { get => Get(true); set => Set(value); }
 		public bool LineMarkers { get => Get(true); set => Set(value); }
+		public bool ScrollbarMarkers { get => Get(true); set => Set(value); }
 		public bool CodeFolding { get => Get(false); set => Set(value); }
 		public bool ControlCharacters { get => Get(false); set => Set(value); }
 

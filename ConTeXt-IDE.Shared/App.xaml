@@ -68,8 +68,9 @@
 				<Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
 			</Style>
 
-			<CornerRadius x:Key="CornerRadius" >4</CornerRadius>
-			<CornerRadius x:Key="LargeCornerRadius" >8</CornerRadius>
+			<CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
+			<CornerRadius x:Key="CornerRadius">4</CornerRadius>
+			<CornerRadius x:Key="LargeCornerRadius">8</CornerRadius>
 			<CornerRadius x:Key="CornerRadiusRight">0,4,4,0</CornerRadius>
 			<CornerRadius x:Key="CornerRadiusLeft">4,0,0,4</CornerRadius>
 
@@ -193,7 +194,7 @@
 			<SolidColorBrush x:Key="WindowCaptionBackground" Color="{Binding AccentColor.Color, Source={StaticResource VM}}"></SolidColorBrush>
 			<SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColor.Color, Source={StaticResource VM}}"></SolidColorBrush>
 
-			<CornerRadius x:Key="OverlayCornerRadius">0,0,0,0</CornerRadius>
+			
 			<!--<SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="Green"></SolidColorBrush>-->
 			<SolidColorBrush x:Key="TabViewItemSeparator" Color="Transparent"></SolidColorBrush>
 			

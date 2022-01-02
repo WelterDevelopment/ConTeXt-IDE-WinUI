@@ -37,11 +37,10 @@ namespace ConTeXt_IDE
 				AW = GetAppWindowForCurrentWindow();
 				AW.TitleBar.ExtendsContentIntoTitleBar = true;
 				CustomDragRegion.Height = 22;
+				
 				AW.Title = "ConTeXt IDE";
 				AW.Closing += AW_Closing;
 				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
-				
-				// AW.TitleBar.SetDragRectangles(new[] { new Windows.Graphics.RectInt32(0, 0, 500, 500) });
 			}
 			else
 			{
@@ -52,6 +51,13 @@ namespace ConTeXt_IDE
 				SetTitleBar(CustomDragRegion);
 				Title = "ConTeXt IDE";
 			}
+		}
+
+		private AppWindow GetAppWindowForCurrentWindow()
+		{
+			IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+			WindowId myWndId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+			return AppWindow.GetFromWindowId(myWndId);
 		}
 
 		private async void AW_Closing(AppWindow sender, AppWindowClosingEventArgs args)
@@ -66,12 +72,7 @@ namespace ConTeXt_IDE
 				App.Current.Exit();
 		}
 
-		private AppWindow GetAppWindowForCurrentWindow()
-		{
-			IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-			WindowId myWndId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
-			return AppWindow.GetFromWindowId(myWndId);
-		}
+		
 
 		public static bool CheckForInternetConnection(int timeoutMs = 5000, string url = "https://www.google.com/")
 		{

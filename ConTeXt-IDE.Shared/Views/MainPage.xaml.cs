@@ -1653,6 +1653,7 @@ namespace ConTeXt_IDE
 			{
 				VM.Default.FontSize--;
 			}
+			e.Handled = true;
 		}
 		private void Tbx_TabLength_Wheel(object sender, PointerRoutedEventArgs e)
 		{
@@ -1667,6 +1668,7 @@ namespace ConTeXt_IDE
 			{
 				VM.Default.TabLength--;
 			}
+			e.Handled = true;
 		}
 
 		#endregion
