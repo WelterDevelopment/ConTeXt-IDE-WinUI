@@ -10,12 +10,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConTeXt-IDE.Shared", "ConTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeEditorControl-WinUI", "..\CodeEditorContol-WinUI\CodeEditorControl-WinUI\CodeEditorControl-WinUI.csproj", "{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFjs.WinUI", "..\Users\welte\source\repos\PDFjs.WinUI\PDFjs.WinUI\PDFjs.WinUI.csproj", "{C0F0D250-6A77-4135-964A-D37308C7ECAB}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1B7D6251-2995-43F1-BDD0-3BAB81B2D49F}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFjs.WinUI", "..\PDFjs.WinUI\PDFjs.WinUI\PDFjs.WinUI.csproj", "{758DB093-593F-458A-8294-A70C5023B11C}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -85,22 +85,22 @@ Global
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|x64.Build.0 = Release|x64
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|x86.ActiveCfg = Release|x86
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|x86.Build.0 = Release|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|arm64.ActiveCfg = Debug|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|arm64.Build.0 = Debug|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|x64.ActiveCfg = Debug|x64
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|x64.Build.0 = Debug|x64
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|x86.ActiveCfg = Debug|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Debug|x86.Build.0 = Debug|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|arm64.ActiveCfg = Release|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|arm64.Build.0 = Release|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|x64.ActiveCfg = Release|x64
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|x64.Build.0 = Release|x64
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|x86.ActiveCfg = Release|x86
-		{C0F0D250-6A77-4135-964A-D37308C7ECAB}.Release|x86.Build.0 = Release|x86
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|Any CPU.Build.0 = Debug|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|arm64.ActiveCfg = Debug|arm64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|arm64.Build.0 = Debug|arm64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|x64.ActiveCfg = Debug|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|x64.Build.0 = Debug|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|x86.ActiveCfg = Debug|x86
+		{758DB093-593F-458A-8294-A70C5023B11C}.Debug|x86.Build.0 = Debug|x86
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|Any CPU.ActiveCfg = Release|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|Any CPU.Build.0 = Release|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|arm64.ActiveCfg = Release|arm64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|arm64.Build.0 = Release|arm64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|x64.ActiveCfg = Release|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|x64.Build.0 = Release|x64
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|x86.ActiveCfg = Release|x86
+		{758DB093-593F-458A-8294-A70C5023B11C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
