@@ -31,6 +31,8 @@ namespace ConTeXt_IDE.ViewModels
 		public ObservableCollection<LogLine> LogLines { get => Get(new ObservableCollection<LogLine>()); set => Set(value); }
 		public ObservableCollection<OutlineItem> OutlineItems { get => Get(new ObservableCollection<OutlineItem>()); set => Set(value); }
 
+		
+
 		public OutlineItem SelectedOutlineItem
 		{
 			get => Get<OutlineItem>(null);
@@ -113,7 +115,7 @@ namespace ConTeXt_IDE.ViewModels
 		public BackgroundTaskDeferral AppServiceDeferral { get; set; }
 
 		public string Blocks { get => Get<string>(); set => Set(value); }
-
+		public int Page { get => Get(1); set => Set(value); }
 		public bool InfoOpen { get => Get(false); set => Set(value); }
 		public bool CanUndo { get => Get(false); set => Set(value); }
 		public ObservableCollection<EditAction> EditActionHistory { get => Get(new ObservableCollection<EditAction>()); set => Set(value); }
@@ -416,7 +418,7 @@ namespace ConTeXt_IDE.ViewModels
 			}
 			return;
 		}
-		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua" };
+		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua", ".synctex" };
 		private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf" };
 		private async Task DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
 		{

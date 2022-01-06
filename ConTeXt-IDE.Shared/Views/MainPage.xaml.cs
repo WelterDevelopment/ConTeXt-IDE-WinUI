@@ -82,8 +82,10 @@ namespace ConTeXt_IDE
 
 				MenuSave.Command = new RelayCommand(() => { Btnsave_Click(null, null); });
 				MenuCompile.Command = new RelayCommand(() => { Btncompile_Click(null, null); });
+				MenuSyncTeX.Command = new RelayCommand(() => { FindInPDF(); });
 				MenuSave.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.S, Modifiers = VirtualKeyModifiers.Control });
 				MenuCompile.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control });
+				MenuSyncTeX.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Space, Modifiers = VirtualKeyModifiers.Control });
 				Binding myBinding = new Binding();
 				myBinding.Path = new("CurrentFileItem.IsTexFile");
 				MenuCompile.SetBinding(MenuFlyoutItem.IsEnabledProperty, myBinding);
@@ -91,6 +93,47 @@ namespace ConTeXt_IDE
 			catch (Exception ex)
 			{
 				App.VM?.InfoMessage("Exception", ex.Message, InfoBarSeverity.Error);
+			}
+		}
+
+		private async void FindInPDF()
+		{
+			try
+			{
+				if (VM.CurrentProject.SyncTeX != null)
+				{
+					int line = VM.CurrentFileItem.CurrentLine.iLine + 1;
+					string file = VM.CurrentFileItem.FileName;
+					SyncTeX syncTeX = VM.CurrentProject.SyncTeX;
+					SyncTeXInputFile input = syncTeX.SyncTeXInputFiles.FirstOrDefault(x => x.Name.Contains(file));
+					if (input != null)
+					{
+						int id = syncTeX.SyncTeXInputFiles.FirstOrDefault(x => x.Name.Contains(file)).Id;
+						var entries = syncTeX.SyncTeXEntries.Where(x => x.Id == id && x.Line == line);
+						if (entries.Count() > 0)
+						{
+							SyncTeXEntry entry = entries.First();
+							//VM.Page = entry.Page;
+							await PDFReader.ScrollToPosition(entry.Page, entry.YOffset, entry.Depth);
+						}
+						else
+						{
+							VM.Log("The position you selected has no SyncTeX entry. Please try again with a line that contains plain text.");
+						}
+					}
+					else
+					{
+						VM.Log($"The file {file} has no SyncTeX entry. Please try again with a file that contains plain text.");
+					}
+				}
+				else
+				{
+					VM.InfoMessage("SyncTeX Warning", "To use SyncTeX, please compile the root file with the --synctex parameter enabled.");
+				}
+			}
+			catch (Exception ex)
+			{
+				VM.Log("Error on parsing the .synctex file: " + ex.Message);
 			}
 		}
 
@@ -144,6 +187,7 @@ namespace ConTeXt_IDE
 
 		private MenuFlyoutItem MenuSave = new MenuFlyoutItem() { Text = "Save", Icon = new SymbolIcon() { Symbol = Symbol.Save } };
 		private MenuFlyoutItem MenuCompile = new MenuFlyoutItem() { Text = "Compile", Icon = new SymbolIcon() { Symbol = Symbol.Play } };
+		private MenuFlyoutItem MenuSyncTeX = new MenuFlyoutItem() { Text = "Find in PDF", Icon = new SymbolIcon() { Symbol = Symbol.Find } };
 
 		private async void Codewriter_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -156,6 +200,9 @@ namespace ConTeXt_IDE
 
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }))
 				cw.Action_Add(MenuCompile);
+
+			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX)
+				cw.Action_Add(MenuSyncTeX);
 
 			if (VM.CurrentFileItem.IsTexFile)
 				cw.UpdateSuggestions();
@@ -259,7 +306,7 @@ namespace ConTeXt_IDE
 			try
 			{
 				//PDFReader.PDFjsViewerWebView.WebMessageReceived += (a,b) => { VM.Log(b.TryGetWebMessageAsString()); };
-				
+
 			}
 			catch (Exception ex)
 			{
@@ -270,7 +317,7 @@ namespace ConTeXt_IDE
 		bool opening = true;
 		private void PDFReader_CoreWebView2Initialized(WebView2 sender, CoreWebView2InitializedEventArgs args)
 		{
-			sender.NavigationStarting += (a,b) => { if (!opening) b.Cancel = true; };
+			sender.NavigationStarting += (a, b) => { if (!opening) b.Cancel = true; };
 			(sender as WebView2).CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
 			(sender as WebView2).CoreWebView2.Settings.AreDevToolsEnabled = true;
 			(sender as WebView2).CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
@@ -748,6 +795,8 @@ namespace ConTeXt_IDE
 							if (!string.IsNullOrWhiteSpace(environmentsstring))
 								param += "--environment=" + environmentsstring + " ";
 
+							if (VM.CurrentProject.UseSyncTeX)
+								param += "--synctex ";
 							if (VM.CurrentProject.UseNonStopMode)
 								param += "--nonstopmode ";
 							if (VM.CurrentProject.UseNoConsole)
@@ -833,6 +882,21 @@ namespace ConTeXt_IDE
 								if (VM.Default.InternalViewer)
 								{
 									await OpenPDF(pdfout);
+
+									if (VM.CurrentProject.UseSyncTeX)
+									{
+										string synctexpath = Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".synctex";
+										StorageFile synctexfile = await currFolder.TryGetItemAsync(synctexpath) as StorageFile;
+										if (synctexfile != null)
+										{
+											SyncTeX syncTeX = new SyncTeX();
+											if (await syncTeX.ParseFile(synctexfile))
+											{
+												VM.CurrentProject.SyncTeX = syncTeX;
+												VM.Log($"Successfully loaded {syncTeX.FileName}");
+											}
+										}
+									}
 								}
 								else
 								{
@@ -887,28 +951,28 @@ namespace ConTeXt_IDE
 		}
 
 
-			//private async Task<bool> OpenPDF(StorageFile pdfout)
-			//{
-			//	try
-			//	{
-			//		Stream stream = await pdfout.OpenStreamForReadAsync();
-			//		byte[] buffer = new byte[stream.Length];
-			//		stream.Read(buffer, 0, (int)stream.Length);
-			//		var asBase64 = Convert.ToBase64String(buffer);
-			//		VM.IsInternalViewerActive = true;
-			//		// PDFReader.ExecuteScriptAsync("window.openPdfAsBase64('" + asBase64 + "')");
-			//		PDFReader.Source = new Uri(pdfout.Path);
-			//		return true;
-			//	}
-			//	catch (Exception ex)
-			//	{
-			//		VM.InfoMessage("Error", ex.Message, InfoBarSeverity.Error);
-			//		VM.IsInternalViewerActive = false;
-			//		return false;
-			//	}
-			//}
+		//private async Task<bool> OpenPDF(StorageFile pdfout)
+		//{
+		//	try
+		//	{
+		//		Stream stream = await pdfout.OpenStreamForReadAsync();
+		//		byte[] buffer = new byte[stream.Length];
+		//		stream.Read(buffer, 0, (int)stream.Length);
+		//		var asBase64 = Convert.ToBase64String(buffer);
+		//		VM.IsInternalViewerActive = true;
+		//		// PDFReader.ExecuteScriptAsync("window.openPdfAsBase64('" + asBase64 + "')");
+		//		PDFReader.Source = new Uri(pdfout.Path);
+		//		return true;
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		VM.InfoMessage("Error", ex.Message, InfoBarSeverity.Error);
+		//		VM.IsInternalViewerActive = false;
+		//		return false;
+		//	}
+		//}
 
-			private void PDFReader_NewWindowRequested(WebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
+		private void PDFReader_NewWindowRequested(WebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
 		{
 			args.Handled = true;
 		}

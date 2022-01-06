@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Bindable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Converters.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RichTextBlockHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\SyncTeXparser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThemeHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandList.cs" />

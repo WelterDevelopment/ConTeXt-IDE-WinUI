@@ -481,6 +481,7 @@
 								<DropDownButton.Flyout>
 									<Flyout  Placement="Bottom">
 										<StackPanel Orientation="Vertical" >
+											<CheckBox  Content="synctex (β)" IsChecked="{Binding CurrentProject.UseSyncTeX, Mode=TwoWay}"/>
 											<CheckBox  Content="noconsole" IsChecked="{Binding CurrentProject.UseNoConsole, Mode=TwoWay}"/>
 											<CheckBox  Content="nonstopmode" IsChecked="{Binding CurrentProject.UseNonStopMode, Mode=TwoWay}"/>
 											<StackPanel Orientation="Horizontal">
@@ -1318,7 +1319,7 @@
 							</animations:Implicit.ShowAnimations>
 
 
-							<pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0">
+							<pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Page="{Binding Page, Mode=TwoWay}" FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0">
 								<animations:Implicit.ShowAnimations>
 									<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
 								</animations:Implicit.ShowAnimations>

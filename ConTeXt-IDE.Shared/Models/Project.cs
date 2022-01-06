@@ -33,6 +33,8 @@ namespace ConTeXt_IDE.Models
 		[JsonIgnore]
 		public StorageFolder Folder { get => Get<StorageFolder>(null); set { Set(value); if (value != null)	Path = value.Path;} }
 
+		public SyncTeX SyncTeX { get => Get<SyncTeX>(null); set => Set(value); }
+
 		public string Name { get => Get(""); set => Set(value); }
 
 		public string Path { get => Get(""); set => Set(value); }
@@ -101,6 +103,7 @@ namespace ConTeXt_IDE.Models
 		public string Interface { get => Get("en"); set => Set(value); }
 		public bool UseModes { get => Get(false); set => Set(value); }
 		public bool UseEnvironments { get => Get(false); set => Set(value); }
+		public bool UseSyncTeX { get => Get(true); set => Set(value); }
 		public bool UseParameters { get => Get(false); set => Set(value); }
 	}
 }
