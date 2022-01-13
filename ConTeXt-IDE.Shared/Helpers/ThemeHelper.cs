@@ -75,7 +75,7 @@ namespace ConTeXt_IDE.Helpers
 				}
 
 				AccentColorHigh = ChangeColorBrightness(value, HighFactor * 0.2f);
-				AccentColorLow = ChangeColorBrightness(value, LowFactor * 0.26f);
+				AccentColorLow = ChangeColorBrightness(value, LowFactor * 0.4f);
 				AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.4f), 0.9f);
 				AccentColorLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.6f), 0.9f);
 				AccentColorLowLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.8f), 0.9f);

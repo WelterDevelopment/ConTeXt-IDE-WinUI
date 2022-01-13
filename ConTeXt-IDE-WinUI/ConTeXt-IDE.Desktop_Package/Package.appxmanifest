@@ -9,7 +9,7 @@
   <Identity
     Name="7614MasterDevelopment.ConTeXtIDE"
     Publisher="CN=F3B9189F-4D2B-4342-889D-A9D7D5A98D3A"
-    Version="1.10.27.0" />
+    Version="1.10.40.0" />
 
   <Properties>
     <DisplayName>ConTeXt IDE</DisplayName>
@@ -18,8 +18,8 @@
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22000.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22000.0" />
   </Dependencies>
 
   <Resources>
@@ -28,9 +28,9 @@
 
   <Applications>
     <Application Id="App"
-      Executable="$targetnametoken$.exe"
+      Executable="ConTeXt-IDE.Desktop\ConTeXt-IDE.Desktop.exe"
       EntryPoint="$targetentrypoint$">
-		<!--<Extensions>Executable="$targetnametoken$.exe"
+		<!--<Extensions>Executable="ConTeXt-IDE.Desktop\ConTeXt-IDE.Desktop.exe$targetnametoken$.exe"
 			<uap:Extension Category="windows.fileTypeAssociation">
 				<uap:FileTypeAssociation Name="context">
 					<uap:SupportedFileTypes>

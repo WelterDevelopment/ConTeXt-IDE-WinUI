@@ -14,7 +14,7 @@
     mc:Ignorable="d" 
 	DataContext="{x:Bind VM}" RasterizationScale="1.0"
 	Loaded="Page_Loaded" 
-	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" x:DefaultBindMode="OneWay" >
+	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" x:DefaultBindMode="OneWay" >
 	<Page.Resources>
 		<DataTemplate x:Key="FolderTemplate" x:DataType="models:FileItem">
 			<models:MyTreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" CanDrag="False" ToolTipService.ToolTip="{Binding FileName}" HorizontalContentAlignment="Left" ItemsSource="{x:Bind Children}">
@@ -182,7 +182,7 @@
 		<Grid.BackgroundTransition>
 			<BrushTransition />
 		</Grid.BackgroundTransition>
-		<TabView Grid.Row="0" Foreground="White" IsAddTabButtonVisible="False" CanDragTabs="False" CanReorderTabs="False" TabWidthMode="SizeToContent" x:Name="MainRibbon" >
+		<TabView Grid.Row="0" Foreground="White" IsAddTabButtonVisible="False" CanDragTabs="False" CanReorderTabs="False" TabWidthMode="SizeToContent" x:Name="MainRibbon">
 			<!--<TabView.Background>
 				<SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
 			</TabView.Background>-->
@@ -290,7 +290,7 @@
 			</TabView.TabStripHeader>
 
 			<TabView.TabStripFooter>
-				<Grid x:Name="TabStripFooter" IsHitTestVisible="True" Background="Transparent" >
+				<Grid x:Name="TabStripFooter" IsHitTestVisible="False" Background="Transparent" Loaded="TabStripFooter_Loaded" >
 					<!--<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="6" Margin="0,0,12,0">
                         <Button Click="Btn_Minimize_Click" Height="24" Width="24" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                             <Button.Content>
@@ -362,7 +362,7 @@
 									<Button.Content>
 										<StackPanel Orientation="Horizontal" >
 											<SymbolIcon Symbol="Save"></SymbolIcon>
-											<TextBlock Text="Save" VerticalAlignment="Center" ></TextBlock>
+											<TextBlock Text="Save" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
 									</Button.Content>
 								</Button>
@@ -370,7 +370,7 @@
 									<Button.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xEA35;"></FontIcon>
-											<TextBlock Text="Save all" VerticalAlignment="Center" ></TextBlock>
+											<TextBlock Text="Save all" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
 									</Button.Content>
 								</Button>
@@ -381,7 +381,7 @@
 									<Button.Content>
 										<StackPanel Orientation="Horizontal">
 											<FontIcon Glyph="&#xF5B0;"></FontIcon>
-											<TextBlock Text="Root" VerticalAlignment="Center" ></TextBlock>
+											<TextBlock Text="Root" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 										</StackPanel>
 									</Button.Content>
 								</Button>
@@ -390,7 +390,7 @@
 									<Button.Content>
 										<StackPanel Orientation="Horizontal">
 											<SymbolIcon Symbol="Play"></SymbolIcon>
-											<TextBlock  Text="Current" VerticalAlignment="Center" ></TextBlock>
+											<TextBlock  Text="Current" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
 									</Button.Content>
 								</Button>
@@ -403,7 +403,7 @@
 								<DropDownButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xE9D5;"></FontIcon>
-										<TextBlock  Text="Modes" ></TextBlock>
+										<TextBlock  Text="Modes"  Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
@@ -439,7 +439,7 @@
 								<DropDownButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xe943;"></FontIcon>
-										<TextBlock  Text="Environments" ></TextBlock>
+										<TextBlock  Text="Environments"  Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
@@ -475,7 +475,7 @@
 								<DropDownButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xEC7A;"></FontIcon>
-										<TextBlock  Text="Parameters" ></TextBlock>
+										<TextBlock  Text="Parameters"  Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
@@ -503,16 +503,16 @@
 								<Button.Content>
 									<StackPanel Orientation="Horizontal" >
 										<SymbolIcon Symbol="Delete"></SymbolIcon>
-										<TextBlock Text="Clear Workspace" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+										<TextBlock Text="Clear Workspace" VerticalAlignment="Center"  Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 									</StackPanel>
 								</Button.Content>
 							</Button>
 
-							<Button Visibility="{Binding IsProjectLoaded, Converter={StaticResource BoolToInvisibility}}" Click="Btnaddproject_Click" ToolTipService.ToolTip="Add a project folder" >
+							<Button x:Name="Btn_Addproject" Visibility="{Binding IsProjectLoaded, Converter={StaticResource BoolToInvisibility}}" Click="Btnaddproject_Click" ToolTipService.ToolTip="Add a project folder" >
 								<Button.Content>
 									<StackPanel Orientation="Horizontal">
 										<SymbolIcon Symbol="Add"></SymbolIcon>
-										<TextBlock  Text="Add Project" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
+										<TextBlock  Text="Add Project" VerticalAlignment="Center"  Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 									</StackPanel>
 								</Button.Content>
 							</Button>
@@ -574,11 +574,11 @@
 								</ToggleButton.Content>
 							</ToggleButton>
 
-							<ToggleButton IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
+							<ToggleButton IsEnabled="False" ToolTipService.ToolTip="Text wrapping is not yet implemented. Please wait for the next releases of ConTeXt IDE." IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
 								<ToggleButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xe8e4;"></FontIcon>
-										<TextBlock  Text="Text Wrapping (α)" ></TextBlock>
+										<TextBlock  Text="Text wrapping (α)" ></TextBlock>
 									</StackPanel>
 								</ToggleButton.Content>
 							</ToggleButton>
@@ -812,7 +812,7 @@
 									<ToggleButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xEA49;"></FontIcon>
-											<TextBlock  Text="Project pane"></TextBlock>
+											<TextBlock  Text="Project pane" Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -820,7 +820,7 @@
 									<ToggleButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xe8fd;"></FontIcon>
-											<TextBlock  Text="Document outline"></TextBlock>
+											<TextBlock  Text="Document outline"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -831,7 +831,7 @@
 									<ToggleButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xEA37;"></FontIcon>
-											<TextBlock  Text="Application log"></TextBlock>
+											<TextBlock  Text="Application log"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -839,7 +839,7 @@
 									<ToggleButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xe945;"></FontIcon>
-											<TextBlock  Text="Compiler output"></TextBlock>
+											<TextBlock  Text="Compiler output"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -852,7 +852,7 @@
 									<ToggleButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xE81C;"></FontIcon>
-											<TextBlock  Text="Auto-open last project"></TextBlock>
+											<TextBlock  Text="Auto-open last project"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -871,7 +871,7 @@
 								<ToggleButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xF7ED;"></FontIcon>
-										<TextBlock  Text="Allow multiple app instances (β)"></TextBlock>
+										<TextBlock  Text="Allow multiple app instances (β)"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 									</StackPanel>
 								</ToggleButton.Content>
 							</ToggleButton>
@@ -894,7 +894,7 @@
 									<DropDownButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<SymbolIcon Symbol="Help"></SymbolIcon>
-											<TextBlock  Text="PDF Manuals" VerticalAlignment="Center" ></TextBlock>
+											<TextBlock  Text="PDF Manuals" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
 
 									</DropDownButton.Content>
@@ -917,7 +917,7 @@
 									<ToggleButton.Content>
 										<StackPanel Orientation="Horizontal" >
 											<FontIcon Glyph="&#xE89F;"></FontIcon>
-											<TextBlock  Text="open internally" ></TextBlock>
+											<TextBlock  Text="open internally"  Foreground="{ThemeResource ForegroundColor}" ></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -927,7 +927,7 @@
 								<ToggleButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xF168;"></FontIcon>
-										<TextBlock Text="Command reference"></TextBlock>
+										<TextBlock Text="Command reference" Foreground="{ThemeResource ForegroundColor}" ></TextBlock>
 									</StackPanel>
 								</ToggleButton.Content>
 							</ToggleButton>
@@ -938,16 +938,16 @@
 								<Button.Content>
 									<StackPanel Orientation="Horizontal">
 										<FontIcon Glyph="&#xECC5;" ></FontIcon>
-										<TextBlock Text="Update ConTeXt" VerticalAlignment="Center" ></TextBlock>
+										<TextBlock Text="Update ConTeXt" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
 								</Button.Content>
 							</Button>
 
-							<DropDownButton ToolTipService.ToolTip="Manage ConTeXt modules" >
+							<DropDownButton ToolTipService.ToolTip="Manage ConTeXt modules"  IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" >
 								<DropDownButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<SymbolIcon Symbol="AllApps"></SymbolIcon>
-										<TextBlock  Text="Manage Modules" VerticalAlignment="Center"></TextBlock>
+										<TextBlock  Text="Manage Modules" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
@@ -1107,7 +1107,7 @@
 						<Grid.ColumnDefinitions>
 							<ColumnDefinition x:Name="EditorGridColumn" Width="*"></ColumnDefinition>
 							<ColumnDefinition x:Name="PDFGridSplitter" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=6}"></ColumnDefinition>
-							<ColumnDefinition x:Name="PDFGridColumn" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=400}"></ColumnDefinition>
+							<ColumnDefinition x:Name="PDFGridColumn" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=400}" MinWidth="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToMinWidth}, ConverterParameter=250}"></ColumnDefinition>
 						</Grid.ColumnDefinitions>
 
 						<Grid x:Name="EditGrid" Grid.Column="0" Style="{StaticResource GridCell}" Padding="0">
@@ -1231,7 +1231,7 @@
 															<RowDefinition Height="Auto" />
 														</Grid.RowDefinitions>
 														<Grid >
-															<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" TabLength="{Binding Default.TabLength, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowLineMarkers="{Binding Default.LineMarkers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers, Source={StaticResource VM}}" IsWrappingEnabled="{Binding Default.TextWrapping, Source={StaticResource VM}}" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
+															<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" Initialized="Codewriter_Initialized" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" TabLength="{Binding Default.TabLength, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowLineMarkers="{Binding Default.LineMarkers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers, Source={StaticResource VM}}" IsWrappingEnabled="{Binding Default.TextWrapping, Source={StaticResource VM}}" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
 														</Grid>
 														<!--<codeeditor:CodeWriter  Loaded="Codewriter_Loaded" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=OneWay}"  Text="{Binding FileContent, Mode=OneWay}"  ></codeeditor:CodeWriter>-->
 														<Grid  Grid.Row="1" MaxHeight="24" Padding="2">
@@ -1319,7 +1319,7 @@
 							</animations:Implicit.ShowAnimations>
 
 
-							<pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Page="{Binding Page, Mode=TwoWay}" FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0">
+							<pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Page="{Binding Page, Mode=TwoWay}" SyncTeXRequested="PDFjsViewer_SyncTeXRequested" FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0">
 								<animations:Implicit.ShowAnimations>
 									<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
 								</animations:Implicit.ShowAnimations>
@@ -1661,7 +1661,7 @@
 				</animations:Implicit.HideAnimations>
 			</ProgressBar>
 		</Grid>
-		<ContentDialog MinWidth="500" x:Name="AboutDialog" PrimaryButtonText="Close" DefaultButton="Primary">
+		<ContentDialog MinWidth="500" x:Name="AboutDialog" PrimaryButtonText="Close" DefaultButton="Primary"  CornerRadius="{StaticResource LargeCornerRadius}">
 			<ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
 				<StackPanel Orientation="Vertical">
 					<TextBlock Margin="0,6,0,0" Style="{ThemeResource SubheaderTextBlockStyle}" Text="ConTeXt IDE"></TextBlock>
@@ -1677,5 +1677,9 @@
 				</StackPanel>
 			</ScrollViewer>
 		</ContentDialog>
+		<TeachingTip x:Name="Ttp" IsOpen="false" CornerRadius="{StaticResource LargeCornerRadius}"  >
+			<!--<TextBlock x:Name="Ttp_Tbk" TextWrapping="WrapWholeWords" Text="Text"></TextBlock>-->
+		</TeachingTip>
+		<!--<Grid Visibility="Visible" VerticalAlignment="Top" HorizontalAlignment="Right" Width="200" Height="28" x:Name="CustomDragRegion"  IsHitTestVisible="False"/>-->
 	</Grid>
 </Page>

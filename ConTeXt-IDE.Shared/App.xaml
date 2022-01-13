@@ -90,6 +90,10 @@
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
 				<Setter Property="BorderThickness" Value="1"></Setter>
 			</Style>
+
+			<Style  TargetType="TextBlock" x:Key="BtnTextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}" >
+			</Style>
+
 			<Style  TargetType="ToggleButton">
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
@@ -182,6 +186,7 @@
 			<helpers:BoolToVisibilityConverter x:Key="BoolToVisibility" />
 			<helpers:BoolToInvisibilityConverter x:Key="BoolToInvisibility" />
 			<helpers:BoolToWidthConverter x:Key="BoolToWidth" />
+			<helpers:BoolToMinWidthConverter x:Key="BoolToMinWidth" />
 			<helpers:BoolToFontWeightConverter x:Key="BoolToFontWeight" />
 			<helpers:BoolInverter x:Key="BoolInverter" />
 			<helpers:ListInverter x:Key="ListInverter" />

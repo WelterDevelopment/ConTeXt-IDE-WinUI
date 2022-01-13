@@ -414,7 +414,32 @@ namespace ConTeXt_IDE.Helpers
         }
     }
 
-    public class VisibilityToCornerRadius : IValueConverter
+ public class BoolToMinWidthConverter : IValueConverter
+ {
+  private int closed = 0;
+  private int open = 0;
+
+  public object Convert(object value, Type targetType, object parameter, string language)
+  {
+   if (parameter is string width)
+   {
+    open = int.Parse(width);
+   }
+   int IsVisible = open;
+   if (!string.IsNullOrEmpty(value.ToString()))
+   {
+    IsVisible = (bool)value ? open : closed;
+   }
+   return IsVisible;
+  }
+
+  public object ConvertBack(object value, Type targetType, object parameter, string language)
+  {
+   return ((int)parameter) == open ? true : false;
+  }
+ }
+
+ public class VisibilityToCornerRadius : IValueConverter
     {
         private CornerRadius connectedside = new CornerRadius(4);
 

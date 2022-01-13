@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json;
+using PDFjs.WinUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -34,6 +35,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Graphics;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
@@ -82,9 +84,14 @@ namespace ConTeXt_IDE
 
 				MenuSave.Command = new RelayCommand(() => { Btnsave_Click(null, null); });
 				MenuCompile.Command = new RelayCommand(() => { Btncompile_Click(null, null); });
+
 				MenuSyncTeX.Command = new RelayCommand(() => { FindInPDF(); });
 				MenuSave.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.S, Modifiers = VirtualKeyModifiers.Control });
-				MenuCompile.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control });
+
+				var compile = new KeyboardAccelerator() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control };
+				//compile.Invoked += (a, b) => { b.Handled = true;};
+				MenuCompile.KeyboardAccelerators.Add(compile);
+
 				MenuSyncTeX.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Space, Modifiers = VirtualKeyModifiers.Control });
 				Binding myBinding = new Binding();
 				myBinding.Path = new("CurrentFileItem.IsTexFile");
@@ -149,7 +156,7 @@ namespace ConTeXt_IDE
 		{
 			if (VM.Default.FirstStart)
 			{
-				//ShowTeachingTip("AddProject", Btnaddproject);
+				ShowTeachingTip("AddProject", Btn_Addproject);
 				VM.Default.FirstStart = false;
 			}
 		}
@@ -187,7 +194,7 @@ namespace ConTeXt_IDE
 
 		private MenuFlyoutItem MenuSave = new MenuFlyoutItem() { Text = "Save", Icon = new SymbolIcon() { Symbol = Symbol.Save } };
 		private MenuFlyoutItem MenuCompile = new MenuFlyoutItem() { Text = "Compile", Icon = new SymbolIcon() { Symbol = Symbol.Play } };
-		private MenuFlyoutItem MenuSyncTeX = new MenuFlyoutItem() { Text = "Find in PDF", Icon = new SymbolIcon() { Symbol = Symbol.Find } };
+		private MenuFlyoutItem MenuSyncTeX = new MenuFlyoutItem() { Text = "Find in PDF", Icon = new FontIcon() { Glyph = "\xEBE7" } };
 
 		private async void Codewriter_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -201,19 +208,14 @@ namespace ConTeXt_IDE
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }))
 				cw.Action_Add(MenuCompile);
 
-			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX)
+			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX && cw.Language.Name == "ConTeXt")
 				cw.Action_Add(MenuSyncTeX);
 
 			if (VM.CurrentFileItem.IsTexFile)
 				cw.UpdateSuggestions();
 
-			cw.ScrollToLine(VM.CurrentFileItem.CurrentLine.iLine);
-			cw.Focus(FocusState.Keyboard);
-
-
 			cw.Lines.CollectionChanged += Lines_CollectionChanged;
 			cw.DoubleClicked += Cw_DoubleClicked;
-
 		}
 
 		// SyncTex logic
@@ -688,15 +690,20 @@ namespace ConTeXt_IDE
 				if (BitmapsToOpen.Contains(type))
 				{
 					//await Launcher.LaunchFileAsync(fileitem.File as StorageFile);
-					var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = fileitem.FileName, PreferredPlacement = TeachingTipPlacementMode.Center, IsLightDismissEnabled = true };
+					//var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = fileitem.FileName, PreferredPlacement = TeachingTipPlacementMode.Center, IsLightDismissEnabled = true };
+					Ttp.Title = fileitem.FileName;
+					Ttp.PreferredPlacement = TeachingTipPlacementMode.RightTop;
+					Ttp.Target = (FrameworkElement)e.OriginalSource;
+					Ttp.IsLightDismissEnabled = true;
+					Ttp.Content = null;
 					var content = new Grid() { Background = new SolidColorBrush(Colors.LightGray) };
 					content.Children.Add(new Image() { Source = await LoadImage((StorageFile)fileitem.File), });
-					tip.HeroContent = content;
-					tip.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
-					RootGrid.Children.Add(tip);
+					Ttp.HeroContent = content;
+					Ttp.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
+					//RootGrid.Children.Add(tip);
 
 
-					tip.IsOpen = true;
+					Ttp.IsOpen = true;
 				}
 				else if (type == ".pdf")
 				{
@@ -1131,15 +1138,21 @@ namespace ConTeXt_IDE
 			//return; // Teaching Tips are busted in WinAppSDK 1.0
 			if (VM.Default.HelpItemList.Any(x => x.ID == ID))
 			{
-				var helpItem = VM.Default.HelpItemList[VM.Default.HelpItemList.IndexOf(VM.Default.HelpItemList.First(x => x.ID == ID))];
-				if (!helpItem.Shown)
+				var helpItem = VM.Default.HelpItemList.FirstOrDefault(x => x.ID == ID);
+				if (helpItem != null && !helpItem.Shown)
 				{
-					var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = helpItem.Title, PreferredPlacement = TeachingTipPlacementMode.Center, IsLightDismissEnabled = false, IsOpen = false };
+					//var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = helpItem.Title, PreferredPlacement = TeachingTipPlacementMode.Center, IsLightDismissEnabled = false, IsOpen = false };
+					Ttp.Target = (FrameworkElement)Target;
+					Ttp.Title = helpItem.Title;
+					Ttp.IsLightDismissEnabled = false;
+					Ttp.PreferredPlacement = TeachingTipPlacementMode.RightBottom;
 					if (!string.IsNullOrWhiteSpace(helpItem.Subtitle))
-						tip.Subtitle = helpItem.Subtitle;
-					tip.Content = new TextBlock() { TextWrapping = TextWrapping.WrapWholeWords, Text = helpItem.Text };
-					RootGrid.Children.Add(tip);
-					tip.IsOpen = true;
+						Ttp.Subtitle = helpItem.Subtitle;
+					Ttp.Content = new TextBlock() { TextWrapping = TextWrapping.WrapWholeWords, Text = helpItem.Text };
+					//Ttp.Content = helpItem.Text;
+					//RootGrid.Children.Add(Ttp);
+					//Ttp_Tbk.Text = helpItem.Text;
+					Ttp.IsOpen = true;
 					helpItem.Shown = true;
 					VM.Default.SaveSettings();
 				}
@@ -1255,9 +1268,16 @@ namespace ConTeXt_IDE
 									StorageApplicationPermissions.MostRecentlyUsedList.AddOrReplace(folder.Name, folder, "");
 									VM.RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
 
-
-
 									var proj = new Project(folder.Name, folder);
+
+									foreach (StorageFile file in await proj.Folder.GetFilesAsync())
+									{
+										if (file.Name.StartsWith("prd_") && file.FileType == ".tex")
+										{
+											proj.RootFile = file.Name;
+											break;
+										}
+									}
 
 									if (VM.Default.ProjectList.Any(x => x.Name == proj.Name))
 									{
@@ -1387,7 +1407,7 @@ namespace ConTeXt_IDE
 			try
 			{
 				VM.CurrentProject = null;
-
+				VM.IsInternalViewerActive = false;
 				VM.FileItems.Clear();
 			}
 			catch (Exception ex)
@@ -2374,6 +2394,78 @@ namespace ConTeXt_IDE
 		private void Fly_Color_Closing(object sender, FlyoutBaseClosingEventArgs e)
 		{
 			VM.Default.SaveSettings();
+		}
+
+		private async void PDFjsViewer_SyncTeXRequested(object sender, double e)
+		{
+			try
+			{
+				var viewer = (PDFjsViewer)sender;
+				int page = VM.Page;
+				double scale = await viewer.CurrentScale;
+				double yoffset = e;
+				var synctex = VM.CurrentProject.SyncTeX;
+				if (synctex != null)
+				{
+					var pageentries = synctex.SyncTeXEntries.Where(x => x.Page == page);
+					var entry = pageentries.FirstOrDefault(x => x.YOffset > yoffset / scale / 2.03 - 2 && x.YOffset < yoffset / scale / 2.03 + 20);
+					if (entry != null)
+					{
+						var file = synctex.SyncTeXInputFiles.FirstOrDefault(x => x.Id == entry.Id);
+						if (file != null)
+						{
+							FileItem texfile = VM.CurrentProject.GetFileItemByName(VM.CurrentProject.Directory[0], Path.GetFileName(file.Name));
+							VM.OpenFile(texfile);
+							texfile.CurrentLine = new(0, entry.Line - 1);
+
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				VM.Log(ex.Message);
+			}
+		}
+
+		private void Codewriter_Initialized(object sender, EventArgs e)
+		{
+			((CodeWriter)sender).CenterView();
+		}
+
+		private void TabStripFooter_Loaded(object sender, RoutedEventArgs e)
+		{
+			if (App.mainWindow.IsCustomizationSupported)
+			{
+				TabStripFooter.SizeChanged += TabStripFooter_SizeChanged;
+				TabStripFooter_SizeChanged(null,null);
+			}
+			else 
+			{
+				//MainRibbon.TabStripFooter = null;
+				//RootGrid.Background = null;
+				//App.mainWindow.SetTitleBar(CustomDragRegion);
+			}
+		}
+
+		private void TabStripFooter_SizeChanged(object sender, SizeChangedEventArgs e)
+		{
+			if (App.mainWindow.IsCustomizationSupported && App.mainWindow.AW != null)
+			{
+				int x = App.mainWindow.AW.Size.Width - ((int)TabStripFooter.ActualWidth + 20);
+				int y = 0;
+				int width = (int)TabStripFooter.ActualWidth +20;
+				int height = (int)TabStripFooter.ActualHeight;
+
+				App.mainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+			}
+			else
+			{
+				//int width = (int)e.NewSize.Width;
+				//int height = (int)e.NewSize.Height;
+				//CustomDragRegion.Width = width;
+				//CustomDragRegion.Height = height;
+			}
 		}
 	}
 }

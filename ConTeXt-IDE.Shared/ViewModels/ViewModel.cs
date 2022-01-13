@@ -419,7 +419,7 @@ namespace ConTeXt_IDE.ViewModels
 			return;
 		}
 		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua", ".synctex" };
-		private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf" };
+		private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf", ".synctex" };
 		private async Task DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
 		{
 			try

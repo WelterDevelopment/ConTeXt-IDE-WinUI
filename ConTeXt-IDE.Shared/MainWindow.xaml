@@ -21,7 +21,7 @@
 				<BrushTransition/>
 			</Grid.BackgroundTransition>
 		</Grid>
-		<Frame Grid.Row="1" Loaded="RootFrame_Loaded" x:FieldModifier="public" x:Name="RootFrame" Background="{ThemeResource SolidBackgroundFillColorBase}" ></Frame>
+		<Frame Grid.Row="1" Loaded="RootFrame_Loaded" x:FieldModifier="public" x:Name="RootFrame" ></Frame>
 
 	</Grid>
 </Window>

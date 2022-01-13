@@ -36,8 +36,9 @@ namespace ConTeXt_IDE
 			{
 				AW = GetAppWindowForCurrentWindow();
 				AW.TitleBar.ExtendsContentIntoTitleBar = true;
-				CustomDragRegion.Height = 22;
-				
+
+				CustomDragRegion.Height = 0;
+
 				AW.Title = "ConTeXt IDE";
 				AW.Closing += AW_Closing;
 				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
@@ -72,7 +73,7 @@ namespace ConTeXt_IDE
 				App.Current.Exit();
 		}
 
-		
+
 
 		public static bool CheckForInternetConnection(int timeoutMs = 5000, string url = "https://www.google.com/")
 		{
@@ -179,7 +180,7 @@ namespace ConTeXt_IDE
 			};
 			p.OutputDataReceived += (e, f) =>
 			{ //VM.Log(f.Data.);
-												};
+			};
 			//p.ErrorDataReceived += (e, f) => {Log(f.Data); };
 			p.StartInfo = info;
 

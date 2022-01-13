@@ -10,9 +10,6 @@ namespace ConTeXt_IDE.Helpers
 {
 	public class SyncTeX
 	{
-		//[DllImport("SyncTeXparser.dll", CallingConvention = CallingConvention.Cdecl)]
-		//static extern synctex_scanner_p synctex_scanner_new_with_output_file() { }
-
 		public async Task<bool> ParseFile(StorageFile file)
 		{
 			try
@@ -55,11 +52,11 @@ namespace ConTeXt_IDE.Helpers
 								Type = type, 
 								Id = id, 
 								Line = line,   
-								XOffset = xoffset / 100000 / 0.75,
-								YOffset = yoffset / 100000 / 0.75,
-								Width = width / 100000 / 0.75,
-								Height = height / 100000 / 0.75,
-								Depth = depth / 100000 / 0.75,
+								XOffset = (double)xoffset / 100000d , // Convert pt to px
+								YOffset = (double)yoffset / 100000d,
+								Width = (double)width / 100000d ,
+								Height = (double)height / 100000d ,
+								Depth = (double)depth / 100000d ,
 							});
 						}
 					}
@@ -71,19 +68,15 @@ namespace ConTeXt_IDE.Helpers
 				return false;
 			}
 		}
-
 		public string FileName = "";
 		public List<SyncTeXInputFile> SyncTeXInputFiles { get; set; } = new();
 		public List<SyncTeXEntry> SyncTeXEntries { get; set; } = new();
 	}
-
 	public class SyncTeXInputFile
 	{
 		public int Id { get; set; }
 		public string Name { get; set; }
-	}
-
-	public class SyncTeXEntry
+	}	public class SyncTeXEntry
 	{
 		public string Type { get; set; } = "h";
 		public int Id { get; set; }
@@ -95,11 +88,4 @@ namespace ConTeXt_IDE.Helpers
 		public double Height { get; set; }
 		public double Depth { get; set; }
 	}
-
-	public class SyncTeXOutputPage
-	{
-		public int Page { get; set; }
-	}
-
-
 }
