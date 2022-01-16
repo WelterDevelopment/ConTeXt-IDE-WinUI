@@ -41,7 +41,8 @@ namespace ConTeXt_IDE
 
 				AW.Title = "ConTeXt IDE";
 				AW.Closing += AW_Closing;
-				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
+				AW.SetIcon(@"C:\ConTeXt-IDE-WinUI\ConTeXt-IDE.Shared\Assets\SquareLogo.png");
+				AW.TitleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
 			}
 			else
 			{
@@ -52,6 +53,14 @@ namespace ConTeXt_IDE
 				SetTitleBar(CustomDragRegion);
 				Title = "ConTeXt IDE";
 			}
+		}
+
+		public void ResetTitleBar()
+		{
+			AW.TitleBar.ExtendsContentIntoTitleBar = true;
+			AW.Title = "ConTeXt IDE";
+			AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
+			AW.TitleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
 		}
 
 		private AppWindow GetAppWindowForCurrentWindow()

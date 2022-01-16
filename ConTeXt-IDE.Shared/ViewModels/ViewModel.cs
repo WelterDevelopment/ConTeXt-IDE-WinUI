@@ -31,7 +31,7 @@ namespace ConTeXt_IDE.ViewModels
 		public ObservableCollection<LogLine> LogLines { get => Get(new ObservableCollection<LogLine>()); set => Set(value); }
 		public ObservableCollection<OutlineItem> OutlineItems { get => Get(new ObservableCollection<OutlineItem>()); set => Set(value); }
 
-		
+
 
 		public OutlineItem SelectedOutlineItem
 		{
@@ -382,7 +382,42 @@ namespace ConTeXt_IDE.ViewModels
 
 		public string NVHead { get => Get(""); set => Set(value); }
 
-		public Command SelectedCommand { get => Get<Command>(null); set { if (SelectedCommand != null) { SelectedCommand.IsSelected = false; SelectedCommand.SelectedIndex = -1; } Set(value); if (value != null) value.IsSelected = true; } }
+		public Command SelectedCommand
+		{
+			get => Get<Command>(null);
+			set
+			{
+				if (value == null)
+				{
+					if (SelectedCommand != null)
+					{
+						SelectedCommand.IsSelected = false; SelectedCommand.SelectedIndex = -1;
+					}
+					Set(value);
+				}
+				else if (value.Name == SelectedCommand?.Name && value.ID == SelectedCommand?.ID)
+				{
+					value.IsSelected = !value.IsSelected;
+					value.SelectedIndex = -1;
+				}
+				else if (!value.IsSelected)
+				{
+					if (SelectedCommand != null)
+					{
+						SelectedCommand.IsSelected = false; SelectedCommand.SelectedIndex = -1;
+					}
+
+					Set(value);
+					Task.Run(async () =>
+				{
+					App.MainPage?.DispatcherQueue?.TryEnqueue(async () =>
+					{
+						value.IsSelected = true;
+					});
+				});
+				}
+			}
+		}
 
 		public List<string> ContextCommandGroupList { get => Get(new List<string>()); set => Set(value); }
 
@@ -534,8 +569,8 @@ namespace ConTeXt_IDE.ViewModels
 						StorageFolder currFolder = await StorageFolder.GetFolderFromPathAsync(CurrentFileItem.FileFolder);
 
 						StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(CurrentFileItem.FileName) + ".pdf") as StorageFile;
-						if (pdfout!=null)
-							await	App.MainPage?.OpenPDF(pdfout);
+						if (pdfout != null)
+							await App.MainPage?.OpenPDF(pdfout);
 					}
 					//if (!ProjectLoad)
 					//    CurrentProject.LastOpenedFiles = FileItems.Select(x => x.FileName).ToList();
@@ -683,7 +718,7 @@ namespace ConTeXt_IDE.ViewModels
 			{
 				//HelpItems = PopulateHelpItems();
 				// UpdateRecentAccessList();
-				
+
 				if (Default.StartWithLastActiveProject && !string.IsNullOrWhiteSpace(Default.LastActiveProject) && string.IsNullOrWhiteSpace(LaunchArguments))
 				{
 					RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
@@ -701,7 +736,7 @@ namespace ConTeXt_IDE.ViewModels
 						}
 					}
 				}
-				else if(!string.IsNullOrWhiteSpace(LaunchArguments))
+				else if (!string.IsNullOrWhiteSpace(LaunchArguments))
 				{
 					IsSaving = true;
 					var folder = await RecentAccessList.GetFolderAsync(LaunchArguments);

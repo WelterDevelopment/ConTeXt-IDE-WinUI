@@ -74,6 +74,9 @@
 			<CornerRadius x:Key="CornerRadiusRight">0,4,4,0</CornerRadius>
 			<CornerRadius x:Key="CornerRadiusLeft">4,0,0,4</CornerRadius>
 
+			<Style  TargetType="ContentDialog" >
+				<Setter Property="CornerRadius" Value="{StaticResource LargeCornerRadius}"></Setter>
+			</Style>
 			<Style  TargetType="FlyoutPresenter" >
 				<Setter Property="CornerRadius" Value="{StaticResource LargeCornerRadius}"></Setter>
 			</Style>
@@ -188,6 +191,9 @@
 			<helpers:BoolToWidthConverter x:Key="BoolToWidth" />
 			<helpers:BoolToMinWidthConverter x:Key="BoolToMinWidth" />
 			<helpers:BoolToFontWeightConverter x:Key="BoolToFontWeight" />
+			<helpers:BoolToStarGlyph x:Key="BoolToStarGlyph" />
+			<helpers:BoolToOpacity x:Key="BoolToOpacity" />
+			<helpers:BoolToForeground x:Key="BoolToForeground" />
 			<helpers:BoolInverter x:Key="BoolInverter" />
 			<helpers:ListInverter x:Key="ListInverter" />
 			<helpers:LevelToVisibility x:Key="LevelToVisibility" />

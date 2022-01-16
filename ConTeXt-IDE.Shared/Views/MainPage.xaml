@@ -11,10 +11,11 @@
 	xmlns:helpers="using:ConTeXt_IDE.Helpers" 
 	xmlns:codeeditor="using:CodeEditorControl_WinUI"
 	xmlns:pdfjs="using:PDFjs.WinUI"
+	xmlns:data="using:System.Linq"
     mc:Ignorable="d" 
 	DataContext="{x:Bind VM}" RasterizationScale="1.0"
 	Loaded="Page_Loaded" 
-	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" x:DefaultBindMode="OneWay" >
+	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" x:DefaultBindMode="OneWay"  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 	<Page.Resources>
 		<DataTemplate x:Key="FolderTemplate" x:DataType="models:FileItem">
 			<models:MyTreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" CanDrag="False" ToolTipService.ToolTip="{Binding FileName}" HorizontalContentAlignment="Left" ItemsSource="{x:Bind Children}">
@@ -91,9 +92,12 @@
 			/>
 
 		<DataTemplate x:Key="KeywordsTemplate" x:DataType="models:Keywords">
-			<StackPanel Orientation="Horizontal">
+			<StackPanel Orientation="Horizontal" >
 				<TextBlock Text="{Binding Number}"></TextBlock>
-				<ListView ItemsSource="{Binding Constant}" SelectionMode="None" IsItemClickEnabled="False">
+				<ListView ItemsSource="{Binding Constant}" SelectionMode="None" IsItemClickEnabled="False"  IsHitTestVisible="False">
+					<ListView.ItemContainerTransitions>
+						<TransitionCollection></TransitionCollection>
+					</ListView.ItemContainerTransitions>
 					<ListView.ItemContainerStyle>
 						<Style TargetType="ListViewItem">
 							<Setter Property="Padding" Value="0"/>
@@ -105,7 +109,7 @@
 					</ListView.ItemContainerStyle>
 					<ListView.ItemsPanel>
 						<ItemsPanelTemplate>
-							<toolkit:WrapPanel Orientation="Horizontal" MaxWidth="300" Padding="0"></toolkit:WrapPanel>
+							<toolkit:WrapPanel Orientation="Horizontal" MaxWidth="370" Padding="0"></toolkit:WrapPanel>
 						</ItemsPanelTemplate>
 					</ListView.ItemsPanel>
 					<ListView.ItemTemplate>
@@ -114,17 +118,19 @@
 						</DataTemplate>
 					</ListView.ItemTemplate>
 				</ListView>
-				<TextBlock Text="{Binding Inherit.Name}" Margin="4,0,0,0"></TextBlock>
 			</StackPanel>
 		</DataTemplate>
 
 		<DataTemplate x:Key="AssignmentsTemplate" x:DataType="models:Assignments">
 			<StackPanel Orientation="Horizontal" >
 				<TextBlock Text="{Binding Number}"></TextBlock>
-				<ListView ItemsSource="{Binding Parameter}" SelectionMode="None" IsItemClickEnabled="False">
+				<ListView ItemsSource="{Binding Parameter}" SelectionMode="None" IsItemClickEnabled="False" IsHitTestVisible="False">
+					<ListView.ItemContainerTransitions>
+						<TransitionCollection></TransitionCollection>
+					</ListView.ItemContainerTransitions>
 					<ListView.ItemContainerStyle>
 						<Style TargetType="ListViewItem">
-							<Setter Property="Padding" Value="0"/>
+							<Setter Property="Padding" Value="2,0,0,2"/>
 							<Setter Property="Margin" Value="4,0,0,0"/>
 							<Setter Property="MinWidth" Value="10"/>
 							<Setter Property="MinHeight" Value="10"/>
@@ -134,9 +140,12 @@
 					<ListView.ItemTemplate>
 						<DataTemplate>
 							<StackPanel Orientation="Horizontal">
-								<TextBlock MinWidth="100"><Run Text="{Binding Name, Converter={StaticResource ParameterTypeToText}}"/></TextBlock>
-								<TextBlock><Run Text=" = "/></TextBlock>
+								<TextBlock MinWidth="120"><Run Text="{Binding Name, Converter={StaticResource ParameterTypeToText}}"/></TextBlock>
+								<TextBlock Visibility="{Binding Constant, Converter={StaticResource StringToVisibility}}"><Run Text=" = "/></TextBlock>
 								<ListView ItemsSource="{Binding Constant}" SelectionMode="None" IsItemClickEnabled="False">
+									<ListView.ItemContainerTransitions>
+										<TransitionCollection></TransitionCollection>
+									</ListView.ItemContainerTransitions>
 									<ListView.ItemContainerStyle>
 										<Style TargetType="ListViewItem">
 											<Setter Property="Padding" Value="0"/>
@@ -148,7 +157,7 @@
 									</ListView.ItemContainerStyle>
 									<ListView.ItemsPanel>
 										<ItemsPanelTemplate>
-											<toolkit:WrapPanel Orientation="Horizontal" MaxWidth="300" Padding="0"></toolkit:WrapPanel>
+											<toolkit:WrapPanel Orientation="Horizontal" MaxWidth="240" Padding="0"></toolkit:WrapPanel>
 										</ItemsPanelTemplate>
 									</ListView.ItemsPanel>
 									<ListView.ItemTemplate>
@@ -161,7 +170,7 @@
 						</DataTemplate>
 					</ListView.ItemTemplate>
 				</ListView>
-				<TextBlock Text="{Binding Inherit.Name}" Margin="4,0,0,0"></TextBlock>
+				<!--<TextBlock Text="{Binding Inherit.Name}" Margin="4,0,0,0"></TextBlock>-->
 			</StackPanel>
 		</DataTemplate>
 
@@ -290,7 +299,7 @@
 			</TabView.TabStripHeader>
 
 			<TabView.TabStripFooter>
-				<Grid x:Name="TabStripFooter" IsHitTestVisible="False" Background="Transparent" Loaded="TabStripFooter_Loaded" >
+				<Grid x:Name="TabStripFooter" IsHitTestVisible="False" Loaded="TabStripFooter_Loaded" >
 					<!--<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="6" Margin="0,0,12,0">
                         <Button Click="Btn_Minimize_Click" Height="24" Width="24" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                             <Button.Content>
@@ -934,14 +943,7 @@
 
 							<Border Style="{StaticResource Separator}" ></Border>
 
-							<Button Visibility="{Binding Default.DistributionInstalled, Mode=OneWay}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Update ConTeXt distribution"   Click="Update_Click" >
-								<Button.Content>
-									<StackPanel Orientation="Horizontal">
-										<FontIcon Glyph="&#xECC5;" ></FontIcon>
-										<TextBlock Text="Update ConTeXt" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
-									</StackPanel>
-								</Button.Content>
-							</Button>
+
 
 							<DropDownButton ToolTipService.ToolTip="Manage ConTeXt modules"  IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" >
 								<DropDownButton.Content>
@@ -951,7 +953,7 @@
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
-									<Flyout Placement="Bottom">
+									<Flyout Placement="Bottom" >
 										<ListView SelectionMode="None" IsItemClickEnabled="False" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}, Mode=OneWay}" ItemsSource="{Binding Default.ContextModules}" >
 											<ListView.ItemContainerStyle>
 												<Style TargetType="ListViewItem">
@@ -992,6 +994,19 @@
 								</DropDownButton.Flyout>
 							</DropDownButton>
 
+							<Button Visibility="{Binding Default.DistributionInstalled, Mode=OneWay}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Update ConTeXt distribution"   Click="Update_Click" >
+								<Button.Content>
+									<StackPanel Orientation="Horizontal">
+										<FontIcon Glyph="&#xECC5;" ></FontIcon>
+										<TextBlock Text="Update ConTeXt" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
+									</StackPanel>
+								</Button.Content>
+							</Button>
+							<TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource ForegroundLightColor}" VerticalAlignment="Center" TextWrapping="WrapWholeWords" MaxLines="2">
+								<Run Text="ConTeXt Version:" />
+								<LineBreak/>
+								<Run Text="{Binding Default.ContextVersion}"></Run>
+							</TextBlock>
 
 						</StackPanel>
 					</ScrollViewer>
@@ -1021,7 +1036,7 @@
 					<Grid.RowDefinitions>
 						<RowDefinition x:Name="ProjectsGridCurrentRow" Height="*"></RowDefinition>
 						<RowDefinition x:Name="ProjectsGridSplitter" Height="{Binding Default.ShowOutline, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=6}"></RowDefinition>
-						<RowDefinition x:Name="ProjectsGridLibraryRow" Height="{Binding Default.ShowOutline, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=300}"></RowDefinition>
+						<RowDefinition x:Name="ProjectsGridLibraryRow" Height="{Binding Default.ShowOutline, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=*}"></RowDefinition>
 					</Grid.RowDefinitions>
 
 					<Grid x:Name="ProjectsGridCurrent" Grid.Row="0" Style="{StaticResource GridCell}">
@@ -1408,231 +1423,219 @@
 						<animations:TranslationAnimation Duration="0:0:0.25" From="0" To="50, 0, 0" ></animations:TranslationAnimation>
 						<animations:OpacityAnimation Duration="0:0:0.25" From="1" To="0"></animations:OpacityAnimation>
 					</animations:Implicit.HideAnimations>
-					<ListView Visibility="Visible" ui:VisualExtensions.NormalizedCenterPoint="0.5" ShowsScrollingPlaceholders="False" Background="Transparent" x:Name="DocumentationView"  SelectionMode="Single" IsItemClickEnabled="False" ItemsSource="{Binding Source={StaticResource cvs}}" SelectedItem="{Binding SelectedCommand, Mode=TwoWay}" SelectedIndex="-1" >
-						<animations:Implicit.ShowAnimations>
-							<animations:ScaleAnimation EasingMode="EaseInOut" Duration="0:0:0.25"  From="0.4" To="1" />
-							<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1"></animations:OpacityAnimation>
-						</animations:Implicit.ShowAnimations>
-						<animations:Implicit.HideAnimations>
-							<animations:ScaleAnimation EasingMode="EaseInOut" Duration="0:0:0.25"  From="1" To="0.4" />
-							<animations:OpacityAnimation Duration="0:0:0.25" From="1" To="0"></animations:OpacityAnimation>
-						</animations:Implicit.HideAnimations>
-						<ListView.ItemContainerStyle>
-							<Style TargetType="ListViewItem" BasedOn="{StaticResource ListViewItemRevealStyle}">
-								<Setter Property="Padding" Value="4,0,4,0"/>
-								<Setter Property="Margin" Value="12,0,24,0"/>
-								<Setter Property="MinHeight" Value="32"/>
-								<Setter Property="BorderThickness" Value="0"/>
-								<Setter Property="Template">
-									<Setter.Value>
-										<ControlTemplate TargetType="ListViewItem" >
-											<ListViewItemPresenter 
-						 x:Name="Root"
-						Control.IsTemplateFocusTarget="True"
-						FocusVisualMargin="{TemplateBinding FocusVisualMargin}"
-						SelectionCheckMarkVisualEnabled="{ThemeResource ListViewItemSelectionCheckMarkVisualEnabled}"
-						CheckBrush="{ThemeResource ListViewItemCheckBrush}"
-						CheckBoxBrush="{ThemeResource ListViewItemCheckBoxBrush}"
-						DragBackground="{ThemeResource ListViewItemDragBackground}"
-						DragForeground="{ThemeResource ListViewItemDragForeground}"
-						FocusBorderBrush="{ThemeResource ListViewItemFocusBorderBrush}"
-						FocusSecondaryBorderBrush="{ThemeResource ListViewItemFocusSecondaryBorderBrush}"
-						PlaceholderBackground="{ThemeResource ListViewItemPlaceholderBackground}"
-						PointerOverBackground="{ThemeResource ListViewItemBackgroundPointerOver}"
-						PointerOverForeground="{ThemeResource ListViewItemForegroundPointerOver}"
-						SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}"
-						SelectedForeground="{ThemeResource ListViewItemForegroundSelected}"
-						SelectedPointerOverBackground="{ThemeResource ListViewItemBackgroundSelectedPointerOver}"
-						PressedBackground="{ThemeResource ListViewItemBackgroundPressed}"
-						SelectedPressedBackground="{ThemeResource ListViewItemBackgroundSelectedPressed}"
-						DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
-						DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"
-						ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
-						HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-						VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-						ContentMargin="{TemplateBinding Padding}"
-						CheckMode="{ThemeResource ListViewItemCheckMode}"
-					   >
 
-												<VisualStateManager.VisualStateGroups>
-													<VisualStateGroup x:Name="CommonStates">
-														<VisualState x:Name="Normal" />
-														<VisualState x:Name="Selected" />
-
-														<VisualState x:Name="PointerOver">
-															<VisualState.Setters>
-																<!--<Setter Target="Root.(RevealBrush.State)" Value="PointerOver" />
-															<Setter Target="Root.RevealBorderBrush" Value="{ThemeResource ListViewItemRevealBorderBrushPointerOver}" />-->
-															</VisualState.Setters>
-														</VisualState>
-
-														<VisualState x:Name="PointerOverSelected">
-															<VisualState.Setters>
-																<!--<Setter Target="Root.(RevealBrush.State)" Value="PointerOver" />
-															<Setter Target="Root.RevealBorderBrush" Value="{ThemeResource ListViewItemRevealBorderBrushPointerOver}" />-->
-															</VisualState.Setters>
-														</VisualState>
-														<!--<VisualState x:Name="PointerOverPressed">
-														<VisualState.Setters>
-															-->
-														<!--<Setter Target="Root.(RevealBrush.State)" Value="Pressed" />
-															<Setter Target="Root.RevealBorderBrush" Value="{ThemeResource ListViewItemRevealBorderBrushPressed}" />-->
-														<!--
-														</VisualState.Setters>
-													</VisualState>
-
-													<VisualState x:Name="Pressed">
-														<VisualState.Setters>
-															-->
-														<!--<Setter Target="Root.(RevealBrush.State)" Value="Pressed" />
-															<Setter Target="Root.RevealBorderBrush" Value="{ThemeResource ListViewItemRevealBorderBrushPressed}" />-->
-														<!--
-														</VisualState.Setters>
-													</VisualState>
-
-													<VisualState x:Name="PressedSelected">
-														<VisualState.Setters>
-															-->
-														<!--<Setter Target="Root.(RevealBrush.State)" Value="Pressed" />
-															<Setter Target="Root.RevealBorderBrush" Value="{ThemeResource ListViewItemRevealBorderBrushPressed}" />-->
-														<!--
-														</VisualState.Setters>
-													</VisualState>-->
-
-													</VisualStateGroup>
-
-													<VisualStateGroup x:Name="DisabledStates">
-														<VisualState x:Name="Enabled" />
-
-														<VisualState x:Name="Disabled">
-															<VisualState.Setters>
-																<!--<Setter Target="Root.RevealBorderThickness" Value="0" />-->
-															</VisualState.Setters>
-														</VisualState>
-
-													</VisualStateGroup>
-
-												</VisualStateManager.VisualStateGroups>
-											</ListViewItemPresenter>
-
-										</ControlTemplate>
-									</Setter.Value>
-								</Setter>
-							</Style>
-						</ListView.ItemContainerStyle>
-						<ListView.GroupStyle>
-							<GroupStyle>
-								<GroupStyle.HeaderTemplate>
-									<DataTemplate>
-										<Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Content="{Binding Key}" Click="Btn_GroupHeader_Click">
-										</Button>
-									</DataTemplate>
-								</GroupStyle.HeaderTemplate>
-							</GroupStyle>
-						</ListView.GroupStyle>
-						<ListView.ItemTemplate>
-							<DataTemplate x:DataType="models:Command">
-								<StackPanel>
-									<StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-
-										<TextBlock VerticalAlignment="Center">
-										<Run Text="\"/><Run Text="{Binding Type, Converter={StaticResource CommandTypeToText}}"/><Run Text="{Binding Name}"/>
-										</TextBlock>
-
-										<ListView IsEnabled="{Binding IsSelected, Mode=OneWay}" VerticalAlignment="Center" Background="Transparent" ItemsSource="{Binding Arguments.ArgumentsList}" SelectionMode="Single" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" IsItemClickEnabled="False">
-											<ListView.ItemsPanel>
-												<ItemsPanelTemplate>
-													<ItemsStackPanel Orientation="Horizontal" />
-												</ItemsPanelTemplate>
-											</ListView.ItemsPanel>
-											<ListView.ItemContainerTransitions>
-												<TransitionCollection></TransitionCollection>
-											</ListView.ItemContainerTransitions>
-											<ListView.ItemContainerStyle>
-												<Style TargetType="ListViewItem">
-													<Setter Property="Padding" Value="4,0,4,0"/>
-													<Setter Property="Margin" Value="4,0,0,0"/>
-													<Setter Property="MinWidth" Value="10"/>
-													<Setter Property="MinHeight" Value="10"/>
-													<Setter Property="BorderThickness" Value="0"/>
-												</Style>
-											</ListView.ItemContainerStyle>
-											<ListView.ItemTemplate>
-												<DataTemplate >
-													<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="1,0,0,-2">
-														<TextBlock FontSize="10" Text="{Binding Number}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-8"></TextBlock>
-														<TextBlock Text="{Binding Converter={StaticResource ArgumentTypeToText}}" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-														<TextBlock FontSize="10" Text="{Binding Optional, Converter={StaticResource ArgumentOptionalToText}}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-4,0,0"></TextBlock>
-													</StackPanel>
-												</DataTemplate>
-											</ListView.ItemTemplate>
-										</ListView>
-
-									</StackPanel>
-									<!--<ListView Visibility="{Binding IsSelected,  Converter={StaticResource BoolToVisibility}, Mode=OneWay}" Background="Transparent"  ItemsSource="{Binding Instances.Constant}"  SelectionMode="None" IsItemClickEnabled="False">
-										<animations:Implicit.ShowAnimations >
-											<animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
-											<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1"></animations:OpacityAnimation>
-										</animations:Implicit.ShowAnimations>
-										<ListView.ItemsPanel>
-											<ItemsPanelTemplate>
-												<toolkit:WrapPanel Orientation="Horizontal" Width="420"></toolkit:WrapPanel>
-											</ItemsPanelTemplate>
-										</ListView.ItemsPanel>
-										<ListView.ItemContainerStyle>
-											<Style TargetType="ListViewItem">
-												<Setter Property="Padding" Value="0"/>
-												<Setter Property="Margin" Value="4,0,0,0"/>
-												<Setter Property="IsHitTestVisible" Value="False"/>
-												<Setter Property="MinWidth" Value="10"/>
-												<Setter Property="MinHeight" Value="10"/>
-												<Setter Property="BorderThickness" Value="0"/>
-											</Style>
-										</ListView.ItemContainerStyle>
-										<ListView.ItemTemplate>
+					<SemanticZoom ViewChangeStarted="SemanticZoom_ViewChangeStarted" >
+						<SemanticZoom.ZoomedInView>
+							<ListView x:Name="DocumentationView" IsRightTapEnabled="True" RightTapped="DocumentationView_RightTapped" ShowsScrollingPlaceholders="False" Grid.Row="0"  Background="Transparent" SelectionMode="Single" ItemsSource="{x:Bind cvs.View}"   SelectedItem="{Binding SelectedCommand, Mode=OneWay}" IsItemClickEnabled="True" CanDragItems="True" DragOver="DocumentationView_DragOver" DragItemsStarting="DocumentationView_DragItemsStarting" AllowDrop="False"  ItemClick="DocumentationView_ItemClick" Padding="4,4,12,4" >
+								<ListView.Resources>
+									<x:Double x:Key="ListViewItemMinHeight">32</x:Double>
+									<x:Double x:Key="ListViewItemMinWidth">6</x:Double>
+									<x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled" >False</x:Boolean>
+									<MenuFlyout x:Name="DocumentationViewContextMenu">
+										<MenuFlyout.Items>
+											<MenuFlyoutItem  Text="Copy command" Tag="copycommand" Click="DocumentationViewContextMenu_Click" />
+											<MenuFlyoutItem  Text="Copy with arguments" Tag="copywitharguments" Click="DocumentationViewContextMenu_Click" />
+										</MenuFlyout.Items>
+									</MenuFlyout>
+								</ListView.Resources>
+								
+								<ListView.ItemContainerTransitions>
+									<TransitionCollection></TransitionCollection>
+								</ListView.ItemContainerTransitions>
+								<ListView.GroupStyle>
+									<GroupStyle>
+										<GroupStyle.HeaderTemplate>
 											<DataTemplate>
-												<TextBlock Text="{Binding Value}"></TextBlock>
+												<Grid >
+													<TextBlock Style="{ThemeResource SubtitleTextBlockStyle}" FontSize="16" Text="{Binding Key}">
+													</TextBlock>
+												</Grid>
 											</DataTemplate>
-										</ListView.ItemTemplate>
-									</ListView>-->
+										</GroupStyle.HeaderTemplate>
+									</GroupStyle>
+								</ListView.GroupStyle>
+								<ListView.ItemTemplate>
+									<DataTemplate x:DataType="models:Command">
+										<StackPanel Padding="0,0,0,0">
+											<Grid ColumnSpacing="4">
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="Auto" />
+													<ColumnDefinition Width="*" />
+													<ColumnDefinition Width="Auto" />
+												</Grid.ColumnDefinitions>
 
-									<ListView Visibility="{Binding IsSelected,  Converter={StaticResource BoolToVisibility}, Mode=OneWay}" Background="Transparent" ItemTemplateSelector="{StaticResource CommandItemTemplateSelector}" ItemsSource="{Binding Arguments.ArgumentsList}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" SelectionMode="Single" IsItemClickEnabled="False">
-										<animations:Implicit.ShowAnimations >
-											<animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
-											<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1"></animations:OpacityAnimation>
-										</animations:Implicit.ShowAnimations>
-										<ListView.ItemContainerStyle>
-											<Style TargetType="ListViewItem">
-												<Setter Property="Padding" Value="4,0,4,0"/>
-												<Setter Property="Margin" Value="4,0,0,4"/>
-												<Setter Property="IsHitTestVisible" Value="False"/>
-												<Setter Property="MinWidth" Value="10"/>
-												<Setter Property="MinHeight" Value="10"/>
-												<Setter Property="BorderThickness" Value="0"/>
-											</Style>
-										</ListView.ItemContainerStyle>
-									</ListView>
-								</StackPanel>
-							</DataTemplate>
-						</ListView.ItemTemplate>
-					</ListView>
-					<ListView x:Name="GroupListView" Margin="0,48,0,0" ui:VisualExtensions.NormalizedCenterPoint="0.5" ShowsScrollingPlaceholders="False" Background="Transparent" Visibility="Collapsed" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ItemsSource="{Binding ContextCommandGroupList}"  IsItemClickEnabled="True" ItemClick="GroupList_ItemClick">
-						<animations:Implicit.ShowAnimations>
-							<animations:ScaleAnimation EasingMode="EaseInOut" Duration="0:0:0.25"  From="1.4" To="1" />
-							<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1"></animations:OpacityAnimation>
-						</animations:Implicit.ShowAnimations>
-						<animations:Implicit.HideAnimations>
-							<animations:ScaleAnimation EasingMode="EaseInOut" Duration="0:0:0.25"  From="1" To="1.4" />
-							<animations:OpacityAnimation Duration="0:0:0.25" From="1" To="0"></animations:OpacityAnimation>
-						</animations:Implicit.HideAnimations>
-						<ListView.ItemTemplate>
-							<DataTemplate>
-								<TextBlock Margin="2,0,6,0" Text="{Binding}"></TextBlock>
-							</DataTemplate>
-						</ListView.ItemTemplate>
-					</ListView>
-					<StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,8,32,8" Spacing="6">
-						<Button ToolTipService.ToolTip="Set filters">
+												<TextBlock Grid.Column="0" VerticalAlignment="Center">
+										<Run Text="\"/><Run Text="{Binding Type, Converter={StaticResource CommandTypeToText}}"/><Run Text="{Binding Name}"/>
+												</TextBlock>
+
+												<ListView Grid.Column="1" IsHitTestVisible="{Binding IsSelected}" Opacity="{Binding IsSelected, Converter={StaticResource BoolToOpacity}}" VerticalAlignment="Center" Background="Transparent" ItemsSource="{Binding Arguments.ArgumentsList}" SelectionMode="Single" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" IsItemClickEnabled="False">
+													<ListView.Resources>
+														<x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled" >False</x:Boolean>
+													</ListView.Resources>
+													<ListView.ItemContainerTransitions>
+														<TransitionCollection></TransitionCollection>
+													</ListView.ItemContainerTransitions>
+													<ListView.ItemsPanel>
+														<ItemsPanelTemplate>
+															<ItemsStackPanel Orientation="Horizontal" />
+														</ItemsPanelTemplate>
+													</ListView.ItemsPanel>
+													<ListView.ItemContainerStyle>
+														<Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+															<Setter Property="Padding" Value="8,4,8,4"/>
+															<Setter Property="Margin" Value="-6,0,0,0"/>
+															<Setter Property="MinWidth" Value="32"/>
+															<Setter Property="MinHeight" Value="10"/>
+															<Setter Property="BorderThickness" Value="0"/>
+														</Style>
+													</ListView.ItemContainerStyle>
+													<ListView.ItemTemplate>
+														<DataTemplate >
+															<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="1,0,0,-2">
+																<TextBlock FontSize="10" Text="{Binding Number}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-8" ></TextBlock>
+																<TextBlock  Text="{Binding Converter={StaticResource ArgumentTypeToText}}" HorizontalAlignment="Center" VerticalAlignment="Center" ></TextBlock>
+																<TextBlock FontSize="10" Text="{Binding Optional, Converter={StaticResource ArgumentOptionalToText}}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-4,0,0"></TextBlock>
+															</StackPanel>
+														</DataTemplate>
+													</ListView.ItemTemplate>
+												</ListView>
+
+												<CheckBox Grid.Column="2" Opacity="{Binding IsFavoriteOrSelected, Converter={StaticResource BoolToOpacity}}" IsChecked="{Binding IsFavorite, Mode=TwoWay}" Padding="0" Margin="0" MinWidth="22" MinHeight="32" VerticalAlignment="Center"  Click="AddDeleteFavorite_Checked" >
+													<CheckBox.Template>
+														<ControlTemplate TargetType="CheckBox">
+															<FontIcon x:Name="Icon" FontSize="12">
+
+																<VisualStateManager.VisualStateGroups>
+																	<VisualStateGroup x:Name="CombinedStates">
+
+																		<VisualState x:Name="UncheckedNormal">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE734;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="0.8" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+
+																		<VisualState x:Name="UncheckedPointerOver">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE734;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+																		
+																		<VisualState x:Name="UncheckedPressed">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE735;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+
+																		<VisualState x:Name="UncheckedDisabled">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE734;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+
+																		<VisualState x:Name="CheckedNormal">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE735;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="0.8" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+
+																		<VisualState x:Name="CheckedPointerOver">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE735;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+
+																		<VisualState x:Name="CheckedPressed">
+																			<Storyboard>
+																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
+																					<DiscreteObjectKeyFrame KeyTime="0" Value="&#xE735;" />
+																				</ObjectAnimationUsingKeyFrames>
+																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.1" />
+																			</Storyboard>
+																		</VisualState>
+																		
+																	</VisualStateGroup>
+
+																</VisualStateManager.VisualStateGroups>
+
+															</FontIcon>
+														</ControlTemplate>
+													</CheckBox.Template>
+												</CheckBox>
+											</Grid>
+											<ListView Visibility="{Binding IsSelected,  Converter={StaticResource BoolToVisibility}}" Background="Transparent" ItemTemplateSelector="{StaticResource CommandItemTemplateSelector}" ItemsSource="{Binding Arguments.ArgumentsList}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}" SelectionMode="Single" Margin="0">
+												<animations:Implicit.ShowAnimations >
+													<animations:TranslationAnimation Duration="0:0:0.25" From="0, 50, 0" To="0" ></animations:TranslationAnimation>
+													<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1"></animations:OpacityAnimation>
+												</animations:Implicit.ShowAnimations>
+												<ListView.Resources>
+													<x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled" >False</x:Boolean>
+												</ListView.Resources>
+												<ListView.ItemContainerTransitions>
+													<TransitionCollection></TransitionCollection>
+												</ListView.ItemContainerTransitions>
+												<ListView.ItemsPanel>
+													<ItemsPanelTemplate>
+														<ItemsStackPanel ></ItemsStackPanel>
+													</ItemsPanelTemplate>
+												</ListView.ItemsPanel>
+												<ListView.ItemContainerStyle>
+													<Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+														<Setter Property="Margin" Value="0,0,0,0" />
+														<Setter Property="Padding" Value="12,4,12,4" />
+														<Setter Property="BorderThickness" Value="0,0,0,0" />
+														<Setter Property="MinHeight" Value="0" />
+													</Style>
+												</ListView.ItemContainerStyle>
+												<!--<ListView.ItemContainerStyle>
+													<Style TargetType="ListViewItem">
+														<Setter Property="Padding" Value="4,0,4,0"/>
+														<Setter Property="Margin" Value="4,0,0,4"/>
+														<Setter Property="IsHitTestVisible" Value="False"/>
+														<Setter Property="MinWidth" Value="10"/>
+														<Setter Property="MinHeight" Value="10"/>
+														<Setter Property="BorderThickness" Value="0"/>
+													</Style>
+												</ListView.ItemContainerStyle>-->
+											</ListView>
+										</StackPanel>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
+						</SemanticZoom.ZoomedInView>
+						<SemanticZoom.ZoomedOutView>
+							<ListView x:Name="GroupListView" Margin="0,48,0,0" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ItemsSource="{Binding ContextCommandGroupList}" Padding="4,4,12,4">
+								<ListView.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Margin="2,0,6,0" Text="{Binding}"></TextBlock>
+									</DataTemplate>
+								</ListView.ItemTemplate>
+							</ListView>
+						</SemanticZoom.ZoomedOutView>
+					</SemanticZoom>
+
+					<StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Orientation="Horizontal" Margin="0,4,16,0" Spacing="4">
+						<ToggleButton ToolTipService.ToolTip="Only show favorites" IsChecked="{Binding Default.FilterFavorites, Mode=TwoWay}" Click="FilterFavorites_Checked" Padding="4" Width="32">
+							<FontIcon FontSize="16" Foreground="{ThemeResource ForegroundColor}" Glyph="&#xE735;"></FontIcon>
+						</ToggleButton>
+						<Button ToolTipService.ToolTip="Set filters" Padding="4" Width="32">
 							<Button.Content>
 								<SymbolIcon Symbol="Filter"></SymbolIcon>
 							</Button.Content>
@@ -1648,8 +1651,9 @@
 								</Flyout>
 							</Button.Flyout>
 						</Button>
-						<TextBox PlaceholderText="Search..." TextChanged="Searchtext_TextChanged" Width="120"></TextBox>
+						<TextBox x:Name="Searchtext" PlaceholderText="Search..."  TextChanged="Searchtext_TextChanged" Width="120" Padding="4" VerticalAlignment="Stretch"></TextBox>
 					</StackPanel>
+
 				</Grid>
 			</Grid>
 			<ProgressBar Name="Progressbar" Grid.Row="1" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Background="{ThemeResource SolidBackgroundFillColorTertiary }" Visibility="{Binding IsVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">

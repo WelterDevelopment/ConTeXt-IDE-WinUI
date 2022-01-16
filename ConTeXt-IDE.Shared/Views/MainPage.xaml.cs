@@ -48,9 +48,6 @@ namespace ConTeXt_IDE
 	public sealed partial class MainPage : Page
 	{
 		private ViewModel VM { get; } = App.VM;
-
-
-
 		public MainPage()
 		{
 			try
@@ -154,11 +151,18 @@ namespace ConTeXt_IDE
 
 		public async void FirstStart()
 		{
+
 			if (VM.Default.FirstStart)
 			{
 				ShowTeachingTip("AddProject", Btn_Addproject);
 				VM.Default.FirstStart = false;
 			}
+			string version = "";
+			await Task.Run(async () =>
+			{
+				version = await GetVersion();
+			});
+			VM.Default.ContextVersion = version;
 		}
 
 		private bool loaded = false;
@@ -1444,6 +1448,11 @@ namespace ConTeXt_IDE
 				if (temporarilyshowlog)
 					VM.Default.ShowLog = true;
 				await Task.Run(async () => { UpdateSuccessful = await Update(); });
+
+				string version = "";
+				await Task.Run(async () => { version = await GetVersion(); });
+				VM.Default.ContextVersion = version;
+
 				if (temporarilyshowlog)
 					VM.Default.ShowLog = false;
 
@@ -1534,6 +1543,59 @@ namespace ConTeXt_IDE
 			}
 		}
 
+		private async Task<string> GetVersion()
+		{
+			try
+			{
+				Process p = new Process();
+				ProcessStartInfo info = new ProcessStartInfo()
+				{
+					RedirectStandardInput = false,
+					RedirectStandardOutput = true,
+					RedirectStandardError = false,
+					CreateNoWindow = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					UseShellExecute = false,
+					WorkingDirectory = VM.Default.ContextDistributionPath
+				};
+
+				p.StartInfo = info;
+
+				info.FileName = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe";// @"C:\Windows\System32\cmd.exe";
+				info.Arguments = "--version";
+				//sw.WriteLine("setx path \"%PATH%;" + VM.Default.ContextDistributionPath + @"\tex\texmf-mswin\bin" + "\"");
+				string version = "";
+
+				p.OutputDataReceived += (a, b) =>
+				{
+					//DispatcherQueue.TryEnqueue(async () =>
+					//{
+					if (b?.Data != null)
+					{
+						Match mu = Regex.Match(b.Data, @"(current version: *?)(\d{2,4}\.\d{2}\.\d{2} *?\d{2}\:\d{2})");
+						if (mu.Success)
+						{
+							version = mu.Groups[2].Value;
+						}
+					}
+					//});
+
+				};
+
+				p.Start();
+				p.BeginOutputReadLine();
+
+				p.WaitForExit();
+				p.Close();
+
+				return version;
+			}
+			catch
+			{
+				return "";
+			}
+		}
+
 		private void LsV_OutlineItems_SelectionChanged(object sender, SelectionChangedEventArgs args)
 		{
 			(sender as ListView).ScrollIntoView(args.AddedItems?.FirstOrDefault());
@@ -1604,8 +1666,9 @@ namespace ConTeXt_IDE
 			{
 				StorageApplicationPermissions.MostRecentlyUsedList.Clear();
 				VM.Default.ProjectList.Clear();
-				Settings.RestoreSettings();
+				Settings.Default = Settings.RestoreSettings();
 				Unload_Click(null, null);
+				VM.Default.ShowCommandReference = false;
 			}
 		}
 
@@ -2064,6 +2127,8 @@ namespace ConTeXt_IDE
 			}
 		}
 
+
+
 		private List<string> disableGroups = new List<string>() { "attribute", "background", "background colors", "boxes", "buffer", "catcode", "characters", "commandhandler", "strings", "symbols", "tracker", "twopassdata", "verbatim", "xml" };
 		#endregion
 		private List<Command> contextcommands;
@@ -2077,28 +2142,10 @@ namespace ConTeXt_IDE
 				{
 					Interface contextinterface = (Interface)serializer.Deserialize(reader);
 					List<Command> commands = contextinterface.InterfaceList.SelectMany(x => x.Command).ToList();
-					List<Command> commandstoiterate = new(commands);
 
-					foreach (var instancecommand in commandstoiterate.Where(x => x.Variant?.ToLower() == "instance"))
-					{
-						if (instancecommand?.Instances?.Constant != null)
-						{
-							foreach (var constant in instancecommand?.Instances?.Constant)
-							{
-								string sequence = "";
-								if (instancecommand?.Sequence?.String?.Count > 0)
-									sequence = instancecommand?.Sequence?.String?.First()?.Value ?? "";
-								Command newcommand = (Command)instancecommand.Clone();
-								newcommand.Name = sequence + constant.Value;
-								commands.Insert(commands.IndexOf(instancecommand), newcommand);
-							}
-							commands.Remove(instancecommand);
-						}
-					}
+					List<string> commandnames = new();
 
-					contextcommands = commands;
-
-					foreach (Command command in contextcommands)
+					foreach (Command command in commands)
 					{
 						if (command?.Arguments?.ArgumentsList != null)
 						{
@@ -2110,9 +2157,125 @@ namespace ConTeXt_IDE
 									i++;
 									argument.Number = i;
 								}
+								if (argument is Assignments assignments)
+								{
+									if (assignments?.Parameter != null)
+										foreach (var param in assignments?.Parameter)
+											if (param?.Resolve != null)
+											{
+												if (param.Constant == null)
+													param.Constant = new();
+												foreach (var res in param?.Resolve)
+													if (res != null)
+														param.Constant.Add(new() { Type = res.Name });
+											}
+									if (assignments?.Inherit != null)
+										foreach (var inherit in assignments?.Inherit)
+											if (inherit?.Name != null)
+											{
+
+												string inheritedcommandname = inherit.Name;
+												Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
+												if (inheritedcommand != null)
+												{
+													Assignments inheritasmt = (Assignments)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Assignments asmt && asmt?.List == "yes");
+													if (inheritasmt?.Parameter != null)
+													{
+														//assignments.Parameter = new();
+														assignments.Parameter.Add(new() { Name = $"Inherited from \\{inheritedcommandname}:", Constant = null });
+														foreach (var param in inheritasmt?.Parameter)
+															assignments.Parameter.Add(param);
+														//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
+													}
+												}
+											}
+									if (assignments?.Parameter != null)
+										foreach (var parameter in assignments?.Parameter)
+										{
+											if (parameter?.Inherit != null)
+												foreach (var inh in parameter?.Inherit)
+												{
+													string inheritedcommandname = inh.Name;
+													Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
+													if (inheritedcommand != null)
+													{
+														//if (parameter.Constant == null)
+														parameter.Constant = new();
+														Keywords inheritkeyw = (Keywords)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
+														if (inheritkeyw?.Constant != null)
+														{
+															parameter.Constant.Add(new() { Type = $"\\{inheritedcommandname}->" });
+															foreach (var cons in inheritkeyw?.Constant)
+																parameter.Constant.Add(cons);
+															//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
+														}
+														//if (inheritkeyw?.Inherit != null)
+														//{
+														//	string ininheritedcommandname = inheritkeyw?.Inherit?.Name;
+														//	Command ininheritedcommand = commands.FirstOrDefault(x => x.Name == ininheritedcommandname);
+														//	Keywords ininheritkeyw = (Keywords)ininheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
+														//	parameter.Constant.Add(new() { Type = $"\\{ininheritedcommandname}->" });
+														//	foreach (var cons in ininheritkeyw?.Constant)
+														//		parameter.Constant.Add(cons);
+														//	//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
+														//}
+													}
+												}
+										}
+								}
+								if (argument is Keywords keywords)
+								{
+									if (keywords?.Inherit != null)
+										if (keywords?.Inherit?.Name != null)
+										{
+											string inheritedcommandname = keywords?.Inherit.Name;
+											Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
+											if (inheritedcommand != null)
+											{
+												Keywords inheritkeyw = (Keywords)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
+												if (inheritkeyw?.Constant != null)
+												{
+													keywords.Constant.Add(new() { Type = $"\\{inheritedcommandname}->" });
+													foreach (var param in inheritkeyw?.Constant)
+														keywords.Constant.Add(param);
+												}
+											}
+										}
+								}
 							}
 						}
 					}
+
+					List<Command> commandstoiterate = new(commands);
+
+					foreach (var instancecommand in commandstoiterate.Where(x => x.Variant?.ToLower() == "instance"))
+					{
+						if (instancecommand?.Instances?.Constant != null)
+						{
+							foreach (var constant in instancecommand?.Instances?.Constant)
+							{
+								string sequence = "";
+								if (instancecommand?.Sequence?.String?.Count > 0)
+									sequence = instancecommand?.Sequence?.String?.First()?.Value ?? "";
+								Command newcommand = (Command)instancecommand.DeepClone();
+								newcommand.Name = sequence + constant.Value;
+								commands.Insert(commands.IndexOf(instancecommand), newcommand);
+							}
+							commands.Remove(instancecommand);
+						}
+					}
+
+					foreach (var command in commands)
+					{
+						int count = commandnames.Count(x => x == command.Name);
+						command.ID = count;
+						commandnames.Add(command.Name);
+						command.IsFavorite = VM.Default.CommandFavorites.Any(x => x.Name == @"\" + (command.Type == "environment" ? "start" : "") + command.Name && x.ID == command.ID);
+					}
+
+					contextcommands = commands;
+
+
 
 					IOrderedEnumerable<IGrouping<string, Command>> query = from item in contextcommands
 																																																												group item by item?.Category into g
@@ -2121,21 +2284,21 @@ namespace ConTeXt_IDE
 																																																												select g;
 
 					VM.ContextCommandGroupList = query.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
-
 					if (VM.Default.CommandGroups.Count == 0)
 					{
 						VM.Default.CommandGroups = VM.ContextCommandGroupList.Select(x => new CommandGroup() { Name = x, IsSelected = !disableGroups.Contains(x) }).ToList();
 					}
-					IOrderedEnumerable<IGrouping<string, Command>> filtered;
-					filtered = from item in query
-																where VM.Default.CommandGroups.Where(x => x.IsSelected).Select(x => x.Name).Contains(item.Key)
-																orderby item.Key
-																select item;
+
+					IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
+					string text = Searchtext.Text;
+					await Task.Run(() => { filtered = UpdateSearchFilter(text, VM.Default.FilterFavorites); });
 
 					VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
 					cvs.Source = filtered;
 
-					DocumentationView.SelectedIndex = -1;
+					//DocumentationView.SelectedIndex = -1;
+
+
 					PopulateIntelliSense("ConTeXt");
 				}
 			}
@@ -2221,7 +2384,7 @@ namespace ConTeXt_IDE
 								{
 									Delimiters = assignments?.Delimiters,
 									IntelliSenseType = IntelliSenseType.Argument,
-									Name = assignments?.Inherit?.Name,
+									Name = assignments?.Inherit?.FirstOrDefault()?.Name ?? "",
 									Parameters = assignments?.Parameter?.Select(x => new CodeEditorControl_WinUI.Parameter() { Name = x.Name, Description = "Type: " + x.Constant?.FirstOrDefault()?.Type, Constant = x.Constant?.Select(x => new CodeEditorControl_WinUI.Constant() { Type = x.Type }).ToList() }).ToList(),
 								});
 							}
@@ -2275,9 +2438,24 @@ namespace ConTeXt_IDE
 
 		}
 
-		private void Btn_CommandGroup_Click(object sender, RoutedEventArgs e)
+		private async void Btn_CommandGroup_Click(object sender, RoutedEventArgs e)
 		{
-			InitializeCommandReference();
+			//InitializeCommandReference();
+			try
+			{
+				IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
+				string text = Searchtext.Text;
+				await Task.Run(() => { filtered = UpdateSearchFilter(text, VM.Default.FilterFavorites); });
+
+				VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+				cvs.Source = filtered;
+
+				DocumentationView.SelectedIndex = -1;
+			}
+			catch (Exception ex)
+			{
+				VM.Log(ex.Message);
+			}
 		}
 
 		private bool IsSearching = false;
@@ -2290,7 +2468,7 @@ namespace ConTeXt_IDE
 					IsSearching = true;
 					IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
 					string text = (sender as TextBox).Text;
-					await Task.Run(() => { filtered = UpdateSearchFilter(text); });
+					await Task.Run(() => { filtered = UpdateSearchFilter(text, VM.Default.FilterFavorites); });
 
 					VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
 					cvs.Source = filtered;
@@ -2304,19 +2482,91 @@ namespace ConTeXt_IDE
 				VM.Log(ex.Message);
 			}
 		}
-
-		private IOrderedEnumerable<IGrouping<string, Command>> UpdateSearchFilter(string text)
+		private async void FilterFavorites_Checked(object sender, RoutedEventArgs e)
 		{
-			IOrderedEnumerable<IGrouping<string, Command>> query = from item in contextcommands
-																																																										where item.Name.Insert(0, @"\" + (item.Type == "environment" ? "start" : "")).Contains(text)
-																																																										group item by item?.Category into g
-																																																										where !string.IsNullOrWhiteSpace(g.Key)
-																																																										orderby g.Key
-																																																										select g;
-			return from item in query
-										where VM.Default.CommandGroups.Where(x => x.IsSelected).Select(x => x.Name).Contains(item.Key)
-										orderby item.Key
-										select item;
+			try
+			{
+				bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
+				IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
+				string text = Searchtext.Text;
+				await Task.Run(() => { filtered = UpdateSearchFilter(text, ischecked); });
+
+				VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+				cvs.Source = filtered;
+
+				DocumentationView.SelectedIndex = -1;
+			}
+			catch (Exception ex)
+			{
+				VM.Log(ex.Message);
+			}
+		}
+
+		private async void AddDeleteFavorite_Checked(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
+				Command cmd = ((ToggleButton)sender).DataContext as Command;
+
+				if (ischecked)
+				{
+					if (!VM.Default.CommandFavorites.Any(x => x.Name == @"\" + (cmd.Type == "environment" ? "start" : "") + cmd.Name && x.ID == cmd.ID))
+						VM.Default.CommandFavorites.Add(new(@"\" + (cmd.Type == "environment" ? "start" : "") + cmd.Name, cmd.ID));
+				}
+				else
+				{
+					VM.Default.CommandFavorites.Remove(VM.Default.CommandFavorites.First(x => x.Name == @"\" + (cmd.Type == "environment" ? "start" : "") + cmd.Name && x.ID == cmd.ID));
+
+					if (VM.Default.FilterFavorites)
+					{
+						IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
+						string text = Searchtext.Text;
+						await Task.Run(() => { filtered = UpdateSearchFilter(text, true); });
+
+						VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+						cvs.Source = filtered;
+						DocumentationView.SelectedIndex = -1;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				VM.Log(ex.Message);
+			}
+		}
+
+
+		private IOrderedEnumerable<IGrouping<string, Command>> UpdateSearchFilter(string text, bool filterfavorites = false)
+		{
+
+			var selectedgroups = VM.Default.CommandGroups.Where(x => x.IsSelected).Select(x => x.Name);
+			IOrderedEnumerable<IGrouping<string, Command>> query = null;
+			if (!filterfavorites)
+			{
+				query = from item in contextcommands
+												where item.Name.Insert(0, @"\" + (item.Type == "environment" ? "start" : "")).Contains(text, StringComparison.InvariantCultureIgnoreCase) && selectedgroups.Contains(item.Category)
+												group item by item?.Category into g
+												where !string.IsNullOrWhiteSpace(g.Key)
+												orderby g.Key
+												select g;
+			}
+			else
+			{
+				query = from item in contextcommands
+												where item.IsFavorite
+												where item.Name.Insert(0, @"\" + (item.Type == "environment" ? "start" : "")).Contains(text, StringComparison.InvariantCultureIgnoreCase) && selectedgroups.Contains(item.Category)
+												group item by item?.Category into g
+												where !string.IsNullOrWhiteSpace(g.Key)
+												orderby g.Key
+												select g;
+			}
+
+			//return from item in query
+			//							where VM.Default.CommandGroups.Where(x => x.IsSelected).Select(x => x.Name).Contains(item.Key)
+			//							orderby item.Key
+			//							select item;
+			return query;
 		}
 
 		private async void Btn_Clear_Click(object sender, RoutedEventArgs e)
@@ -2438,9 +2688,9 @@ namespace ConTeXt_IDE
 			if (App.mainWindow.IsCustomizationSupported)
 			{
 				TabStripFooter.SizeChanged += TabStripFooter_SizeChanged;
-				TabStripFooter_SizeChanged(null,null);
+				TabStripFooter_SizeChanged(null, null);
 			}
-			else 
+			else
 			{
 				//MainRibbon.TabStripFooter = null;
 				//RootGrid.Background = null;
@@ -2448,16 +2698,36 @@ namespace ConTeXt_IDE
 			}
 		}
 
+		private double scale = 0d;
+
 		private void TabStripFooter_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			if (App.mainWindow.IsCustomizationSupported && App.mainWindow.AW != null)
 			{
-				int x = App.mainWindow.AW.Size.Width - ((int)TabStripFooter.ActualWidth + 20);
-				int y = 0;
-				int width = (int)TabStripFooter.ActualWidth +20;
-				int height = (int)TabStripFooter.ActualHeight;
+				if (scale == 0d)
+				{
+					scale = XamlRoot.RasterizationScale;
+				}
 
-				App.mainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+				int width = (int)(XamlRoot.RasterizationScale * TabStripFooter.ActualWidth);
+				int height = (int)(XamlRoot.RasterizationScale * TabStripFooter.ActualHeight);
+
+				int x = (int)(XamlRoot.RasterizationScale * RootGrid.ActualWidth) - width;
+				int y = 0;
+
+				if (scale == XamlRoot.RasterizationScale)
+				{
+
+					App.mainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+				}
+				else
+				{
+					scale = XamlRoot.RasterizationScale;
+					App.mainWindow.AW.TitleBar.ResetToDefault();
+					App.mainWindow.ResetTitleBar();
+					SetColor();
+					App.mainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+				}
 			}
 			else
 			{
@@ -2466,6 +2736,86 @@ namespace ConTeXt_IDE
 				//CustomDragRegion.Width = width;
 				//CustomDragRegion.Height = height;
 			}
+		}
+
+		private void SemanticZoom_ViewChangeStarted(object sender, SemanticZoomViewChangedEventArgs e)
+		{
+			if (e.IsSourceZoomedInView == false)
+			{
+				e.DestinationItem.Item = (cvs.Source as IOrderedEnumerable<IGrouping<string, Command>>).SelectMany(x => x).First(x => x.Category == (string)e.SourceItem.Item);
+				VM.SelectedCommand = null;
+				DocumentationView.ScrollIntoView(e.DestinationItem.Item);
+			}
+			else
+			{
+				GroupListView.SelectedItem = e.DestinationItem.Item = (e.SourceItem.Item as Command).Category;
+			}
+
+		}
+
+		private async void DocumentationView_ItemClick(object sender, ItemClickEventArgs e)
+		{
+			//if (e.ClickedItem == DocumentationView.SelectedItem)
+			//{
+			VM.SelectedCommand = (Command)e.ClickedItem;
+			//}
+		}
+
+		private string GetCommandString(Command command)
+		{
+			string text = @"\" + (command.Type == "environment" ? "start" : "") + command.Name;
+			if (command?.Arguments?.ArgumentsList != null)
+				foreach (var arg in command?.Arguments?.ArgumentsList)
+					text += arg.Delimiters == "braces" ? "{}" : (arg.Delimiters == "none" ? "" : "[]");
+			if (command.Type == "environment")
+				text += "\n\t\n" + @"\stop" + command.Name;
+
+			return text;
+		}
+
+
+		private void DocumentationView_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+		{
+			e.Data.RequestedOperation = DataPackageOperation.Copy;
+			var command = (Command)e.Items.FirstOrDefault();
+			if (command != null)
+			{
+			string texttopaste = GetCommandString(command);
+				e.Data.SetText(texttopaste);
+				e.Items[0] = texttopaste;
+			}
+		}
+
+		private void DocumentationView_DragOver(object sender, DragEventArgs e)
+		{
+			e.DragUIOverride.Caption = "caption";
+			e.DragUIOverride.IsGlyphVisible = false;
+			e.DragUIOverride.IsCaptionVisible = false;
+			e.Handled = true;
+		}
+
+		private void DocumentationView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+		{
+			ListView listView = (ListView)sender;
+			DocumentationViewContextMenu.ShowAt(listView, e.GetPosition(listView));
+			tappedCommand = (Command)((FrameworkElement)e.OriginalSource).DataContext;
+		}
+		private Command tappedCommand = null;
+		private void DocumentationViewContextMenu_Click(object sender, RoutedEventArgs e)
+		{
+			MenuFlyoutItem mfi = (MenuFlyoutItem)sender;
+			Command command = tappedCommand;
+			string texttocopy = "";
+			switch (mfi.Tag)
+			{
+				case "copycommand": texttocopy = @"\" + (command.Type == "environment" ? "start" : "") + command.Name; break;
+				case "copywitharguments": texttocopy = GetCommandString(command); break;
+			}
+
+			DataPackage dataPackage = new DataPackage();
+			dataPackage.RequestedOperation = DataPackageOperation.Copy;
+			dataPackage.SetText(texttocopy);
+			Clipboard.SetContent(dataPackage);
 		}
 	}
 }

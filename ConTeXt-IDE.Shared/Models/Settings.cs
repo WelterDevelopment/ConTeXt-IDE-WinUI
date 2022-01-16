@@ -20,16 +20,24 @@ namespace ConTeXt_IDE.Models
 		public static Settings FromJson(string json) => JsonConvert.DeserializeObject<Settings>(json);
 
 		[JsonIgnore]
-		public static Settings Default { get; } = GetSettings();
+		public static Settings Default { get; internal set; } = GetSettings();
 
-		public static void RestoreSettings()
+		public static Settings RestoreSettings()
 		{
-			string file = "settings.json";
-			var storageFolder = ApplicationData.Current.LocalFolder;
-			string settingsPath = Path.Combine(storageFolder.Path, file);
-			if (File.Exists(settingsPath))
+			try
 			{
-				File.Delete(settingsPath);
+				string file = "settings.json";
+				var storageFolder = ApplicationData.Current.LocalFolder;
+				string settingsPath = Path.Combine(storageFolder.Path, file);
+				if (File.Exists(settingsPath))
+				{
+					File.Delete(settingsPath);
+				}
+				return GetSettings();
+			}
+			catch
+			{
+				return null;
 			}
 		}
 
@@ -62,6 +70,22 @@ namespace ConTeXt_IDE.Models
 				};
 
 				settings.ProjectList.CollectionChanged += (o, a) =>
+				{
+					string json = settings.ToJson();
+					File.WriteAllText(settingsPath, json);
+				};
+
+				if (settings.CommandFavorites.Count == 0)
+				{
+					settings.CommandFavorites =
+					new ObservableCollection<CommandFavorite>()
+					{ 
+					new(@"\startsection"), new(@"\startalignment"), new(@"\setuplayout"), new(@"\setuppapersize"), new(@"\starttext"), new(@"\startfrontmatter"), new(@"\startbodymatter"), new(@"\startappendices"), new(@"\startbackmatter"),
+					new(@"\startframed"), new(@"\setupbodyfont"), new(@"\setupfooter"), new(@"\setupheader"),  new(@"\setuphead"),  new(@"\setupcaptions"), new(@"\setupcombinations"), new(@"\setupinteraction"), new(@"\placebookmarks"), new(@"\setuplist"), new(@"\environment"),  new(@"\startenvironment"), new(@"\product"),  new(@"\startproduct"), new(@"\component"),  new(@"\startcomponent"), new(@"\cite"), new(@"\setupTABLE"),
+					};
+				}
+
+				settings.CommandFavorites.CollectionChanged += (o, a) =>
 				{
 					string json = settings.ToJson();
 					File.WriteAllText(settingsPath, json);
@@ -110,7 +134,7 @@ namespace ConTeXt_IDE.Models
 				if (settings.ContextModules.Count == 0)
 				{
 					settings.ContextModules = new ObservableCollection<ContextModule>() {
-																								new ContextModule() { IsInstalled = false, Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter-2020.06.29.zip", Type = ContextModuleType.TDSArchive},
+																								new ContextModule() { IsInstalled = false, Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter.zip", Type = ContextModuleType.TDSArchive},
 																								new ContextModule() { IsInstalled = false, Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
 																								new ContextModule() { IsInstalled = false, Name = "letter", Description = "Package for writing letters", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-letter.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-letter\"},
 																								new ContextModule() { IsInstalled = true, Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
@@ -124,7 +148,7 @@ namespace ConTeXt_IDE.Models
 			{
 				//App.VM.Log("Exception on getting Settings: "+ex.Message);
 
-				return null;
+				return RestoreSettings();
 			}
 		}
 
@@ -156,15 +180,16 @@ namespace ConTeXt_IDE.Models
 		public bool ScrollbarMarkers { get => Get(true); set => Set(value); }
 		public bool CodeFolding { get => Get(false); set => Set(value); }
 		public bool ControlCharacters { get => Get(false); set => Set(value); }
+		public bool FilterFavorites { get => Get(false); set => Set(value); }
 
 		public string AccentColor { get => Get("Default"); set { Set(value); } }
-
+		public string ContextVersion { get => Get(""); set { Set(value); } }
 		public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
 		public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
 		public string LastActiveProject { get => Get(""); set => Set(value); }
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
-		public int FontSize { get => Get(18); set => Set(value); }
+		public int FontSize { get => Get(14); set => Set(value); }
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{
@@ -180,6 +205,8 @@ namespace ConTeXt_IDE.Models
 
 
 		public List<CommandGroup> CommandGroups { get => Get(new List<CommandGroup>()); set => Set(value); }
+
+		public ObservableCollection<CommandFavorite> CommandFavorites { get => Get(new ObservableCollection<CommandFavorite>()); set => Set(value); }
 
 		public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
 

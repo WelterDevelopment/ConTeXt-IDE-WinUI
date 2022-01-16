@@ -1,4 +1,5 @@
-﻿using ConTeXt_IDE.Helpers;
+﻿using CodeEditorControl_WinUI;
+using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
@@ -32,6 +33,9 @@ namespace ConTeXt_IDE
 				UnhandledException += App_UnhandledException;
 				var uiSettings = new UISettings();
 				var defaultthemecolor = uiSettings.GetColorValue(UIColorType.Background);
+
+				
+
 				if (Settings.Default.Theme == "Light")
 				{
 					RequestedTheme = ApplicationTheme.Light;
@@ -66,7 +70,7 @@ namespace ConTeXt_IDE
 
 		protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
 		{
-			StartUp();
+			StartUp(); 
 
 			VM.LaunchArguments = args.Arguments;
 
@@ -74,6 +78,8 @@ namespace ConTeXt_IDE
 			if (!createdNew && !VM.Default.MultiInstance)
 			{
 				Application.Current.Exit();
+				Environment.Exit(0);
+
 				return;
 			}
 
@@ -98,9 +104,18 @@ namespace ConTeXt_IDE
 				var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
 				setting.Theme = VM.Default.Theme == "Light" ? ElementTheme.Light : ElementTheme.Dark;
 				setting.AccentColor = VM.AccentColor.Color;
-				//ColorPaletteResources palette = new ColorPaletteResources();
-				//palette.Accent = setting.AccentColorLow;
-				//App.Current.Resources.MergedDictionaries.Add(palette);
+				var accentColor = VM.AccentColor;
+
+				if (accentColor != null)
+				{
+					setting.Theme = (ElementTheme)Enum.Parse(typeof(ElementTheme), Settings.Default.Theme);
+					setting.AccentColor = accentColor.Color;
+					Application.Current.Resources["SystemAccentColor"] = accentColor.Color;
+					Application.Current.Resources["SystemAccentColorLight2"] = setting.AccentColorLow;
+					Application.Current.Resources["SystemAccentColorDark1"] = setting.AccentColorLow.ChangeColorBrightness(0.1f);
+					Application.Current.Resources["WindowCaptionBackground"] = setting.AccentColorLow;
+					Application.Current.Resources["WindowCaptionBackgroundDisabled"] = setting.AccentColorLow;
+				}
 
 			}
 			catch (Exception ex)

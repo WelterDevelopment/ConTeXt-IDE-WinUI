@@ -1,11 +1,12 @@
 ﻿using ConTeXt_IDE.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace ConTeXt_IDE.Models
 {
-    [XmlRoot(ElementName = "resolve")]
+	[XmlRoot(ElementName = "resolve")]
 	public class Resolve : Argument
 	{
 		[XmlAttribute(AttributeName = "name")]
@@ -17,16 +18,62 @@ namespace ConTeXt_IDE.Models
 	{
 		[XmlAttribute(AttributeName = "name")]
 		public string Name { get; set; }
+
+		public object Clone()
+		{
+			return this.MemberwiseClone();
+		}
 	}
 
 	[XmlRoot(ElementName = "assignments")]
 	public class Assignments : Argument
 	{
 		[XmlElement(ElementName = "inherit")]
-		public Inherit Inherit { get; set; }
+		public List<Inherit> Inherit { get; set; }
 
 		[XmlElement(ElementName = "parameter")]
 		public List<Parameter> Parameter { get; set; }
+
+
+		public override string ToString()
+		{
+			return "Inherits: " + string.Join(", ", Inherit?.Select(x => x.Name)) + "\nParameters: " + string.Join(", ", Parameter?.Select(x => x.Name));
+		}
+
+		public Assignments DeepClone()
+		{
+			Assignments assignments = new Assignments();
+			assignments.Number = Number;
+			assignments.Delimiters = Delimiters;
+			assignments.List = List;
+			assignments.Optional = Optional;
+			assignments.Inherit = new();
+			assignments.Parameter = new();
+			foreach (Inherit inherit in Inherit)
+			{
+				assignments.Inherit.Add((Inherit)inherit.Clone());
+			}
+			foreach (Parameter parameter in Parameter)
+			{
+				Parameter param = new Parameter();
+				param.Name = parameter.Name;
+				if (parameter.Inherit != null)
+				{
+					param.Inherit = new();
+					foreach (var inh in parameter.Inherit)
+						param.Inherit.Add(new() { Name = inh.Name});
+				}
+				if (parameter.Constant != null)
+				{
+					param.Constant = new();
+					foreach (var cons in parameter.Constant)
+						param.Constant.Add(new() { Default = cons.Default, Type = cons.Type, Value = cons.Value});
+				}
+
+				assignments.Parameter.Add(param);
+			}
+			return assignments;
+		}
 	}
 
 	//[XmlInclude(typeof(Resolve))]
@@ -58,6 +105,8 @@ namespace ConTeXt_IDE.Models
 		[XmlElement(typeof(Assignments), ElementName = "assignments")]
 		[XmlElement(typeof(Keywords), ElementName = "keywords")]
 		public List<Argument> ArgumentsList { get; set; }
+
+
 	}
 
 	[XmlRoot(ElementName = "command")]
@@ -97,15 +146,65 @@ namespace ConTeXt_IDE.Models
 		public string Type { get; set; }
 
 		[XmlIgnore]
-		public bool IsSelected { get => Get(false); set => Set(value); }
+		public bool IsSelected { get => Get(false); set { Set(value); IsFavoriteOrSelected = IsSelected | IsFavorite; } }
 
 		[XmlIgnore]
 		public int SelectedIndex { get => Get(-1); set => Set(value); }
+
+		[XmlIgnore]
+		public bool IsFavorite { get => Get(false); set { Set(value); IsFavoriteOrSelected = IsSelected | IsFavorite; } }
+
+		[XmlIgnore]
+		public bool IsFavoriteOrSelected { get => Get(false); set => Set(value); }
+
+		[XmlIgnore]
+		public int ID { get => Get(0); set => Set(value); }
 
 		public object Clone()
 		{
 			return this.MemberwiseClone();
 		}
+		public Command DeepClone()
+		{
+			//Command cmd = (Command)MemberwiseClone();
+			Command cmd = new();
+			cmd.Name = Name;
+			cmd.Level = Level;
+			cmd.Type = Type;
+			cmd.Variant = Variant;
+			cmd.Instances = Instances;
+			cmd.Keywords = Keywords;
+			cmd.Sequence = Sequence;
+			cmd.Category = Category;
+			cmd.File = File;
+			cmd.Generated = Generated;
+			Arguments arg = new();
+			if (Arguments?.ArgumentsList != null)
+			{
+				arg.ArgumentsList = new();
+				foreach (var a in Arguments?.ArgumentsList)
+				{
+					if (a is Assignments asmt)
+						arg.ArgumentsList.Add(asmt.DeepClone());
+					if (a is Keywords keyw)
+						arg.ArgumentsList.Add(keyw.DeepClone());
+				}
+			}
+			cmd.Arguments = arg;
+
+			return cmd;
+		}
+	}
+
+	public class CommandFavorite : Bindable
+	{
+		public CommandFavorite(string name, int id = 0)
+		{
+			Name = name;
+			ID = id;
+		}
+		public string Name { get => Get(""); set => Set(value); }
+		public int ID { get => Get(0); set => Set(value); }
 	}
 
 	[XmlRoot(ElementName = "variable")]
@@ -146,6 +245,14 @@ namespace ConTeXt_IDE.Models
 
 		[XmlAttribute(AttributeName = "value")]
 		public string Value { get; set; }
+
+		[XmlAttribute(AttributeName = "name")]
+		public string Name { get; set; }
+
+		public object Clone()
+		{
+			return this.MemberwiseClone();
+		}
 	}
 
 	[XmlRoot(ElementName = "parameter")]
@@ -154,8 +261,36 @@ namespace ConTeXt_IDE.Models
 		[XmlElement(ElementName = "constant")]
 		public List<Constant> Constant { get; set; }
 
+		[XmlElement(ElementName = "inherit")]
+		public List<Inherit> Inherit { get; set; }
+
+		[XmlElement(ElementName = "resolve")]
+		public List<Resolve> Resolve { get; set; }
+
 		[XmlAttribute(AttributeName = "name")]
 		public string Name { get; set; }
+
+		public object Clone()
+		{
+			return this.MemberwiseClone();
+		}
+
+		public Parameter DeepClone()
+		{
+			Parameter assignments = new();
+			assignments.Constant = new();
+			assignments.Inherit = new();
+			assignments.Name = Name;
+			foreach (Constant parameter in Constant)
+			{
+				assignments.Constant.Add((Constant)parameter.Clone());
+			}
+			foreach (Inherit parameter in Inherit)
+			{
+				assignments.Inherit.Add((Inherit)parameter.Clone());
+			}
+			return assignments;
+		}
 	}
 
 	[XmlRoot(ElementName = "keywords")]
@@ -169,6 +304,17 @@ namespace ConTeXt_IDE.Models
 
 		[XmlElement(ElementName = "resolve")]
 		public Resolve Resolve { get; set; }
+
+		public Keywords DeepClone()
+		{
+			Keywords assignments = (Keywords)MemberwiseClone();
+			assignments.Constant = new();
+			foreach (Constant inherit in Constant)
+			{
+				assignments.Constant.Add((Constant)inherit.Clone());
+			}
+			return assignments;
+		}
 	}
 
 	[XmlRoot(ElementName = "define")]

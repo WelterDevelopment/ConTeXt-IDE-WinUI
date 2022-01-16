@@ -9,7 +9,7 @@
   <Identity
     Name="7614MasterDevelopment.ConTeXtIDE"
     Publisher="CN=F3B9189F-4D2B-4342-889D-A9D7D5A98D3A"
-    Version="1.10.40.0" />
+    Version="1.10.45.0" />
 
   <Properties>
     <DisplayName>ConTeXt IDE</DisplayName>
@@ -28,7 +28,7 @@
 
   <Applications>
     <Application Id="App"
-      Executable="ConTeXt-IDE.Desktop\ConTeXt-IDE.Desktop.exe"
+      Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
 		<!--<Extensions>Executable="ConTeXt-IDE.Desktop\ConTeXt-IDE.Desktop.exe$targetnametoken$.exe"
 			<uap:Extension Category="windows.fileTypeAssociation">
