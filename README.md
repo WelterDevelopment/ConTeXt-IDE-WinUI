@@ -18,6 +18,24 @@ Bugs and Limitations:
 
 ### Changelog
 
+#### 1.10.45 (2022-01-16)
+- In Windows 11, the Ribbon now extends into the title bar to save space
+- The command reference got visually polished
+- Drag and drop a command reference entry to your editor to quickly insert the command
+- Mark commands as favorite, filter the command reference for your favorites
+- The version of your ConTeXt distribution is now displayed
+- The "new line" control character is now displayed correctly
+- Fixed a bug where the app would not shutdown completely
+
+#### 1.10.40 (2022-01-09)
+- Two-way SyncTeX is now implemented: Double-click a word in the PDF viewer to jump to the corresponding position in the source file
+- Minor bug fixes
+
+#### 1.10.38 (2022-01-06)
+- One-way SyncTeX is now implemented: Press Ctrl+Space to jump to the corresponding position in the pdf
+- Fixed some bugs with IntelliSense
+- PDF.js viewer got further optimized to integrate into the UI
+
 #### 1.10.25 (2021-12-31)
 - The min/max/close buttons returned in Windows 10
 - The syntax highlighting colors are now freely adjustable with direct visual impact on the editor
