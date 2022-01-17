@@ -41,8 +41,8 @@ namespace ConTeXt_IDE
 
 				AW.Title = "ConTeXt IDE";
 				AW.Closing += AW_Closing;
-				AW.SetIcon(@"C:\ConTeXt-IDE-WinUI\ConTeXt-IDE.Shared\Assets\SquareLogo.png");
-				AW.TitleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
+				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
+				CustomDragRegion.XamlRoot.Changed += (a,b) => { VM.Log(b.ToString()); };
 			}
 			else
 			{
