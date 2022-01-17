@@ -92,6 +92,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Assets\GitHub.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Assets\SquareLogo.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Assets\SquareLogo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

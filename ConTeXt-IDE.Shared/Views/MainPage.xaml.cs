@@ -1028,7 +1028,6 @@ namespace ConTeXt_IDE
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine(ex.Message);
 				App.write(ex.Message + "\n" + ex.StackTrace);
 				return false;
 			}

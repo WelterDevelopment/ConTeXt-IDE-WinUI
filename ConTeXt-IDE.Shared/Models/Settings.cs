@@ -59,7 +59,6 @@ namespace ConTeXt_IDE.Models
 				else
 				{
 					string json = File.ReadAllText(settingsPath);
-					Debug.WriteLine(json);
 					settings = FromJson(json);
 				}
 

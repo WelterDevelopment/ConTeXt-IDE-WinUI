@@ -41,8 +41,7 @@ namespace ConTeXt_IDE
 
 				AW.Title = "ConTeXt IDE";
 				AW.Closing += AW_Closing;
-				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
-				CustomDragRegion.XamlRoot.Changed += (a,b) => { VM.Log(b.ToString()); };
+				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets\", @"SquareLogo.ico"));
 			}
 			else
 			{
@@ -58,8 +57,6 @@ namespace ConTeXt_IDE
 		public void ResetTitleBar()
 		{
 			AW.TitleBar.ExtendsContentIntoTitleBar = true;
-			AW.Title = "ConTeXt IDE";
-			AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets/", @"SquareLogo.png"));
 			AW.TitleBar.IconShowOptions = IconShowOptions.HideIconAndSystemMenu;
 		}
 
@@ -205,6 +202,9 @@ namespace ConTeXt_IDE
 		}
 		private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
 		{
+			if (IsCustomizationSupported)
+				VM.Default.EvergreenInstalled = true;
+
 			try
 			{
 				if (!VM.Default.EvergreenInstalled)
