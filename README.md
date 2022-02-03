@@ -18,6 +18,12 @@ Bugs and Limitations:
 
 ### Changelog
 
+#### 1.11.6 (2022-01-29)
+- The app now listens to file system changes, meaning that you can add, remove, rename and edit files outside of the app while the project is open
+- Multi-instancing is now working, so you can open different ConTeXt projects in seperate windows at once
+- The jump list (= context menu of the task bar icon) entries now actually work and open a new instance with the corresponding project
+- Bug fixes
+
 #### 1.10.45 (2022-01-16)
 - In Windows 11, the Ribbon now extends into the title bar to save space
 - The command reference got visually polished
