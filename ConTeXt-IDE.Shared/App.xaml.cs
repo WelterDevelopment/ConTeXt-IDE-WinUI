@@ -6,6 +6,8 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
@@ -17,11 +19,11 @@ namespace ConTeXt_IDE
 
 	{
 		public static ViewModel VM { get; set; }
-		public static MainWindow mainWindow;
+		public static MainWindow MainWindow { get; set; }
 
-		private const string MutexName = "##||ConTeXt_IDE||##";
-		private Mutex _mutex;
-		bool createdNew;
+		//private const string MutexName = "##||ConTeXt_IDE||##";
+		//private Mutex _mutex;
+		//bool createdNew;
 
 		public static MainPage MainPage;
 
@@ -34,7 +36,8 @@ namespace ConTeXt_IDE
 				var uiSettings = new UISettings();
 				var defaultthemecolor = uiSettings.GetColorValue(UIColorType.Background);
 
-				
+
+
 
 				if (Settings.Default.Theme == "Light")
 				{
@@ -55,6 +58,17 @@ namespace ConTeXt_IDE
 			}
 		}
 
+		private void AI_Activated(object sender, AppActivationArguments e)
+		{
+			switch (e.Data)
+			{
+				case Windows.ApplicationModel.Activation.LaunchActivatedEventArgs Args:
+					VM.LaunchArguments = Args.Arguments;
+					VM.CurrentProject = VM.Default.ProjectList.FirstOrDefault(x => x.Name == Args.Arguments);
+					break;
+			}
+		}
+
 		public static async void write(string stringtowrite)
 		{
 			StorageFolder sf = ApplicationData.Current.LocalFolder;
@@ -68,26 +82,59 @@ namespace ConTeXt_IDE
 			VM?.Log("Unhandled app exception:" + e.Message);
 		}
 
-		protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+		protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
 		{
-			StartUp(); 
+			StartUp();
 
-			VM.LaunchArguments = args.Arguments;
+			AppInstance DefaultAI = AppInstance.FindOrRegisterForKey("MainAppInstance");
+			AppInstance CurrentAI = AppInstance.GetCurrent();
+			var activation = CurrentAI.GetActivatedEventArgs();
 
-			_mutex = new Mutex(true, MutexName, out createdNew);
-			if (!createdNew && !VM.Default.MultiInstance)
+
+			if (DefaultAI != CurrentAI)
 			{
-				Application.Current.Exit();
-				Environment.Exit(0);
+				if (!VM.Default.MultiInstance)
+				{
+					
+					var instances = AppInstance.GetInstances();
+					//	Debug.WriteLine(string.Join(", ", instances.Select(x => x.ProcessId)));
 
-				return;
+					if (instances.Count > 1)
+					{
+						await DefaultAI.RedirectActivationToAsync(activation);
+						instances.Remove(CurrentAI); // does absolutely nothing
+						Exit();
+						Environment.Exit(0);
+						return;
+					}
+					else
+					{
+						CurrentAI.Activated += AI_Activated;
+					}
+				}
+			}
+			else
+			{
+				CurrentAI.Activated += AI_Activated;
 			}
 
-			//var aargs = AppInstance.GetCurrent().GetActivatedEventArgs();
+			switch (activation.Data)
+			{
+				case Windows.ApplicationModel.Activation.LaunchActivatedEventArgs Args: VM.LaunchArguments = Args.Arguments; break;
+			}
 
-			
-			mainWindow = new MainWindow();
-			mainWindow.Activate();
+			MainWindow = new MainWindow();
+			MainWindow.Activate();
+
+			// It seems we don't need the old Mutex stuff anymore.
+			//_mutex = new Mutex(true, MutexName, out createdNew);
+			//if (!createdNew && !VM.Default.MultiInstance)
+			//{
+			//	Application.Current.Exit();
+			//	Environment.Exit(0);
+
+			//	return;
+			//}
 		}
 
 		private void StartUp()

@@ -31,7 +31,7 @@ namespace ConTeXt_IDE.Models
 		public ObservableCollection<FileItem> Directory { get => Get(new ObservableCollection<FileItem>()); set => Set(value); }
 
 		[JsonIgnore]
-		public StorageFolder Folder { get => Get<StorageFolder>(null); set { Set(value); if (value != null)	Path = value.Path;} }
+		public StorageFolder Folder { get => Get<StorageFolder>(null); set { Set(value); if (value != null) Path = value.Path; } }
 
 		public SyncTeX SyncTeX { get => Get<SyncTeX>(null); set => Set(value); }
 
@@ -89,6 +89,116 @@ namespace ConTeXt_IDE.Models
 					if (fi.FileName == filename)
 					{
 						fileItem = fi;
+					}
+				}
+			}
+			return fileItem;
+		}
+
+		
+		public FileItem GetDirectoryByPath(FileItem folder, string itempath)
+		{
+			FileItem containingfolder = null;
+			if (folder.File is StorageFolder)
+			{
+				if (folder.File.Path == itempath)
+				{
+					containingfolder = folder;
+					return containingfolder;
+				}
+				else
+				{
+					foreach (FileItem fi in folder.Children)
+					{
+						if (fi.Type == FileItem.ExplorerItemType.Folder)
+						{
+							containingfolder = GetDirectoryByPath(fi, itempath);
+							if (containingfolder!= null)
+								return containingfolder;
+						}
+					}
+				}
+			}
+			return containingfolder;
+		}
+
+		public FileItem GetFileItemByPath(FileItem folder, string filepath)
+		{
+			FileItem fileItem = null;
+			foreach (FileItem fi in folder.Children)
+			{
+				if (fi.Type == FileItem.ExplorerItemType.Folder)
+				{
+					if (fi.File.Path == filepath)
+					{
+						fileItem=fi;
+						return fileItem;
+					}
+					else
+					{
+						fileItem = GetFileItemByPath(fi, filepath);
+						if (fileItem != null)
+							return fileItem;
+					}
+				}
+				else if (fi.Type == FileItem.ExplorerItemType.File)
+				{
+					if (fi.File.Path == filepath)
+					{
+						fileItem = fi;
+						if (fileItem != null)
+							return fileItem;
+					}
+				}
+			}
+			return fileItem;
+		}
+
+		public FileItem GetFolderByItem(FileItem root, FileItem target)
+		{
+			FileItem fileItem = null;
+			if (root.Children.Contains(target))
+				fileItem = root;
+			else
+			{
+				foreach (FileItem fi in root.Children)
+				{
+					if (fi.Type == FileItem.ExplorerItemType.Folder)
+						fileItem = GetFolderByItem(fi, target);
+				}
+			}
+			return fileItem;
+		}
+
+		public FileItem RemoveFileItemByPath(FileItem folder, string itempath)
+		{
+			FileItem fileItem = null;
+			bool isremoved = false;
+			foreach (FileItem fi in folder.Children)
+			{
+				if (fi.Type == FileItem.ExplorerItemType.Folder)
+				{
+					if (fileItem == null)
+					{
+						if (fi.File.Path == itempath)
+						{
+							folder.Children.Remove(fi);
+							fileItem = fi;
+							isremoved = true;
+							return fi;
+						}
+						else
+							fileItem = RemoveFileItemByPath(fi, itempath);
+					}
+				}
+				else if (fi.Type == FileItem.ExplorerItemType.File)
+				{
+					if (fi.File.Path == itempath)
+					{
+						folder.Children.Remove(fi);
+						fileItem = fi;
+						isremoved = true;
+						return fi;
 					}
 				}
 			}

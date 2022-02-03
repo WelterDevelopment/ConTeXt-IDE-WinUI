@@ -41,6 +41,7 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.StartScreen;
 
 namespace ConTeXt_IDE
@@ -209,7 +210,7 @@ namespace ConTeXt_IDE
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Save"; else return false; }))
 				cw.Action_Add(MenuSave);
 
-			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }))
+			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }) && cw.Language.Name == "ConTeXt")
 				cw.Action_Add(MenuCompile);
 
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX && cw.Language.Name == "ConTeXt")
@@ -241,7 +242,7 @@ namespace ConTeXt_IDE
 		{
 			string file = @"tex\texmf-mswin\bin\context.exe";
 			var storageFolder = ApplicationData.Current.LocalFolder;
-			string filePath = System.IO.Path.Combine(storageFolder.Path, file);
+			string filePath = Path.Combine(storageFolder.Path, file);
 			if (!VM.Default.DistributionInstalled && !File.Exists(filePath))
 			{
 				bool InstallSuccessful = false;
@@ -255,7 +256,7 @@ namespace ConTeXt_IDE
 					VM.Default.DistributionInstalled = true;
 					VM.IsSaving = false;
 					VM.IsPaused = true;
-					VM.IsVisible = false;
+					VM.IsLoadingBarVisible = false;
 					VM.InfoMessage("Installation complete!", "Your ConTeXt distribution is up n' running!", InfoBarSeverity.Success);
 				}
 				else
@@ -267,8 +268,10 @@ namespace ConTeXt_IDE
 			{
 				VM.Default.DistributionInstalled = true;
 			}
+
 			InitializeCommandReference();
-			await VM.Startup();
+
+			VM.Startup();
 			FirstStart();
 
 			// OnProtocolActivated(Windows.ApplicationModel.AppInstance.GetActivatedEventArgs());
@@ -400,10 +403,11 @@ namespace ConTeXt_IDE
 					{
 						var subfile = await folder.CreateFileAsync(name);
 						var fi = new FileItem(subfile) { Type = FileItem.ExplorerItemType.File };
-						fileItem.Children.Add(fi);
+						//VM.AddFileItemAplphabetically(fileItem.Children, fi);
+						//	fileItem.Children.Add(fi);
 					}
 					else
-						VM.InfoMessage("Error", "The file" + name + " does already exist.", InfoBarSeverity.Error);
+						VM.InfoMessage("Error", "The file " + name + " does already exist.", InfoBarSeverity.Error);
 				}
 			}
 			catch (Exception ex)
@@ -411,6 +415,8 @@ namespace ConTeXt_IDE
 				VM.InfoMessage("Error", ex.Message, InfoBarSeverity.Error);
 			}
 		}
+
+	
 
 		private void NewFolder_Click(object sender, RoutedEventArgs e)
 		{
@@ -441,11 +447,13 @@ namespace ConTeXt_IDE
 					{
 						var subfolder = await folder.CreateFolderAsync(name);
 						var fi = new FileItem(subfolder) { Type = FileItem.ExplorerItemType.Folder };
-						fileItem.Children.Insert(0, fi);
+						
+					//	VM.AddFileItemAplphabetically(fileItem.Children,fi);
+						//fileItem.Children.Add(fi);
 					}
 					else
 					{
-						VM.InfoMessage("Error", "The folder" + name + " does already exist.", InfoBarSeverity.Error);
+						VM.InfoMessage("Error", "The folder " + name + " does already exist.", InfoBarSeverity.Error);
 					}
 				}
 			}
@@ -457,60 +465,12 @@ namespace ConTeXt_IDE
 
 		private async void AddFileRoot_Click(object sender, RoutedEventArgs e)
 		{
-			try
-			{
-				string name = "file.tex";
-				var cd = new ContentDialog() { XamlRoot = XamlRoot, Title = "Set file name", PrimaryButtonText = "Ok", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
-
-				TextBox tb = new TextBox() { Text = name };
-				cd.Content = tb;
-
-				if (await cd.ShowAsync() == ContentDialogResult.Primary)
-				{
-					var folder = VM.CurrentProject.Folder;
-					if (await folder.TryGetItemAsync(tb.Text) == null)
-					{
-						var file = await folder.CreateFileAsync(tb.Text);
-						var fi = new FileItem(file) { Type = FileItem.ExplorerItemType.File, FileLanguage = FileItem.GetFileType(file.FileType) };
-						VM.CurrentProject.Directory[0].Children.Add(fi);
-					}
-					else
-						VM.Log(name + " does already exist.");
-				}
-			}
-			catch (Exception ex)
-			{
-				VM.Log("Exception on adding File: " + ex.Message);
-			}
+			NewFile((sender as FrameworkElement).DataContext as FileItem);
 		}
 
 		private async void AddFolderRoot_Click(object sender, RoutedEventArgs e)
 		{
-			try
-			{
-				string name = "";
-				var cd = new ContentDialog() { XamlRoot = XamlRoot, Title = "Set folder name", PrimaryButtonText = "Ok", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
-				TextBox tb = new TextBox() { Text = name };
-				cd.Content = tb;
-				var result = await cd.ShowAsync();
-				if (result == ContentDialogResult.Primary)
-				{
-					name = tb.Text;
-					var folder = VM.CurrentProject.Folder;
-					if (await folder.TryGetItemAsync(name) == null)
-					{
-						var subfolder = await folder.CreateFolderAsync(name);
-						var fi = new FileItem(subfolder) { Type = FileItem.ExplorerItemType.Folder };
-						VM.CurrentProject.Directory[0].Children.Insert(0, fi);
-					}
-					else
-						VM.Log(name + " does already exist.");
-				}
-			}
-			catch (Exception ex)
-			{
-				VM.Log("Exception on adding Folder: " + ex.Message);
-			}
+			NewFolder((sender as FrameworkElement).DataContext as FileItem);
 		}
 
 		private async void OpeninExplorer_Click(object sender, RoutedEventArgs e)
@@ -530,7 +490,7 @@ namespace ConTeXt_IDE
 			try
 			{
 				var fi = (FileItem)(sender as FrameworkElement).DataContext;
-				RemoveItem(VM.CurrentProject.Directory, fi);
+				RemoveItem(VM.CurrentProject?.Directory, fi);
 				VM.FileItems.Remove(fi);
 				string type = fi.File is StorageFile ? "File" : "Folder";
 				await fi.File.DeleteAsync();
@@ -567,8 +527,8 @@ namespace ConTeXt_IDE
 
 				await fi.File.RenameAsync(newname, NameCollisionOption.GenerateUniqueName);
 				fi.FileName = newname;
-				if (fi.File is StorageFile sf)
-					fi.FileLanguage = FileItem.GetFileType(sf.FileType);
+				//if (fi.File is StorageFile sf)
+				//	fi.FileLanguage = FileItem.GetFileType(sf.FileType);
 			}
 			catch (Exception ex)
 			{
@@ -584,7 +544,7 @@ namespace ConTeXt_IDE
 			var res = await cd.ShowAsync();
 			if (res == ContentDialogResult.Primary)
 			{
-				VM.Log($"Renaming {type.ToString().ToLower()} {startstring} to {tb.Text}");
+				//VM.Log($"Renaming {type.ToString().ToLower()} {startstring} to {tb.Text}");
 				return tb.Text;
 			}
 			else
@@ -753,11 +713,10 @@ namespace ConTeXt_IDE
 			if (!VM.IsSaving)
 				try
 				{
-					VM.IsError = false;
+					VM.IsIndeterminate = true;
+					VM.IsTeXError = false;
 					VM.IsPaused = false;
-					VM.IsVisible = true;
 					VM.IsSaving = true;
-
 					//await Task.Delay(500);
 
 					string[] modes = new string[] { };
@@ -843,10 +802,10 @@ namespace ConTeXt_IDE
 						var error = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(filetocompile.FileName) + "-error.log");
 						if (error != null)
 						{
-							VM.IsError = true;
 							StorageFile errorfile = error as StorageFile;
 							string text = await FileIO.ReadTextAsync(errorfile);
 
+							VM.IsTeXError = true;
 							// BAD code, quick hack to convert the lua table to a json format. Depending on special characters in the error message, the JsonConvert.DeserializeObject function can through errors.
 							string newtext = text.Replace("  ", "").Replace("return", "").Replace("[\"", "\"").Replace("\"]", "\"").Replace("=", ":");
 							string pattern = @"([^\\])(\\n)"; // Matches every \n except \\n
@@ -876,12 +835,6 @@ namespace ConTeXt_IDE
 								}
 								catch { }
 							}
-						}
-						else
-						{
-							VM.IsPaused = true;
-							VM.IsError = false;
-							VM.IsVisible = false;
 						}
 
 						if (VM.Default.AutoOpenPDF && error == null)
@@ -1380,10 +1333,20 @@ namespace ConTeXt_IDE
 				var proj = (sender as FrameworkElement).DataContext as Project;
 
 				StorageApplicationPermissions.MostRecentlyUsedList.Remove(proj.Name);
-				VM.Default.ProjectList.Remove(proj);
 
-				if (VM.CurrentProject == proj)
-					VM.CurrentProject = new Project();
+				if (proj == VM.CurrentProject)
+				{
+					VM.FileItems.Clear();
+					VM.Default.ProjectList.Remove(proj);
+					VM.CurrentProject = VM.Default.ProjectList.FirstOrDefault();
+				}
+				else
+				{
+					VM.Default.ProjectList.Remove(proj);
+				}
+
+				VM.PopulateJumpList();
+				VM.Log($"Project {proj.Name} removed");
 
 			}
 			catch (Exception ex)
@@ -1437,7 +1400,9 @@ namespace ConTeXt_IDE
 		{
 			if (NetworkInterface.GetIsNetworkAvailable())
 			{
-				VM.IsSaving = true;
+				VM.IsError = false;
+				VM.IsTeXError = false;
+				VM.IsInstalling = true;
 				VM.IsIndeterminate = true;
 				VM.InfoMessage("Updating", "Your ConTeXt distribution is getting updated. This can take up to 15 minutes. Do not abort this process!", InfoBarSeverity.Informational);
 
@@ -1467,7 +1432,8 @@ namespace ConTeXt_IDE
 			else
 				VM.InfoMessage("No internet connection", "You need to be connected to the internet in order to update your ConTeXt distribution!", InfoBarSeverity.Warning);
 
-			VM.IsSaving = false;
+			VM.IsInstalling = false;
+			VM.IsIndeterminate = false;
 		}
 
 		private async Task<bool> Update()
@@ -1512,7 +1478,10 @@ namespace ConTeXt_IDE
 								if (int.TryParse(mp.Groups[1]?.Value, out percentage))
 								{
 									if (percentage <= 100 && percentage >= 0)
+									{
+										VM.IsIndeterminate = false;
 										VM.ProgressValue = percentage;
+									}
 								}
 							}
 							else
@@ -1668,6 +1637,7 @@ namespace ConTeXt_IDE
 				Settings.Default = Settings.RestoreSettings();
 				Unload_Click(null, null);
 				VM.Default.ShowCommandReference = false;
+				VM.PopulateJumpList();
 			}
 		}
 
@@ -1845,13 +1815,13 @@ namespace ConTeXt_IDE
 
 			// App.Current.Resources.MergedDictionaries.Add(palette);
 
-			if (App.mainWindow.IsCustomizationSupported)
+			if (App.MainWindow.IsCustomizationSupported)
 			{
-				App.mainWindow.AW.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-				App.mainWindow.AW.TitleBar.ButtonBackgroundColor = Colors.Transparent;
-				App.mainWindow.AW.TitleBar.ButtonHoverBackgroundColor = setting.AccentColor;
-				App.mainWindow.AW.TitleBar.ButtonForegroundColor = theme == ElementTheme.Light ? Colors.Black : Colors.White;
-				App.mainWindow.AW.TitleBar.ButtonInactiveForegroundColor = theme == ElementTheme.Light ? Color.FromArgb(255, 50, 50, 50) : Color.FromArgb(255, 200, 200, 200);
+				App.MainWindow.AW.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+				App.MainWindow.AW.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+				App.MainWindow.AW.TitleBar.ButtonHoverBackgroundColor = setting.AccentColor;
+				App.MainWindow.AW.TitleBar.ButtonForegroundColor = theme == ElementTheme.Light ? Colors.Black : Colors.White;
+				App.MainWindow.AW.TitleBar.ButtonInactiveForegroundColor = theme == ElementTheme.Light ? Color.FromArgb(255, 50, 50, 50) : Color.FromArgb(255, 200, 200, 200);
 			}
 			else
 			{
@@ -1977,7 +1947,7 @@ namespace ConTeXt_IDE
 			try
 			{
 				VM.IsIndeterminate = false;
-				VM.IsSaving = true;
+				VM.IsInstalling = true;
 
 				VM.InfoMessage($"Downloading Module {module.Name}", "Please wait...");
 				using (WebClient wc = new WebClient())
@@ -1998,7 +1968,7 @@ namespace ConTeXt_IDE
 						VM.InfoMessage($"Installing Module {module.Name}", "Please wait...");
 						success = await InstallModule(module, filepath);
 
-						VM.IsSaving = false;
+						VM.IsInstalling = false;
 
 						module.IsInstalled = true;
 
@@ -2135,10 +2105,12 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
+				
 				XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
 				string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
 				using (StringReader reader = new StringReader(xml))
 				{
+
 					Interface contextinterface = (Interface)serializer.Deserialize(reader);
 					List<Command> commands = contextinterface.InterfaceList.SelectMany(x => x.Command).ToList();
 
@@ -2485,15 +2457,21 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
-				bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
+				
+					bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
 				IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
 				string text = Searchtext.Text;
-				await Task.Run(() => { filtered = UpdateSearchFilter(text, ischecked); });
+				await Task.Run(() => {
+					filtered = UpdateSearchFilter(text, ischecked);
 
-				VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
-				cvs.Source = filtered;
+					DispatcherQueue.TryEnqueue( Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,() =>
+							{
+								VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+								cvs.Source = filtered;
 
-				DocumentationView.SelectedIndex = -1;
+								DocumentationView.SelectedIndex = -1;
+							});
+				});
 			}
 			catch (Exception ex)
 			{
@@ -2577,8 +2555,8 @@ namespace ConTeXt_IDE
 
 		private void Btn_CloseError_Click(object sender, RoutedEventArgs e)
 		{
-			VM.IsError = false;
-			VM.IsVisible = false;
+			VM.IsTeXError = false;
+			VM.IsLoadingBarVisible = false;
 		}
 
 		private void Codewriter_ErrorOccured(object sender, ErrorEventArgs e)
@@ -2684,7 +2662,7 @@ namespace ConTeXt_IDE
 
 		private void TabStripFooter_Loaded(object sender, RoutedEventArgs e)
 		{
-			if (App.mainWindow.IsCustomizationSupported)
+			if (App.MainWindow.IsCustomizationSupported)
 			{
 				TabStripFooter.SizeChanged += TabStripFooter_SizeChanged;
 				TabStripFooter_SizeChanged(null, null);
@@ -2701,7 +2679,7 @@ namespace ConTeXt_IDE
 
 		private void TabStripFooter_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			if (App.mainWindow.IsCustomizationSupported && App.mainWindow.AW != null)
+			if (App.MainWindow.IsCustomizationSupported && App.MainWindow.AW != null)
 			{
 				if (scale == 0d)
 				{
@@ -2717,15 +2695,15 @@ namespace ConTeXt_IDE
 				if (scale == XamlRoot.RasterizationScale)
 				{
 
-					App.mainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+					App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
 				}
 				else
 				{
 					scale = XamlRoot.RasterizationScale;
-					App.mainWindow.AW.TitleBar.ResetToDefault();
-					App.mainWindow.ResetTitleBar();
+					App.MainWindow.AW.TitleBar.ResetToDefault();
+					App.MainWindow.ResetTitleBar();
 					SetColor();
-					App.mainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+					App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
 				}
 			}
 			else
@@ -2776,10 +2754,11 @@ namespace ConTeXt_IDE
 		private void DocumentationView_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
 		{
 			e.Data.RequestedOperation = DataPackageOperation.Copy;
+
 			var command = (Command)e.Items.FirstOrDefault();
 			if (command != null)
 			{
-			string texttopaste = GetCommandString(command);
+				string texttopaste = GetCommandString(command);
 				e.Data.SetText(texttopaste);
 				e.Items[0] = texttopaste;
 			}
@@ -2795,9 +2774,14 @@ namespace ConTeXt_IDE
 
 		private void DocumentationView_RightTapped(object sender, RightTappedRoutedEventArgs e)
 		{
-			ListView listView = (ListView)sender;
-			DocumentationViewContextMenu.ShowAt(listView, e.GetPosition(listView));
-			tappedCommand = (Command)((FrameworkElement)e.OriginalSource).DataContext;
+			if (((FrameworkElement)e.OriginalSource).DataContext is Command cmd)
+			{
+				ListView listView = (ListView)sender;
+				DocumentationViewContextMenu.ShowAt(listView, e.GetPosition(listView));
+				tappedCommand = cmd;
+			}
+			else
+				tappedCommand = null;
 		}
 		private Command tappedCommand = null;
 		private void DocumentationViewContextMenu_Click(object sender, RoutedEventArgs e)

@@ -31,17 +31,25 @@ namespace ConTeXt_IDE
 		{
 			InitializeComponent();
 			IsCustomizationSupported = AppWindowTitleBar.IsCustomizationSupported();
+			AW = GetAppWindowForCurrentWindow();
+			AW.Title = "ConTeXt IDE";
+			AW.Closing += AW_Closing;
+			AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets\", @"SquareLogo.ico"));
+			//AW.SetPresenter(VM.Default.LastPresenter);
+
+			if (VM.Default.IsMaximized && AW.Presenter is OverlappedPresenter OP)
+			{
+				// OP.SetBorderAndTitleBar(false, true);
+			}
+			else
+			{
+				AW.MoveAndResize(VM.Default.LastSize);
+			}
 
 			if (IsCustomizationSupported)
 			{
-				AW = GetAppWindowForCurrentWindow();
 				AW.TitleBar.ExtendsContentIntoTitleBar = true;
-
 				CustomDragRegion.Height = 0;
-
-				AW.Title = "ConTeXt IDE";
-				AW.Closing += AW_Closing;
-				AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets\", @"SquareLogo.ico"));
 			}
 			else
 			{
@@ -71,12 +79,22 @@ namespace ConTeXt_IDE
 		{
 			args.Cancel = true;
 			bool canceled = false;
+			VM.Default.LastSize = new(sender.Position.X, sender.Position.Y, sender.Size.Width, sender.Size.Height);
+			VM.Default.LastPresenter = sender.Presenter.Kind;
+			if (sender.Presenter is OverlappedPresenter OP)
+			{
+				VM.Default.IsMaximized = OP.State == OverlappedPresenterState.Maximized;
+			}
 			if (RootFrame.Content is MainPage MP)
 			{
 				canceled = await MP?.MainPage_CloseRequested();
 			}
 			if (!canceled)
-				App.Current.Exit();
+			{
+				Application.Current.Exit();
+				Environment.Exit(0);
+				sender.Destroy();
+			}
 		}
 
 
@@ -157,7 +175,7 @@ namespace ConTeXt_IDE
 			{
 				VM.Default.EvergreenInstalled = true;
 				VM.InfoMessage("Success!", "The editor and viewer controls are now fully operational.", InfoBarSeverity.Success);
-				VM.IsVisible = false;
+				VM.IsLoadingBarVisible = false;
 				await Task.Delay(2500);
 				VM.IsIndeterminate = true;
 				RootFrame.Navigate(typeof(MainPage));
@@ -165,7 +183,7 @@ namespace ConTeXt_IDE
 			else
 			{
 				VM.InfoMessage("Error", "Something went wrong. Please try again later.", InfoBarSeverity.Error);
-				VM.IsVisible = false;
+				VM.IsLoadingBarVisible = false;
 			}
 		}
 
@@ -202,14 +220,22 @@ namespace ConTeXt_IDE
 		}
 		private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
 		{
-			if (IsCustomizationSupported)
+			if (IsCustomizationSupported) // Evergreen is preinstalled in W11
+			{
 				VM.Default.EvergreenInstalled = true;
+			}
+
+			if (AW.Presenter is OverlappedPresenter OP)
+			{
+				if (VM.Default.IsMaximized)
+					OP.Maximize();
+			}
 
 			try
 			{
 				if (!VM.Default.EvergreenInstalled)
 				{
-					string RegKey = System.Environment.Is64BitOperatingSystem ? @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" : @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
+					string RegKey = Environment.Is64BitOperatingSystem ? @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" : @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
 					var version = Registry.GetValue(RegKey, "pv", null);
 					VM.Default.EvergreenInstalled = version != null && !string.IsNullOrWhiteSpace(version?.ToString());
 				}

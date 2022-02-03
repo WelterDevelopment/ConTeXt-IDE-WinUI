@@ -1,6 +1,7 @@
 ﻿
 using CodeEditorControl_WinUI;
 using ConTeXt_IDE.Helpers;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Newtonsoft.Json;
 using System;
@@ -10,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Windows.ApplicationModel;
+using Windows.Graphics;
 using Windows.Storage;
 using Windows.UI;
 
@@ -159,7 +161,7 @@ namespace ConTeXt_IDE.Models
 		public bool FirstStart { get => Get(true); set => Set(value); }
 		public bool HelpPDFInInternalViewer { get => Get(false); set => Set(value); }
 		public bool InternalViewer { get => Get(true); set => Set(value); }
-		public bool MultiInstance { get => Get(false); set => Set(value); }
+		public bool MultiInstance { get => Get(true); set => Set(value); }
 		public bool ShowLog { get => Get(false); set => Set(value); }
 		public bool ShowCompilerOutput { get => Get(false); set => Set(value); }
 		public bool ShowOutline { get => Get(true); set => Set(value); }
@@ -176,6 +178,7 @@ namespace ConTeXt_IDE.Models
 		public bool TextWrapping { get => Get(false); set => Set(value); }
 		public bool LineNumbers { get => Get(true); set => Set(value); }
 		public bool LineMarkers { get => Get(true); set => Set(value); }
+		public bool ShowScrollBars { get => Get(false); set => Set(value); }
 		public bool ScrollbarMarkers { get => Get(true); set => Set(value); }
 		public bool CodeFolding { get => Get(false); set => Set(value); }
 		public bool ControlCharacters { get => Get(false); set => Set(value); }
@@ -186,6 +189,10 @@ namespace ConTeXt_IDE.Models
 		public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
 		public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
 		public string LastActiveProject { get => Get(""); set => Set(value); }
+		public RectInt32 LastSize { get => Get(new RectInt32(24,24,1600,800)); set => Set(value); }
+
+		public AppWindowPresenterKind LastPresenter { get => Get(AppWindowPresenterKind.Default); set => Set(value); }
+		public bool IsMaximized { get => Get(false); set => Set(value); }
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }

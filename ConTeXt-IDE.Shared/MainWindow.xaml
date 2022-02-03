@@ -11,12 +11,12 @@
     mc:Ignorable="d" >
 
 
-	<Grid HorizontalAlignment="Stretch" DataContext="{x:Bind VM}"  >
+	<Grid HorizontalAlignment="Stretch" DataContext="{x:Bind VM}" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}"  >
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
-		<Grid Visibility="Visible" Grid.Row="0"   x:Name="CustomDragRegion"  IsHitTestVisible="False" Background="{Binding AccentBrushLow, Source={StaticResource AccentColorSetting}}">
+		<Grid Visibility="Visible" Grid.Row="0"   x:Name="CustomDragRegion"  IsHitTestVisible="False" Background="{Binding AccentBrushLow, Source={StaticResource AccentColorSetting}, Mode=OneWay}">
 			<Grid.BackgroundTransition>
 				<BrushTransition/>
 			</Grid.BackgroundTransition>

@@ -29,7 +29,6 @@
 				<Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
 			</Style>
 
-			
 
 			<Style TargetType="Grid" x:Key="GridCell">
 				<Setter Property="Padding" Value="12,12,12,12"></Setter>
@@ -74,9 +73,13 @@
 			<CornerRadius x:Key="CornerRadiusRight">0,4,4,0</CornerRadius>
 			<CornerRadius x:Key="CornerRadiusLeft">4,0,0,4</CornerRadius>
 
+			<!--<StaticResource x:Key="TabViewBorderBrush" ResourceKey="CardStrokeColorDefault" />-->
+		
+
 			<Style  TargetType="ContentDialog" >
 				<Setter Property="CornerRadius" Value="{StaticResource LargeCornerRadius}"></Setter>
 			</Style>
+			
 			<Style  TargetType="FlyoutPresenter" >
 				<Setter Property="CornerRadius" Value="{StaticResource LargeCornerRadius}"></Setter>
 			</Style>
@@ -93,6 +96,7 @@
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
 				<Setter Property="BorderThickness" Value="1"></Setter>
 			</Style>
+
 
 			<Style  TargetType="TextBlock" x:Key="BtnTextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}" >
 			</Style>
@@ -210,22 +214,23 @@
 			<SolidColorBrush x:Key="TabViewItemSeparator" Color="Transparent"></SolidColorBrush>
 			
 			<ResourceDictionary.ThemeDictionaries>
-				<ResourceDictionary x:Key="Dark">
+				<ResourceDictionary x:Key="Default">
 					<ResourceDictionary.MergedDictionaries>
 						<!--<ColorPaletteResources  Accent="ForestGreen"  BaseHigh="Yellow" BaseLow="Orange" BaseMedium="Red" BaseMediumHigh="Violet" BaseMediumLow="Blue" />-->
 						<!--<ColorPaletteResources Accent="#FFBFCF36" AltHigh="#FFFFFFFF" AltLow="#FFFFFFFF" AltMedium="#FFFFFFFF" AltMediumHigh="#FFFFFFFF" AltMediumLow="#FFFFFFFF" BaseHigh="#FF000000" BaseLow="#FFCCCCCC" BaseMedium="#FF898989" BaseMediumHigh="#FF5D5D5D" BaseMediumLow="#FF737373" ChromeAltLow="#FF5D5D5D" ChromeBlackHigh="#FF000000" ChromeBlackLow="#FFCCCCCC" ChromeBlackMedium="#FF5D5D5D" ChromeBlackMediumLow="#FF898989" ChromeDisabledHigh="#FFCCCCCC" ChromeDisabledLow="#FF898989" ChromeGray="#FF737373" ChromeHigh="#FFCCCCCC" ChromeLow="#FFECECEC" ChromeMedium="#FFE6E6E6" ChromeMediumLow="#FFECECEC" ChromeWhite="#FFFFFFFF" ListLow="#FFE6E6E6" ListMedium="#FFCCCCCC" />-->
 					</ResourceDictionary.MergedDictionaries>
 					<SolidColorBrush x:Key="WindowCaptionForeground">#FFF</SolidColorBrush>
 					<SolidColorBrush x:Key="WindowCaptionForegroundDisabled">#DDD</SolidColorBrush>
-					
+
+					<SolidColorBrush x:Key="TabViewBorderBrush" Color="Transparent"></SolidColorBrush>
+					<Color x:Key="CardStrokeColorDefault">Transparent</Color>
+
 					<Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
 					<Color x:Key="SystemAccentColorDark2" >DarkGray</Color>
 
 					<Color x:Key="ForegroundColor">#FFF</Color>
 					<Color x:Key="BackgroundColor">#000</Color>
 					<Color x:Key="ForegroundLightColor">#AAA</Color>
-
-					<!--<StaticResource x:Key="SystemBaseHighColor" ResourceKey="ForegroundColor"></StaticResource>-->
 				</ResourceDictionary>
 
 				<ResourceDictionary x:Key="HighContrast">

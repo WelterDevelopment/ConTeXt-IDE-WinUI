@@ -19,6 +19,12 @@
 	<Page.Resources>
 		<DataTemplate x:Key="FolderTemplate" x:DataType="models:FileItem">
 			<models:MyTreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" CanDrag="False" ToolTipService.ToolTip="{Binding FileName}" HorizontalContentAlignment="Left" ItemsSource="{x:Bind Children}">
+				<models:MyTreeViewItem.ContentTransitions>
+					<TransitionCollection></TransitionCollection>
+				</models:MyTreeViewItem.ContentTransitions>
+				<models:MyTreeViewItem.Transitions>
+					<TransitionCollection></TransitionCollection>
+				</models:MyTreeViewItem.Transitions>
 				<models:MyTreeViewItem.ContextFlyout>
 					<MenuFlyout Placement="Bottom">
 						<MenuFlyoutItem x:Name="NewFile" Icon="Add" Click="NewFile_Click" Text="New File"></MenuFlyoutItem>
@@ -44,10 +50,6 @@
 						<MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
 					</MenuFlyout>
 				</models:MyTreeViewItem.ContextFlyout>
-				<animations:Implicit.Animations>
-					<animations:TranslationAnimation Duration="0:0:0.25" From="-50, 0, 0" To="0" ></animations:TranslationAnimation>
-					<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
-				</animations:Implicit.Animations>
 				<StackPanel Margin="0" Orientation="Horizontal">
 					<SymbolIcon Width="20" Symbol="Document"></SymbolIcon>
 					<TextBlock Text="{Binding FileName, Mode=OneWay}" FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" />
@@ -57,6 +59,12 @@
 
 		<DataTemplate x:Key="ProjectFolderTemplate" x:DataType="models:FileItem">
 			<models:MyTreeViewItem CanDrag="False" HorizontalAlignment="Stretch" ToolTipService.ToolTip="{Binding File.Path}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}" ItemsSource="{x:Bind Children}">
+				<models:MyTreeViewItem.ContentTransitions>
+					<TransitionCollection></TransitionCollection>
+				</models:MyTreeViewItem.ContentTransitions>
+				<models:MyTreeViewItem.Transitions>
+					<TransitionCollection></TransitionCollection>
+				</models:MyTreeViewItem.Transitions>
 				<models:MyTreeViewItem.ContextFlyout>
 					<MenuFlyout Placement="Bottom">
 						<MenuFlyoutItem x:Name="NewFile" Icon="Add" Click="NewFile_Click" Text="New File"></MenuFlyoutItem>
@@ -65,7 +73,7 @@
 						<MenuFlyoutItem x:Name="ViewInExplorer" Icon="OpenFile" Click="OpeninExplorer_Click" Text="Open in Explorer"></MenuFlyoutItem>
 					</MenuFlyout>
 				</models:MyTreeViewItem.ContextFlyout>
-				<Grid HorizontalAlignment="Stretch" ColumnSpacing="6">
+				<Grid HorizontalAlignment="Stretch" ColumnSpacing="6" Margin="0,0,16,0">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="Auto" />
 						<ColumnDefinition Width="*" />
@@ -180,7 +188,7 @@
 			AssignmentsTemplate="{StaticResource AssignmentsTemplate}"
 			/>
 
-		<CollectionViewSource x:Key="cvs" x:Name="cvs" IsSourceGrouped="True" />
+		<CollectionViewSource x:Key="cvs" x:Name="cvs" IsSourceGrouped="True"  />
 	</Page.Resources>
 
 	<Grid x:Name="RootGrid" Background="{Binding AccentBrushLow, Source={StaticResource AccentColorSetting}}">
@@ -198,9 +206,11 @@
 			<TabView.TabStripHeader>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Height="28" Margin="4,0,4,-4" Spacing="0" x:Name="TabStripHeader" Background="Transparent">
 
-					<Button VerticalAlignment="Stretch" Padding="2"  Background="Transparent">
+					<Button VerticalAlignment="Stretch" Padding="2"  MinWidth="28"  Background="Transparent">
 						<Button.Content>
-							<Image  Source="ms-appx:///Assets/SquareLogo.png"/>
+							<!--<BitmapIcon Foreground="{ThemeResource ForegroundColor}" UriSource="ms-appx:///Assets/SquareLogo.png" ></BitmapIcon>-->
+							<!--<Image  Source="ms-appx:///Assets/SquareLogo.png"/>-->
+							<FontIcon FontSize="14" Glyph="&#xE713;"></FontIcon>
 						</Button.Content>
 						<Button.Flyout >
 							<MenuFlyout Placement="Bottom">
@@ -286,7 +296,11 @@
 									<TreeView Margin="-12,0,0,0" MaxWidth="300" Padding="-6,0,0,0" Grid.Row="0" SelectionMode="None"   ScrollViewer.VerticalScrollBarVisibility="Auto"  ItemTemplateSelector="{StaticResource ExplorerItemTemplateSelector}" ItemsSource="{Binding CurrentProject.Directory, Mode=OneWay}" 
 					  CanReorderItems="False" AllowDrop="False" DragItemsStarting="TreeView_DragItemsStarting"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" >
 										<TreeView.ItemContainerTransitions>
+											<TransitionCollection />
 										</TreeView.ItemContainerTransitions>
+										<TreeView.Transitions>
+											<TransitionCollection></TransitionCollection>
+										</TreeView.Transitions>
 									</TreeView>
 								</Flyout>
 							</DropDownButton.Flyout>
@@ -574,6 +588,15 @@
 								</ToggleButton.Content>
 							</ToggleButton>
 
+							<ToggleButton IsChecked="{Binding Default.ShowScrollBars, Mode=TwoWay}">
+								<ToggleButton.Content>
+									<StackPanel Orientation="Horizontal" >
+										<FontIcon Glyph="&#xece7;"></FontIcon>
+										<TextBlock  Text="Scrollbars" ></TextBlock>
+									</StackPanel>
+								</ToggleButton.Content>
+							</ToggleButton>
+
 							<ToggleButton IsChecked="{Binding Default.ControlCharacters, Mode=TwoWay}">
 								<ToggleButton.Content>
 									<StackPanel Orientation="Horizontal" >
@@ -583,14 +606,14 @@
 								</ToggleButton.Content>
 							</ToggleButton>
 
-							<ToggleButton IsEnabled="False" ToolTipService.ToolTip="Text wrapping is not yet implemented. Please wait for the next releases of ConTeXt IDE." IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
+							<!--<ToggleButton IsEnabled="False" ToolTipService.ToolTip="Text wrapping is not yet implemented. Please wait for the next releases of ConTeXt IDE." IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
 								<ToggleButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<FontIcon Glyph="&#xe8e4;"></FontIcon>
 										<TextBlock  Text="Text wrapping (α)" ></TextBlock>
 									</StackPanel>
 								</ToggleButton.Content>
-							</ToggleButton>
+							</ToggleButton>-->
 
 							<!--<ToggleButton IsEnabled="False" IsChecked="{Binding Default.CodeFolding, Mode=TwoWay}">
                                 <ToggleButton.Content>
@@ -768,7 +791,18 @@
 					<ScrollViewer Style="{StaticResource RibbonView}">
 						<StackPanel Style="{StaticResource RibbonContent}">
 							<TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Theme:"></TextBlock>
-							<ComboBox CornerRadius="{StaticResource CornerRadiusRight}" ItemsSource="{Binding Default.ThemeOption}" SelectionChangedTrigger="Always" DropDownClosed="CbB_Theme_SelectionChanged" SelectedItem="{Binding Default.Theme, Mode=TwoWay}"  FontFamily="Segoe UI"/>
+							<ComboBox CornerRadius="{StaticResource CornerRadiusRight}" ItemsSource="{Binding Default.ThemeOption}" SelectionChangedTrigger="Always" DropDownClosed="CbB_Theme_SelectionChanged" SelectedItem="{Binding Default.Theme, Mode=TwoWay}"  FontFamily="Segoe UI"  >
+								<ComboBox.Resources>
+									<Style TargetType="Popup">
+										<Setter Property="RequestedTheme" Value="{x:Bind RequestedTheme}"></Setter>
+									</Style>
+								</ComboBox.Resources>
+								<!--<ComboBox.ItemsPanel>
+									<ItemsPanelTemplate>
+										<ItemsPresenter ></ItemsPresenter>
+									</ItemsPanelTemplate>
+								</ComboBox.ItemsPanel>-->
+							</ComboBox>
 
 							<TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Accent color:"></TextBlock>
 							<DropDownButton ToolTipService.ToolTip="Select an accent color" Padding="0,0,6,0" CornerRadius="{StaticResource CornerRadiusRight}">
@@ -945,7 +979,7 @@
 
 
 
-							<DropDownButton ToolTipService.ToolTip="Manage ConTeXt modules"  IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" >
+							<DropDownButton ToolTipService.ToolTip="Manage ConTeXt modules"  IsEnabled="{Binding IsInstalling, Mode=OneWay, Converter={StaticResource BoolInverter}}" >
 								<DropDownButton.Content>
 									<StackPanel Orientation="Horizontal" >
 										<SymbolIcon Symbol="AllApps"></SymbolIcon>
@@ -994,7 +1028,7 @@
 								</DropDownButton.Flyout>
 							</DropDownButton>
 
-							<Button Visibility="{Binding Default.DistributionInstalled, Mode=OneWay}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Update ConTeXt distribution"   Click="Update_Click" >
+							<Button Visibility="{Binding Default.DistributionInstalled, Mode=OneWay}" IsEnabled="{Binding IsInstalling, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Update ConTeXt distribution"   Click="Update_Click" >
 								<Button.Content>
 									<StackPanel Orientation="Horizontal">
 										<FontIcon Glyph="&#xECC5;" ></FontIcon>
@@ -1039,7 +1073,7 @@
 						<RowDefinition x:Name="ProjectsGridLibraryRow" Height="{Binding Default.ShowOutline, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=*}"></RowDefinition>
 					</Grid.RowDefinitions>
 
-					<Grid x:Name="ProjectsGridCurrent" Grid.Row="0" Style="{StaticResource GridCell}">
+					<Grid x:Name="ProjectsGridCurrent" Grid.Row="0" Style="{StaticResource GridCell}" Padding="0,12,6,12">
 						<Grid.BackgroundTransition>
 							<BrushTransition />
 						</Grid.BackgroundTransition>
@@ -1051,15 +1085,14 @@
 							<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
 						</animations:Implicit.ShowAnimations>
 
-						<TreeView Margin="-12,0,0,0" Padding="-6,0,0,0" Grid.Row="0" SelectionMode="None"   ScrollViewer.VerticalScrollBarVisibility="Auto"  ItemTemplateSelector="{StaticResource ExplorerItemTemplateSelector}" ItemsSource="{Binding CurrentProject.Directory, Mode=OneWay}" 
+						<TreeView  Grid.Row="0" SelectionMode="None"   ScrollViewer.VerticalScrollBarVisibility="Auto"  ItemTemplateSelector="{StaticResource ExplorerItemTemplateSelector}" ItemsSource="{Binding CurrentProject.Directory, Mode=OneWay}" 
 					  CanReorderItems="False" AllowDrop="False" DragItemsStarting="TreeView_DragItemsStarting"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" >
 							<TreeView.ItemContainerTransitions>
-								<TransitionCollection>
-									<AddDeleteThemeTransition ></AddDeleteThemeTransition>
-									<!--<ContentThemeTransition></ContentThemeTransition>-->
-									<EntranceThemeTransition></EntranceThemeTransition>
-								</TransitionCollection>
+								<TransitionCollection />
 							</TreeView.ItemContainerTransitions>
+							<TreeView.Transitions>
+								<TransitionCollection></TransitionCollection>
+							</TreeView.Transitions>
 						</TreeView>
 					</Grid>
 
@@ -1133,7 +1166,7 @@
 								<RowDefinition Height="Auto"></RowDefinition>
 								<RowDefinition Height="*"></RowDefinition>
 							</Grid.RowDefinitions>
-							<Grid Margin="6,6,6,0" CornerRadius="2" Background="#33fff700" x:Name="ErrorGrid" Grid.Row="0" Visibility="{Binding IsError}">
+							<Grid Margin="6,6,6,0" CornerRadius="2" Background="#33fff700" x:Name="ErrorGrid" Grid.Row="0" Visibility="{Binding IsTeXError}">
 								<ScrollViewer MaxHeight="200" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Hidden">
 									<Grid  Padding="6,6,6,6"  ColumnSpacing="6" >
 										<Grid.Resources>
@@ -1246,7 +1279,7 @@
 															<RowDefinition Height="Auto" />
 														</Grid.RowDefinitions>
 														<Grid >
-															<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" Initialized="Codewriter_Initialized" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" TabLength="{Binding Default.TabLength, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowLineMarkers="{Binding Default.LineMarkers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers, Source={StaticResource VM}}" IsWrappingEnabled="{Binding Default.TextWrapping, Source={StaticResource VM}}" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
+															<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" Initialized="Codewriter_Initialized" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay, Source={StaticResource VM}}" TabLength="{Binding Default.TabLength, Source={StaticResource VM}}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers, Source={StaticResource VM}}" ShowScrollbars="{Binding Default.ShowScrollBars, Source={StaticResource VM}}" ShowLineMarkers="{Binding Default.LineMarkers, Source={StaticResource VM}}" ShowControlCharacters="{Binding Default.ControlCharacters,Source={StaticResource VM}}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers, Source={StaticResource VM}}" IsWrappingEnabled="{Binding Default.TextWrapping, Source={StaticResource VM}}" IsFoldingEnabled="False" Text="{Binding FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentLine, Mode=TwoWay}"  ></codeeditor:CodeWriter>
 														</Grid>
 														<!--<codeeditor:CodeWriter  Loaded="Codewriter_Loaded" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Source={StaticResource VM}}" Language="{Binding Language, Mode=OneWay}"  Text="{Binding FileContent, Mode=OneWay}"  ></codeeditor:CodeWriter>-->
 														<Grid  Grid.Row="1" MaxHeight="24" Padding="2">
@@ -1426,7 +1459,7 @@
 
 					<SemanticZoom ViewChangeStarted="SemanticZoom_ViewChangeStarted" >
 						<SemanticZoom.ZoomedInView>
-							<ListView x:Name="DocumentationView" IsRightTapEnabled="True" RightTapped="DocumentationView_RightTapped" ShowsScrollingPlaceholders="False" Grid.Row="0"  Background="Transparent" SelectionMode="Single" ItemsSource="{x:Bind cvs.View}"   SelectedItem="{Binding SelectedCommand, Mode=OneWay}" IsItemClickEnabled="True" CanDragItems="True" DragOver="DocumentationView_DragOver" DragItemsStarting="DocumentationView_DragItemsStarting" AllowDrop="False"  ItemClick="DocumentationView_ItemClick" Padding="4,4,12,4" >
+							<ListView x:Name="DocumentationView" IsRightTapEnabled="True" RightTapped="DocumentationView_RightTapped" ShowsScrollingPlaceholders="False" Grid.Row="0"  Background="Transparent" SelectionMode="Single" ItemsSource="{x:Bind cvs.View}"   SelectedItem="{Binding SelectedCommand, Mode=OneWay}" IsItemClickEnabled="True" CanDragItems="True" DragOver="DocumentationView_DragOver" DragItemsStarting="DocumentationView_DragItemsStarting" AllowDrop="False"  ItemClick="DocumentationView_ItemClick"  Padding="4,4,12,4" >
 								<ListView.Resources>
 									<x:Double x:Key="ListViewItemMinHeight">32</x:Double>
 									<x:Double x:Key="ListViewItemMinWidth">6</x:Double>
@@ -1631,7 +1664,7 @@
 						</SemanticZoom.ZoomedOutView>
 					</SemanticZoom>
 
-					<StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Orientation="Horizontal" Margin="0,4,16,0" Spacing="4">
+					<StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Orientation="Horizontal" Margin="0,5,16,0" Spacing="4">
 						<ToggleButton ToolTipService.ToolTip="Only show favorites" IsChecked="{Binding Default.FilterFavorites, Mode=TwoWay}" Click="FilterFavorites_Checked" Padding="4" Width="32">
 							<FontIcon FontSize="16" Foreground="{ThemeResource ForegroundColor}" Glyph="&#xE735;"></FontIcon>
 						</ToggleButton>
@@ -1656,7 +1689,7 @@
 
 				</Grid>
 			</Grid>
-			<ProgressBar Name="Progressbar" Grid.Row="1" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Background="{ThemeResource SolidBackgroundFillColorTertiary }" Visibility="{Binding IsVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">
+			<ProgressBar Name="Progressbar" Grid.Row="1" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Background="{ThemeResource SolidBackgroundFillColorTertiary }" Visibility="{Binding IsLoadingBarVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">
 				<animations:Implicit.ShowAnimations>
 					<animations:OpacityAnimation Duration="0:0:0.5" From="0" To="1"></animations:OpacityAnimation>
 				</animations:Implicit.ShowAnimations>

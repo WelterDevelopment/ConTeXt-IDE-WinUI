@@ -246,21 +246,23 @@ namespace ConTeXt_IDE.ViewModels
 			{
 				if (value != null)
 				{
-					IsProjectLoaded = value.Folder != null;
-
 					if (value.Folder == null && value.Name != null)
 					{
 						StorageFolder f = StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(value.Name).AsTask().Result;
 						value.Folder = f;
 					}
+					IsProjectLoaded = value.Folder != null;
 					if (value.Folder != null)
 					{
 						FileItemsTree?.Clear();
 						FileItems?.Clear();
+						watcher?.Dispose();
 						GenerateTreeView(value.Folder, value.RootFile);
 						value.Directory = FileItemsTree;
 						Default.LastActiveProject = value.Name;
 						IsProjectLoaded = true;
+						IsTeXError = false;
+						App.MainWindow.AW.Title = "ConTeXt IDE: " + value.Name;
 						Log("Project " + value.Name + " loaded.");
 					}
 				}
@@ -359,8 +361,9 @@ namespace ConTeXt_IDE.ViewModels
 		public Color SystemAccentColor { get => Get((new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent)); set => Set(value); }
 
 		public bool IsError { get => Get(false); set => Set(value); }
+		public bool IsTeXError { get => Get(false); set => Set(value); }
 
-		public bool IsIndeterminate { get => Get(true); set => Set(value); }
+		public bool IsIndeterminate { get => Get(true); set { if (!IsInstalling) Set(value); } }
 
 		public int ProgressValue { get => Get(0); set => Set(value); }
 
@@ -376,9 +379,13 @@ namespace ConTeXt_IDE.ViewModels
 
 		public bool IsProjectLoaded { get => Get(false); set => Set(value); }
 
-		public bool IsSaving { get => Get(false); set { Set(value); if (value) { IsVisible = true; IsPaused = false; } if (!value && !IsError) { IsVisible = false; } } }
+		public bool IsSaving { get => Get(false); set { Set(value); 
+				if (value) { IsLoadingBarVisible = true; IsPaused = false; }
+				if (!value && !IsInstalling) { IsLoadingBarVisible = false; } } }
 
-		public bool IsVisible { get => Get(false); set => Set(value); }
+		public bool IsInstalling { get => Get(false); set { Set(value); if (value) { IsLoadingBarVisible = true; IsPaused = false; } if (!value && !IsSaving) { IsLoadingBarVisible = false; } } }
+
+		public bool IsLoadingBarVisible { get => Get(false); set => Set(value); }
 
 		public string NVHead { get => Get(""); set => Set(value); }
 
@@ -433,7 +440,7 @@ namespace ConTeXt_IDE.ViewModels
 		public string SelectedPath { get => Get(""); set => Set(value); }
 
 
-
+		FileSystemWatcher watcher;
 		public async Task GenerateTreeView(StorageFolder folder, string rootfile = null)
 		{
 			rootFile = rootfile;
@@ -444,6 +451,115 @@ namespace ConTeXt_IDE.ViewModels
 				await DirWalk(folder);
 				if (CurrentRootItem != null)
 					OpenFile(CurrentRootItem, true);
+
+
+				watcher = new FileSystemWatcher(folder.Path) { IncludeSubdirectories = true, EnableRaisingEvents = true };
+
+				watcher.NotifyFilter = NotifyFilters.DirectoryName
+																															| NotifyFilters.FileName
+																															| NotifyFilters.LastWrite;
+				watcher.Created += (a, b) =>
+				{
+					string filename = Path.GetFileName(b.FullPath);
+					bool iscompiledpdf = (filename.StartsWith("project_") | filename.StartsWith("prd_") | filename.StartsWith("c_") | filename.StartsWith("env_") | filename.StartsWith("p-") | filename.StartsWith("t-")) && filename.EndsWith(".pdf");
+					if (!b.FullPath.EndsWith("~tmp") && !cancelWords.Contains(Path.GetExtension(b.FullPath)) && !iscompiledpdf)
+					{
+						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						{
+							var item = await GetStorageItem(b.FullPath);
+							if (item != null)
+							{
+								var fi = new FileItem(item);
+
+								var info = Directory.GetParent(item.Path);
+
+								var containingfolder = CurrentProject.GetDirectoryByPath(CurrentProject.Directory[0], info.FullName);
+								if (containingfolder != null)
+								{
+									AddFileItemAplphabetically(containingfolder.Children, fi);
+									Log($"{fi.Type.ToString()} {b.Name} created.");
+								}
+							}
+						});
+					}
+				};
+				watcher.Renamed += (a, b) =>
+				{
+					if (!b.FullPath.EndsWith("~tmp") && !b.OldFullPath.EndsWith("~tmp"))
+					{
+						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						{
+							var item = await GetStorageItem(b.FullPath);
+							if (item != null)
+							{
+								var fi = CurrentProject.GetFileItemByPath(CurrentProject?.Directory[0], b.OldFullPath);
+								if (fi != null)
+								{
+									fi.File = item;
+									fi.FileName = item.Name;
+									if (fi.File is StorageFile sf)
+									{
+										fi.FileLanguage = FileItem.GetFileType(sf.FileType);
+									}
+									Log($"{fi.Type.ToString()} {b.OldName} was renamed to {b.Name}.");
+								}
+							}
+						});
+					}
+				};
+				watcher.Deleted += (a, b) =>
+				{
+					if (!b.FullPath.EndsWith("~tmp"))
+					{
+						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+					{
+
+						var fi = CurrentProject.RemoveFileItemByPath(CurrentProject?.Directory[0], b.FullPath);
+						if (fi != null)
+							Log($"{(fi.Type == FileItem.ExplorerItemType.File ? "File" : "Folder")} {b.Name} deleted.");
+						//var item = await GetStorageItem(b.FullPath);
+						//if (item != null)
+						//{
+
+						//}
+					});
+					}
+				};
+				watcher.Changed += (a, b) =>
+				{
+					if (!b.FullPath.EndsWith("~tmp") && !b.FullPath.EndsWith(".TMP") && b.ChangeType == WatcherChangeTypes.Changed)
+					{
+						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						{
+							try
+							{
+								if (Directory.Exists(b.FullPath))
+									return;
+								var item = await GetStorageItem(b.FullPath);
+								if (item != null)
+								{
+									var fileitem = CurrentProject.GetFileItemByPath(CurrentProject?.Directory[0], b.FullPath);
+
+									if (fileitem != null && fileitem.Type == FileItem.ExplorerItemType.File)
+									{
+										string changedtext = await File.ReadAllTextAsync(b.FullPath);
+										if (fileitem.FileContent != changedtext)
+										{
+											fileitem.LastSaveFileContent = changedtext;
+											fileitem.FileContent = changedtext;
+											Log($"File {b.Name} was changed outside of the app.");
+										}
+									}
+								}
+							}
+							catch
+							{
+
+							}
+						});
+					}
+				};
+
 				// return true;
 			}
 			else
@@ -453,7 +569,80 @@ namespace ConTeXt_IDE.ViewModels
 			}
 			return;
 		}
-		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua", ".synctex" };
+
+		async Task<IStorageItem> GetStorageItem(string path)
+		{
+			try
+			{
+				if (Directory.Exists(path))
+					return await StorageFolder.GetFolderFromPathAsync(path);
+
+				else if (File.Exists(path))
+					return await StorageFile.GetFileFromPathAsync(path);
+
+				else
+					return null;
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
+		public void AddFileItemAplphabetically(ObservableCollection<FileItem> Children, FileItem fi)
+		{
+			int count = Children.Count;
+			if (count == 0)
+			{
+				Children.Add(fi);
+				return;
+			}
+
+			var lastItem = Children.LastOrDefault(x => x.Type == fi.Type);
+			if (lastItem != null)
+			{
+				if (fi.CompareTo(lastItem) > 0)
+				{
+					if (Children.IndexOf(lastItem) < Children.Count - 1)
+						Children.Insert(Children.IndexOf(lastItem) + 1, fi);
+					else
+						Children.Add(fi);
+					return;
+				}
+			}
+			else
+			{
+				if (fi.Type == FileItem.ExplorerItemType.Folder)
+				{
+					Children.Insert(0, fi);
+				}
+				else
+				{
+					Children.Add(fi);
+				}
+				return;
+			}
+
+			if (fi.CompareTo(Children.Last()) > 0)
+			{
+				Children.Add(fi);
+			}
+			else
+			{
+				int insertindex = 0;
+				for (int i = 0; i < count; i++)
+				{
+					if (Children[i].CompareTo(fi) > 0 && Children[i].Type == fi.Type)
+					{
+						insertindex = i;
+						break;
+					}
+				}
+				Children.Insert(insertindex, fi);
+			}
+		}
+
+		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua", ".synctex", ".syncctx" };
 		private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf", ".synctex" };
 		private async Task DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
 		{
@@ -698,6 +887,7 @@ namespace ConTeXt_IDE.ViewModels
 		{
 			JumpList jl = await JumpList.LoadCurrentAsync();
 			jl.Items.Clear();
+			await jl.SaveAsync();
 
 			jl.SystemGroupKind = JumpListSystemGroupKind.None;
 			foreach (var item in Default.ProjectList)
@@ -712,38 +902,31 @@ namespace ConTeXt_IDE.ViewModels
 			await jl.SaveAsync();
 		}
 
-		public async Task Startup()
+		public void Startup()
 		{
 			try
 			{
-				//HelpItems = PopulateHelpItems();
-				// UpdateRecentAccessList();
-
 				if (Default.StartWithLastActiveProject && !string.IsNullOrWhiteSpace(Default.LastActiveProject) && string.IsNullOrWhiteSpace(LaunchArguments))
 				{
 					RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
 					if (RecentAccessList.ContainsItem(Default.LastActiveProject))
 					{
 						IsSaving = true;
-						var folder = await RecentAccessList.GetFolderAsync(Default.LastActiveProject);
-						//var f = RecentAccessList.Entries.Where(x => x.Token == folder.Name).FirstOrDefault();
-						var list = Default.ProjectList.Where(x => x.Name == folder.Name);
+						var list = Default.ProjectList.Where(x => x.Name == Default.LastActiveProject);
 						if (list != null && list.Count() == 1)
 						{
 							var project = list.FirstOrDefault();
 							CurrentProject = project;
-							//await LoadProject(project);
 						}
 					}
 				}
 				else if (!string.IsNullOrWhiteSpace(LaunchArguments))
 				{
 					IsSaving = true;
-					var folder = await RecentAccessList.GetFolderAsync(LaunchArguments);
-					var list = Default.ProjectList.Where(x => x.Name == folder.Name);
+					var list = Default.ProjectList.Where(x => x.Name == LaunchArguments);
 					if (list != null && list.Count() == 1)
 					{
-						var project = list.FirstOrDefault();
+						var project = Default.ProjectList.FirstOrDefault(x => x.Name == LaunchArguments);
 						CurrentProject = project;
 					}
 				}
@@ -773,17 +956,15 @@ namespace ConTeXt_IDE.ViewModels
 					{
 						if (filetosave.IsChanged)
 						{
-
+							IsIndeterminate = true;
+							IsError = false;
 							IsSaving = true;
-							IsPaused = false;
 							string cont = filetosave.FileContent ?? " ";
 							var buffer = Windows.Security.Cryptography.CryptographicBuffer.ConvertStringToBinary(cont, Windows.Security.Cryptography.BinaryStringEncoding.Utf8);
 							await FileIO.WriteBufferAsync(CurrentFileItem.File as StorageFile, buffer);
 							filetosave.LastSaveFileContent = filetosave.FileContent;
 							filetosave.IsChanged = false;
 							IsSaving = false;
-							IsPaused = true;
-							IsVisible = false;
 							Log("File " + filetosave.File.Name + " saved");
 							UpdateOutline(filetosave.FileContent);
 						}
@@ -808,7 +989,6 @@ namespace ConTeXt_IDE.ViewModels
 					if (CurrentFileItem.File != null)
 					{
 						IsSaving = true;
-						IsPaused = false;
 						foreach (var item in FileItems)
 						{
 							if (item.IsChanged)
@@ -823,8 +1003,6 @@ namespace ConTeXt_IDE.ViewModels
 							}
 						}
 						IsSaving = false;
-						IsPaused = true;
-						IsVisible = false;
 					}
 				}
 				//else LOG("Error");

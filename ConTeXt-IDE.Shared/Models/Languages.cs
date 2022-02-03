@@ -13,6 +13,7 @@ namespace ConTeXt_IDE.Shared.Models
 			{
 				LineComment = "%",
 				AutoClosingPairs = new() { { '[', ']' }, { '{', '}' }, },
+				WordSelectionDefinitions = new() { /*language=regex*/ @"\b\w+?\b", /*language=regex*/ @"\\.+?\b" },
 				RegexTokens = new()
 				{
 					{ Token.Math, /*language=regex*/ @"\$.*?\$" },
