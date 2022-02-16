@@ -363,7 +363,7 @@ namespace ConTeXt_IDE.ViewModels
 		public bool IsError { get => Get(false); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
 
-		public bool IsIndeterminate { get => Get(true); set { if (!IsInstalling) Set(value); } }
+		public bool IsIndeterminate { get => Get(true); set { Set(value); } }
 
 		public int ProgressValue { get => Get(0); set => Set(value); }
 
@@ -379,9 +379,15 @@ namespace ConTeXt_IDE.ViewModels
 
 		public bool IsProjectLoaded { get => Get(false); set => Set(value); }
 
-		public bool IsSaving { get => Get(false); set { Set(value); 
+		public bool IsSaving
+		{
+			get => Get(false); set
+			{
+				Set(value);
 				if (value) { IsLoadingBarVisible = true; IsPaused = false; }
-				if (!value && !IsInstalling) { IsLoadingBarVisible = false; } } }
+				if (!value && !IsInstalling) { IsLoadingBarVisible = false; }
+			}
+		}
 
 		public bool IsInstalling { get => Get(false); set { Set(value); if (value) { IsLoadingBarVisible = true; IsPaused = false; } if (!value && !IsSaving) { IsLoadingBarVisible = false; } } }
 
@@ -452,6 +458,7 @@ namespace ConTeXt_IDE.ViewModels
 				if (CurrentRootItem != null)
 					OpenFile(CurrentRootItem, true);
 
+				watcher?.Dispose();
 
 				watcher = new FileSystemWatcher(folder.Path) { IncludeSubdirectories = true, EnableRaisingEvents = true };
 
@@ -956,7 +963,8 @@ namespace ConTeXt_IDE.ViewModels
 					{
 						if (filetosave.IsChanged)
 						{
-							IsIndeterminate = true;
+							if (!IsInstalling)
+								IsIndeterminate = true;
 							IsError = false;
 							IsSaving = true;
 							string cont = filetosave.FileContent ?? " ";

@@ -28,7 +28,7 @@
 
   <Applications>
     <Application Id="App"
-      Executable="ConTeXt-IDE.Desktop\ConTeXt-IDE.Desktop.exe"
+      Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
 		<!--<Extensions>Executable="ConTeXt-IDE.Desktop\ConTeXt-IDE.Desktop.exe$targetnametoken$.exe"
 			<uap:Extension Category="windows.fileTypeAssociation">
