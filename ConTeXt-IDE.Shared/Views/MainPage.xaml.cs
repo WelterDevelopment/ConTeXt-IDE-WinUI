@@ -410,7 +410,7 @@ namespace ConTeXt_IDE
 			}
 		}
 
-	
+
 
 		private void NewFolder_Click(object sender, RoutedEventArgs e)
 		{
@@ -441,8 +441,8 @@ namespace ConTeXt_IDE
 					{
 						var subfolder = await folder.CreateFolderAsync(name);
 						var fi = new FileItem(subfolder) { Type = FileItem.ExplorerItemType.Folder };
-						
-					//	VM.AddFileItemAplphabetically(fileItem.Children,fi);
+
+						//	VM.AddFileItemAplphabetically(fileItem.Children,fi);
 						//fileItem.Children.Add(fi);
 					}
 					else
@@ -947,7 +947,7 @@ namespace ConTeXt_IDE
 
 		private async void Save_Click(object sender, RoutedEventArgs e)
 		{
-			
+
 			await VM.Save((sender as FrameworkElement).DataContext as FileItem);
 			VM.Codewriter?.Save();
 		}
@@ -1895,7 +1895,11 @@ namespace ConTeXt_IDE
 			ContextModule module = (sender as FrameworkElement).DataContext as ContextModule;
 
 			if (NetworkInterface.GetIsNetworkAvailable())
+			{
 				DownloadModule(module);
+				VM.ContextModules.Where(x => x.Name == module.Name).FirstOrDefault().IsInstalled = true;
+				VM.Default.InstalledContextModules = VM.ContextModules.Where(x => x.IsInstalled).Select(x => x.Name).ToList();
+			}
 			else
 				VM.InfoMessage("Download error", "No internet connection available.");
 		}
@@ -1931,6 +1935,8 @@ namespace ConTeXt_IDE
 			if (success)
 			{
 				VM.InfoMessage("Success", $"Module {module.Name} has been successfully uninstalled.", InfoBarSeverity.Success);
+				VM.ContextModules.Where(x => x.Name == module.Name).FirstOrDefault().IsInstalled = false;
+				VM.Default.InstalledContextModules = VM.ContextModules.Where(x => x.IsInstalled).Select(x => x.Name).ToList();
 			}
 			else
 			{
@@ -1976,7 +1982,6 @@ namespace ConTeXt_IDE
 						{
 							VM.InfoMessage("Error", $"Module {module.Name} could not be installed.", InfoBarSeverity.Error);
 						}
-						VM.Default.SaveSettings();
 					};
 					wc.DownloadFileAsync(new System.Uri(module.URL), filepath);
 				}
@@ -2101,7 +2106,7 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
-				
+
 				XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
 				string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
 				using (StringReader reader = new StringReader(xml))
@@ -2454,14 +2459,14 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
-				
-					bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
+
+				bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
 				IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
 				string text = Searchtext.Text;
 				await Task.Run(() => {
 					filtered = UpdateSearchFilter(text, ischecked);
 
-					DispatcherQueue.TryEnqueue( Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,() =>
+					DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
 							{
 								VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
 								cvs.Source = filtered;
@@ -2591,7 +2596,19 @@ namespace ConTeXt_IDE
 
 		private void Codewriter_TextChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
 		{
-			VM.UpdateOutline(((CodeWriter)sender).Lines.ToList(), true);
+
+			CodeWriter cw = ((CodeWriter)sender);
+			if (VM.Default.ShowOutline && (cw.Language.Name == "ConTeXt" | cw.Language.Name == "Markdown"))
+				VM.UpdateOutline(cw.Lines.ToList(), true);
+
+			if (cw.Language.Name == "Markdown" && VM.Default.InternalViewer && VM.Default.ShowMarkdownViewer)
+			{
+				if (cw.Text != VM.CurrentMarkdownText)
+				{
+					VM.MarkdownTimer.Stop();
+					VM.MarkdownTimer.Start();
+				}
+			}
 		}
 
 		private void UndoCommands_ItemClick(object sender, ItemClickEventArgs e)
@@ -2714,24 +2731,46 @@ namespace ConTeXt_IDE
 
 		private void SemanticZoom_ViewChangeStarted(object sender, SemanticZoomViewChangedEventArgs e)
 		{
-			if (e.IsSourceZoomedInView == false)
+			try
 			{
-				e.DestinationItem.Item = (cvs.Source as IOrderedEnumerable<IGrouping<string, Command>>).SelectMany(x => x).First(x => x.Category == (string)e.SourceItem.Item);
-				VM.SelectedCommand = null;
-				DocumentationView.ScrollIntoView(e.DestinationItem.Item);
+				if (e.IsSourceZoomedInView == false)
+				{
+					e.DestinationItem.Item = (cvs.Source as IOrderedEnumerable<IGrouping<string, Command>>).SelectMany(x => x).First(x => x.Category == (string)e.SourceItem.Item);
+					VM.SelectedCommand = null;
+					DocumentationView.ScrollIntoView(e.DestinationItem.Item);
+				}
+				else
+				{
+					GroupListView.SelectedItem = e.DestinationItem.Item = (e.SourceItem.Item as Command).Category;
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				GroupListView.SelectedItem = e.DestinationItem.Item = (e.SourceItem.Item as Command).Category;
+				VM.Log(ex.Message);
 			}
+		}
 
+		private delegate void ExceptionHandlerDelegate();
+		private void ExceptionHandler(ExceptionHandlerDelegate exceptionHandlerDelegate)
+		{
+			try
+			{
+			 exceptionHandlerDelegate();
+			}
+			catch (Exception ex)
+			{
+				VM?.Log(ex.Message);
+			}
 		}
 
 		private async void DocumentationView_ItemClick(object sender, ItemClickEventArgs e)
 		{
 			//if (e.ClickedItem == DocumentationView.SelectedItem)
 			//{
-			VM.SelectedCommand = (Command)e.ClickedItem;
+			ExceptionHandler(() =>
+			{
+				VM.SelectedCommand = (Command)e.ClickedItem;
+			});
 			//}
 		}
 

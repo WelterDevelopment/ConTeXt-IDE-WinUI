@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Background;
@@ -32,7 +33,6 @@ namespace ConTeXt_IDE.ViewModels
 		public ObservableCollection<OutlineItem> OutlineItems { get => Get(new ObservableCollection<OutlineItem>()); set => Set(value); }
 
 
-
 		public OutlineItem SelectedOutlineItem
 		{
 			get => Get<OutlineItem>(null);
@@ -45,6 +45,7 @@ namespace ConTeXt_IDE.ViewModels
 
 		private string rootFile;
 
+		public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
 		public ViewModel()
 		{
 			try
@@ -53,8 +54,23 @@ namespace ConTeXt_IDE.ViewModels
 				FileItems = new ObservableCollection<FileItem>();
 				CurrentFileItem = FileItems.Count > 0 ? FileItems.FirstOrDefault() : new FileItem(null);
 
+
+				var modules = new ObservableCollection<ContextModule>() {
+																								new ContextModule() {  Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter.zip", Type = ContextModuleType.TDSArchive},
+																								new ContextModule() {  Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
+																								new ContextModule() {  Name = "letter", Description = "Package for writing letters", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-letter.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-letter\"},
+																								new ContextModule() { Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
+																								new ContextModule() { Name = "pgfplots", Description = "Create normal/logarithmic plots in two and three dimensions", URL = @"http://mirrors.ctan.org/install/graphics/pgf/contrib/pgfplots.tds.zip", Type = ContextModuleType.TDSArchive},
+																				};
+				foreach (var module in modules)
+				{
+					module.IsInstalled = Default.InstalledContextModules.Contains(module.Name);
+				}
+				ContextModules = modules;
+
 				FileItems.CollectionChanged += FileItems_CollectionChanged1;
 
+				MarkdownTimer.Elapsed += MarkdownTimer_Elapsed;
 
 				if (Default.AccentColor == "Default")
 				{
@@ -75,6 +91,17 @@ namespace ConTeXt_IDE.ViewModels
 			catch (Exception ex)
 			{
 				Log("Exception" + ex.Message);
+			}
+		}
+
+		private void MarkdownTimer_Elapsed(object sender, ElapsedEventArgs e)
+		{
+			if (IsMarkdownViewerActive && CurrentFileItem.FileContent != CurrentMarkdownText)
+			{
+				App.MainPage?.DispatcherQueue.TryEnqueue(() =>
+				{
+					CurrentMarkdownText = CurrentFileItem.FileContent;
+				});
 			}
 		}
 
@@ -109,7 +136,7 @@ namespace ConTeXt_IDE.ViewModels
 		}
 
 
-
+		public string CurrentMarkdownText { get => Get(""); set => Set(value); }
 		public AppServiceConnection AppServiceConnection { get; set; }
 
 		public BackgroundTaskDeferral AppServiceDeferral { get; set; }
@@ -134,6 +161,8 @@ namespace ConTeXt_IDE.ViewModels
 
 		public ConTeXtErrorMessage ConTeXtErrorMessage { get => Get(new ConTeXtErrorMessage()); set => Set(value); }
 
+
+		public Timer MarkdownTimer = new(250) { AutoReset = true};
 		public FileItem CurrentFileItem
 		{
 			get => Get(new FileItem(null));
@@ -143,7 +172,23 @@ namespace ConTeXt_IDE.ViewModels
 				OutlineItems.Clear();
 				if (value?.FileLanguage == "ConTeXt")
 				{
-					UpdateOutline(value.FileContent);
+					//UpdateOutline(value.FileContent);
+					IsInternalViewerActive = true;
+					IsMarkdownViewerActive = false;
+				}
+				else if (value?.FileLanguage == "Markdown" && Default.ShowMarkdownViewer)
+				{
+					IsInternalViewerActive = false;
+					IsMarkdownViewerActive = true;
+					CurrentMarkdownText = value.FileContent;
+
+					MarkdownTimer.Start();
+					
+				}
+				else
+				{
+					IsInternalViewerActive = true;
+					IsMarkdownViewerActive = false;
 				}
 
 			}
@@ -154,22 +199,30 @@ namespace ConTeXt_IDE.ViewModels
 			if (text == null)
 				text = Codewriter.Lines.ToList();
 
-			UpdateOutline(string.Join("\n", text.Select(x => x.LineText)), update);
+			UpdateOutline(text.Select(x => x.LineText).ToArray(), update);
 		}
+
 		public async void UpdateOutline(string text = null, bool update = false)
+		{
+			if (text == null)
+				text = String.Join("\r\n", Codewriter.Lines.Select(x=>x.LineText));
+
+			UpdateOutline(text.Split("\r\n"), update);
+		}
+
+		public async void UpdateOutline(string[] text = null, bool update = false)
 		{
 			//await Task.Run(() =>
 			//{
 			try
 			{
 				if (text == null)
-					text = CurrentFileItem.FileContent;
+					text = CurrentFileItem.FileContent.Split("\r\n", StringSplitOptions.None);
 
 				if (!update)
 					OutlineItems.Clear();
 
-
-				string[] lines = text.Contains("\r\n") ? text.Split("\r\n", StringSplitOptions.None) : text.Split("\n", StringSplitOptions.None);
+				string[] lines = text;
 
 				List<OutlineItem> founditems = new();
 				int row = 0;
@@ -177,14 +230,52 @@ namespace ConTeXt_IDE.ViewModels
 				foreach (string line in lines)
 				{
 					row++;
-					MatchCollection mc = Regex.Matches(line, @"\\(start)?([sub].*?)?(section|subject|part|title|chapter)(\[.*?title\s*?=\s*)(.+?)(\s*?)(\,|\])");
-
-					if (mc.Count > 0 && mc.First().Success)
+					MatchCollection mc = null;
+					string depthcounter = "";
+					int startdepth = 0;
+					int depthgroup = 0;
+					int titlegroup = 0;
+					if (CurrentFileItem.FileLanguage == "ConTeXt")
 					{
-						int level = CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(2).Value, "sub");
-						string type = string.Concat(mc.First().Groups.Values.ToList().GetRange(1, 3).Select(x => x.Value)).Replace("start", "");
-						string title = mc.First().Groups.Values.ElementAt(5).Value.Replace("{", "").Replace("}", "");
-						if (!update)
+						mc = Regex.Matches(line, @"\\(start)?([sub].*?)?(section|subject|part|title|chapter)(\[.*?title\s*?=\s*)(.+?)(\s*?)(\,|\])");
+						depthgroup = 2;
+						depthcounter = "sub";
+						startdepth = 0;
+						titlegroup = 5;
+					}
+					else if (CurrentFileItem.FileLanguage == "Markdown")
+					{
+						mc = Regex.Matches(line, @"(^ *?)(#+ *)(.*)");
+						depthgroup = 2;
+						depthcounter = "#";
+						startdepth = -1;
+						titlegroup = 3;
+
+					}
+
+					if (mc?.Count > 0 && mc.First().Success)
+					{
+						int level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
+						string type = "";
+						string title = "";
+						if (CurrentFileItem.FileLanguage == "ConTeXt")
+						{
+							type = string.Concat(mc.First().Groups.Values.ToList().GetRange(1, 3).Select(x => x.Value)).Replace("start", "");
+						}
+						else if (CurrentFileItem.FileLanguage == "Markdown")
+						{
+							type = string.Concat(mc.First().Groups.Values.ElementAt(depthgroup).Value.Replace(depthcounter,"sub"),"section");
+						}
+						if (CurrentFileItem.FileLanguage == "ConTeXt")
+						{
+							title = mc.First().Groups.Values.ElementAt(titlegroup).Value.Replace("{", "").Replace("}", "");
+						}
+						else if (CurrentFileItem.FileLanguage == "Markdown")
+						{
+							title = mc.First().Groups.Values.ElementAt(3).Value;
+						}
+
+							if (!update)
 							OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
 						else
 						{
@@ -370,6 +461,8 @@ namespace ConTeXt_IDE.ViewModels
 		public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
 
 		public bool IsInternalViewerActive { get => Get(false); set => Set(value); }
+
+		public bool IsMarkdownViewerActive { get => Get(false); set => Set(value); }
 
 		public bool IsPaused { get => Get(false); set { Set(value); } }
 
@@ -833,6 +926,8 @@ namespace ConTeXt_IDE.ViewModels
 			}
 		}
 
+		
+		
 		public async Task LoadProject(Project proj)
 		{
 			try
@@ -909,7 +1004,7 @@ namespace ConTeXt_IDE.ViewModels
 			await jl.SaveAsync();
 		}
 
-		public void Startup()
+		public async void Startup()
 		{
 			try
 			{
@@ -918,12 +1013,21 @@ namespace ConTeXt_IDE.ViewModels
 					RecentAccessList = StorageApplicationPermissions.MostRecentlyUsedList;
 					if (RecentAccessList.ContainsItem(Default.LastActiveProject))
 					{
+						
 						IsSaving = true;
 						var list = Default.ProjectList.Where(x => x.Name == Default.LastActiveProject);
 						if (list != null && list.Count() == 1)
 						{
 							var project = list.FirstOrDefault();
 							CurrentProject = project;
+
+							//var folder = await RecentAccessList.GetFolderAsync(Default.LastActiveProject);
+							//if (folder.Name != Default.LastActiveProject)
+							//{
+							//	RecentAccessList.Remove(Default.LastActiveProject);
+							//	Default.LastActiveProject= CurrentProject.Name = RecentAccessList.Add(folder);
+							//	PopulateJumpList();
+							//}
 						}
 					}
 				}

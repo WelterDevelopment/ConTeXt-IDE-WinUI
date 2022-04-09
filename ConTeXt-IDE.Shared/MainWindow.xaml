@@ -7,8 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
      
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" >
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
+	mc:Ignorable="d" >
 
 
 	<Grid HorizontalAlignment="Stretch" DataContext="{x:Bind VM}" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}"  >

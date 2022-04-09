@@ -24,7 +24,10 @@ namespace ConTeXt_IDE.Models
 
 		private void Project_PropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			App.VM?.Default?.SaveSettings();
+			if (App.VM?.Started == true)
+			{
+				App.VM?.Default?.SaveSettings();
+			}
 		}
 
 		[JsonIgnore]

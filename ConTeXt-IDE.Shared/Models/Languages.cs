@@ -11,6 +11,7 @@ namespace ConTeXt_IDE.Shared.Models
 		{
 			new("ConTeXt")
 			{
+				EnableIntelliSense = true,
 				LineComment = "%",
 				AutoClosingPairs = new() { { '[', ']' }, { '{', '}' }, },
 				WordSelectionDefinitions = new() { /*language=regex*/ @"\b\w+?\b", /*language=regex*/ @"\\.+?\b" },
@@ -26,7 +27,7 @@ namespace ConTeXt_IDE.Shared.Models
 					{ Token.Environment, /*language=regex*/ @"\\(start|stop).+?\b" },
 					{ Token.Reference, /*language=regex*/ @"(\#+?\d+|\w+?)(:(\#+?\d+|\w+?)\b)+|\\ref|\#+?\d+?\b" },
 					{ Token.Bracket, /*language=regex*/ @"(?<!\\)(\[|\]|\(|\)|\{|\})" },
-					{ Token.Comment, /*language=regex*/ @"\%.*" },
+					//{ Token.Comment, /*language=regex*/ @"\%.*" },
 				},
 				WordTokens = new()
 				{

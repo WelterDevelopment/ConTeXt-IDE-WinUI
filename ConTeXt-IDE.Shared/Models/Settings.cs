@@ -1,24 +1,52 @@
 ﻿
 using CodeEditorControl_WinUI;
-using ConTeXt_IDE.Helpers;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Windows.ApplicationModel;
 using Windows.Graphics;
 using Windows.Storage;
+using Windows.System.Diagnostics;
 using Windows.UI;
 
 namespace ConTeXt_IDE.Models
 {
 	public class Settings : Helpers.Bindable
 	{
+		FileSystemWatcher watcher;
+		public Settings()
+		{
+			// ToDo: Settings Synchronization between multiple App Windows
+			//watcher?.Dispose();
+
+			//watcher = new FileSystemWatcher(ApplicationData.Current.LocalFolder.Path) { IncludeSubdirectories = false, EnableRaisingEvents = true, Filter = "settings.json" };
+
+			//watcher.NotifyFilter = NotifyFilters.LastWrite;
+
+			//watcher.Changed += (a, b) =>
+			//{
+			//	if (b.ChangeType == WatcherChangeTypes.Changed)
+			//		try
+			//	{ 
+			//		Settings updatedSettings = FromJson(File.ReadAllText(b.FullPath));
+			//		if (updatedSettings.CurrentWindowID != ProcessDiagnosticInfo.GetForCurrentProcess().ProcessId)
+			//		{
+			//			Default = updatedSettings;
+			//		}
+			//	}
+			//	catch (Exception ex)
+			//	{
+			//			App.VM?.Log(ex.Message);
+			//	}
+			//};
+			}
+
+		
+
 		public static Settings FromJson(string json) => JsonConvert.DeserializeObject<Settings>(json);
 
 		[JsonIgnore]
@@ -64,17 +92,7 @@ namespace ConTeXt_IDE.Models
 					settings = FromJson(json);
 				}
 
-				settings.PropertyChanged += (o, a) =>
-				{
-					string json = settings.ToJson();
-					File.WriteAllText(settingsPath, json);
-				};
-
-				settings.ProjectList.CollectionChanged += (o, a) =>
-				{
-					string json = settings.ToJson();
-					File.WriteAllText(settingsPath, json);
-				};
+			
 
 				if (settings.CommandFavorites.Count == 0)
 				{
@@ -132,16 +150,19 @@ namespace ConTeXt_IDE.Models
 					};
 				}
 
-				if (settings.ContextModules.Count == 0)
+				
+
+				settings.PropertyChanged += (o, a) =>
 				{
-					settings.ContextModules = new ObservableCollection<ContextModule>() {
-																								new ContextModule() { IsInstalled = false, Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter.zip", Type = ContextModuleType.TDSArchive},
-																								new ContextModule() { IsInstalled = false, Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
-																								new ContextModule() { IsInstalled = false, Name = "letter", Description = "Package for writing letters", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-letter.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-letter\"},
-																								new ContextModule() { IsInstalled = true, Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
-																								new ContextModule() { IsInstalled = true, Name = "pgfplots", Description = "Create normal/logarithmic plots in two and three dimensions", URL = @"http://mirrors.ctan.org/install/graphics/pgf/contrib/pgfplots.tds.zip", Type = ContextModuleType.TDSArchive},
-																				};
-				}
+					string json = settings.ToJson();
+					File.WriteAllText(settingsPath, json);
+				};
+
+				settings.ProjectList.CollectionChanged += (o, a) =>
+				{
+					string json = settings.ToJson();
+					File.WriteAllText(settingsPath, json);
+				};
 
 				return settings;
 			}
@@ -166,7 +187,21 @@ namespace ConTeXt_IDE.Models
 		public bool ShowCompilerOutput { get => Get(false); set => Set(value); }
 		public bool ShowOutline { get => Get(true); set => Set(value); }
 		public bool ShowProjectPane { get => Get(true); set => Set(value); }
-		public bool ShowCommandReference { get => Get(false); set => Set(value); }
+		public bool ShowCommandReference { get => Get(false); set
+			{
+				try
+				{
+					Set(value);
+				}
+				catch (Exception ex)
+				{
+					App.VM.Log(ex.Message);
+				}
+			} }
+
+		public uint CurrentWindowID { get; set; } = (uint)0;
+
+		public bool ShowMarkdownViewer { get => Get(true); set => Set(value); }
 		public bool StartWithLastActiveProject { get => Get(true); set => Set(value); }
 		public bool StartWithLastOpenFiles { get => Get(false); set => Set(value); }
 		public bool SuggestArguments { get => Get(true); set => Set(value); }
@@ -214,7 +249,8 @@ namespace ConTeXt_IDE.Models
 
 		public ObservableCollection<CommandFavorite> CommandFavorites { get => Get(new ObservableCollection<CommandFavorite>()); set => Set(value); }
 
-		public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
+		public List<string> InstalledContextModules { get => Get(new List<string>() { "pgf", "pgfplots" }); set => Set(value); }
+		
 
 		public ObservableCollection<Project> ProjectList { get => Get(new ObservableCollection<Project>()); set => Set(value); }
 
@@ -239,6 +275,7 @@ namespace ConTeXt_IDE.Models
 		public static void SaveSettings(this Settings settings)
 		{
 			string file = "settings.json";
+			settings.CurrentWindowID = ProcessDiagnosticInfo.GetForCurrentProcess().ProcessId;
 			var storageFolder = ApplicationData.Current.LocalFolder;
 			string settingsPath = Path.Combine(storageFolder.Path, file);
 			string json = settings.ToJson();

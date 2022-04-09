@@ -16,9 +16,19 @@
 
 			<vm:ViewModel x:Key="VM"></vm:ViewModel>
 
-			<Style TargetType="StackPanel">
+			<Style TargetType="StackPanel" x:Key="HorizontalStack">
 				<Setter Property="Orientation" Value="Horizontal"></Setter>
 				<Setter Property="Spacing" Value="6"></Setter>
+			</Style>
+
+			<Style TargetType="StackPanel" x:Key="VerticalStack">
+				<Setter Property="Orientation" Value="Vertical"></Setter>
+				<Setter Property="Spacing" Value="6"></Setter>
+			</Style>
+			
+			<Style TargetType="StackPanel" x:Key="HorizontalStackNarrow">
+				<Setter Property="Orientation" Value="Horizontal"></Setter>
+				<Setter Property="Spacing" Value="0"></Setter>
 			</Style>
 
 			<Style TargetType="FontIcon">

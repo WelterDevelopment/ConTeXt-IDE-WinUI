@@ -10,7 +10,7 @@
     xmlns:models="using:ConTeXt_IDE.Models"
     xmlns:pdfjs="using:PDFjs.WinUI"
     mc:Ignorable="d" 
-	DataContext="{x:Bind VM}" RasterizationScale="1.0"
+	DataContext="{x:Bind VM}"
 	Loaded="Page_Loaded" 
 	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" x:DefaultBindMode="OneWay"  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 	<Page.Resources>
@@ -30,7 +30,7 @@
 						<MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
 					</MenuFlyout>
 				</models:MyTreeViewItem.ContextFlyout>
-				<StackPanel Margin="0" Orientation="Horizontal">
+				<StackPanel Style="{StaticResource HorizontalStack}" Margin="0">
 					<SymbolIcon Width="20" Symbol="Folder"/>
 					<TextBlock Text="{Binding FileName, Mode=OneWay}"/>
 				</StackPanel>
@@ -47,7 +47,7 @@
 						<MenuFlyoutItem x:Name="Rename" Icon="Rename" Click="Rename_Click" Text="Rename"></MenuFlyoutItem>
 					</MenuFlyout>
 				</models:MyTreeViewItem.ContextFlyout>
-				<StackPanel Margin="0" Orientation="Horizontal">
+				<StackPanel  Style="{StaticResource HorizontalStack}" Margin="0" >
 					<SymbolIcon Width="20" Symbol="Document"></SymbolIcon>
 					<TextBlock Text="{Binding FileName, Mode=OneWay}" FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" />
 				</StackPanel>
@@ -97,7 +97,7 @@
 			/>
 
 		<DataTemplate x:Key="KeywordsTemplate" x:DataType="models:Keywords">
-			<StackPanel Orientation="Horizontal" >
+			<StackPanel  Style="{StaticResource HorizontalStack}" >
 				<TextBlock Text="{Binding Number}"></TextBlock>
 				<ListView ItemsSource="{Binding Constant}" SelectionMode="None" IsItemClickEnabled="False"  IsHitTestVisible="False">
 					<ListView.ItemContainerTransitions>
@@ -127,7 +127,7 @@
 		</DataTemplate>
 
 		<DataTemplate x:Key="AssignmentsTemplate" x:DataType="models:Assignments">
-			<StackPanel Orientation="Horizontal" >
+			<StackPanel  Style="{StaticResource HorizontalStack}" >
 				<TextBlock Text="{Binding Number}"></TextBlock>
 				<ListView ItemsSource="{Binding Parameter}" SelectionMode="None" IsItemClickEnabled="False" IsHitTestVisible="False">
 					<ListView.ItemContainerTransitions>
@@ -144,7 +144,7 @@
 					</ListView.ItemContainerStyle>
 					<ListView.ItemTemplate>
 						<DataTemplate>
-							<StackPanel Orientation="Horizontal">
+							<StackPanel  Style="{StaticResource HorizontalStack}">
 								<TextBlock MinWidth="120"><Run Text="{Binding Name, Converter={StaticResource ParameterTypeToText}}"/></TextBlock>
 								<TextBlock Visibility="{Binding Constant, Converter={StaticResource StringToVisibility}}"><Run Text=" = "/></TextBlock>
 								<ListView ItemsSource="{Binding Constant}" SelectionMode="None" IsItemClickEnabled="False">
@@ -201,7 +201,7 @@
 				<SolidColorBrush Color="{Binding AccentColorLow, Source={StaticResource AccentColorSetting}}"></SolidColorBrush>
 			</TabView.Background>-->
 			<TabView.TabStripHeader>
-				<StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" Height="28" Margin="4,0,4,-4" Spacing="0" x:Name="TabStripHeader" Background="Transparent">
+				<StackPanel Style="{StaticResource HorizontalStack}" VerticalAlignment="Stretch" Height="28" Margin="4,0,4,-4" Spacing="0" x:Name="TabStripHeader" Background="Transparent">
 
 					<Button VerticalAlignment="Stretch" Padding="2"  MinWidth="28"  Background="Transparent">
 						<Button.Content>
@@ -243,7 +243,7 @@
 								<StackPanel Orientation="Vertical" Spacing="6">
 									<Button x:Name="Btnaddproject" Click="Btnaddproject_Click" ToolTipService.ToolTip="Add a project folder" >
 										<Button.Content>
-											<StackPanel Orientation="Horizontal">
+											<StackPanel  Style="{StaticResource HorizontalStack}">
 												<SymbolIcon Symbol="Add"></SymbolIcon>
 												<TextBlock  Text="Add Project" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
 											</StackPanel>
@@ -268,7 +268,7 @@
 						</DropDownButton.Flyout>
 					</DropDownButton>
 
-					<StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsProjectLoaded}">
+					<StackPanel Style="{StaticResource HorizontalStackNarrow}" Visibility="{Binding IsProjectLoaded}">
 						<FontIcon VerticalAlignment="Center" Glyph="&#xe76c;" FontSize="10" Visibility="{Binding Default.ShowProjectPane, Converter={StaticResource BoolToInvisibility}}">
 							<animations:Implicit.ShowAnimations>
 								<animations:TranslationAnimation Duration="0:0:0.25" From="-20, 0, 0" To="0" ></animations:TranslationAnimation>
@@ -311,7 +311,7 @@
 
 			<TabView.TabStripFooter>
 				<Grid x:Name="TabStripFooter" IsHitTestVisible="False" Loaded="TabStripFooter_Loaded" >
-					<!--<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="6" Margin="0,0,12,0">
+					<!--<StackPanel Style="{StaticResource HorizontalStack}" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="6" Margin="0,0,12,0">
                         <Button Click="Btn_Minimize_Click" Height="24" Width="24" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                             <Button.Content>
                                 <SymbolIcon HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Symbol="FontDecrease"></SymbolIcon>
@@ -328,7 +328,7 @@
 			<TabView.TabItems>
 				<TabViewItem IsClosable="False" Foreground="White" ToolTipService.ToolTip="Start: Save, compile, set parameters">
 					<TabViewItem.Header>
-						<StackPanel Orientation="Horizontal">
+						<StackPanel Style="{StaticResource HorizontalStack}">
 							<FontIcon  Glyph="&#xE768;"></FontIcon>
 							<TextBlock  Text="Start"></TextBlock>
 						</StackPanel>
@@ -377,10 +377,10 @@
 
 							<Border Style="{StaticResource Separator}" Visibility="{Binding IsFileItemLoaded}" ></Border>
 
-							<StackPanel Orientation="Horizontal" Spacing="0" Visibility="{Binding IsFileItemLoaded}">
+							<StackPanel Style="{StaticResource HorizontalStackNarrow}" Visibility="{Binding IsFileItemLoaded}">
 								<Button CornerRadius="{StaticResource CornerRadiusLeft}"  IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="btnsave"  Click="Btnsave_Click" ToolTipService.ToolTip="Save current file" >
 									<Button.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<SymbolIcon Symbol="Save"></SymbolIcon>
 											<TextBlock Text="Save" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
@@ -388,7 +388,7 @@
 								</Button>
 								<Button CornerRadius="{StaticResource CornerRadiusRight}" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="btnsaveall"  Click="btnsaveall_Click" ToolTipService.ToolTip="Save all opened files">
 									<Button.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xEA35;"></FontIcon>
 											<TextBlock Text="Save all" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
@@ -396,10 +396,10 @@
 								</Button>
 							</StackPanel>
 
-							<StackPanel Orientation="Horizontal" Spacing="0">
+							<StackPanel Style="{StaticResource HorizontalStackNarrow}">
 								<Button x:Name="Root"  CornerRadius="{x:Bind Current.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=right}" Visibility="{Binding CurrentRootItem, Converter={StaticResource StringToVisibility}}" ToolTipService.ToolTip="Save all &amp; Compile root file" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}"  Click="Btncompileroot_Click" >
 									<Button.Content>
-										<StackPanel Orientation="Horizontal">
+										<StackPanel Style="{StaticResource HorizontalStack}">
 											<FontIcon Glyph="&#xF5B0;"></FontIcon>
 											<TextBlock Text="Root" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 										</StackPanel>
@@ -408,7 +408,7 @@
 								<!--BorderThickness="{x:Bind Current.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToBorderThickness}, ConverterParameter=left}"-->
 								<Button x:Name="Current" CornerRadius="{x:Bind Root.Visibility, Mode=OneWay, Converter={StaticResource VisibilityToCornerRadius}, ConverterParameter=left}" Visibility="{Binding CurrentFileItem, Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding IsSaving, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Save &amp; Compile current file"   Click="Btncompile_Click" >
 									<Button.Content>
-										<StackPanel Orientation="Horizontal">
+										<StackPanel Style="{StaticResource HorizontalStack}">
 											<SymbolIcon Symbol="Play"></SymbolIcon>
 											<TextBlock  Text="Current" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
@@ -421,7 +421,7 @@
 
 							<DropDownButton x:Name="Modes" ToolTipService.ToolTip="Select compile modes" Click="Modes_Click" Visibility="{Binding IsProjectLoaded, Mode=OneWay}">
 								<DropDownButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}">
 										<FontIcon Glyph="&#xE9D5;"></FontIcon>
 										<TextBlock  Text="Modes"  Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
@@ -431,7 +431,7 @@
 										<StackPanel Orientation="Vertical" Spacing="6">
 											<Button  Click="addMode_Click" ToolTipService.ToolTip="Add a Mode" >
 												<Button.Content>
-													<StackPanel Orientation="Horizontal">
+													<StackPanel Style="{StaticResource HorizontalStack}">
 														<SymbolIcon Symbol="Add"></SymbolIcon>
 														<TextBlock  Text="Add mode" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
 													</StackPanel>
@@ -457,7 +457,7 @@
 
 							<DropDownButton  x:Name="Environments" ToolTipService.ToolTip="Select Environment(s) to load" Click="Environments_Click" Visibility="{Binding IsProjectLoaded, Mode=OneWay}">
 								<DropDownButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xe943;"></FontIcon>
 										<TextBlock  Text="Environments"  Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
@@ -467,7 +467,7 @@
 										<StackPanel Orientation="Vertical" Spacing="6">
 											<Button  Click="addEnvironment_Click" ToolTipService.ToolTip="Add a Mode" >
 												<Button.Content>
-													<StackPanel Orientation="Horizontal">
+													<StackPanel Style="{StaticResource HorizontalStack}">
 														<SymbolIcon Symbol="Add"></SymbolIcon>
 														<TextBlock  Text="Add environment" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
 													</StackPanel>
@@ -493,22 +493,22 @@
 
 							<DropDownButton ToolTipService.ToolTip="Parameters" Visibility="{Binding IsProjectLoaded}" >
 								<DropDownButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xEC7A;"></FontIcon>
 										<TextBlock  Text="Parameters"  Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
 									<Flyout  Placement="Bottom">
-										<StackPanel Orientation="Vertical" >
+										<StackPanel  Style="{StaticResource VerticalStack}" >
 											<CheckBox  Content="synctex (β)" IsChecked="{Binding CurrentProject.UseSyncTeX, Mode=TwoWay}"/>
 											<CheckBox  Content="noconsole" IsChecked="{Binding CurrentProject.UseNoConsole, Mode=TwoWay}"/>
 											<CheckBox  Content="nonstopmode" IsChecked="{Binding CurrentProject.UseNonStopMode, Mode=TwoWay}"/>
-											<StackPanel Orientation="Horizontal">
+											<StackPanel Style="{StaticResource HorizontalStack}">
 												<CheckBox  Content="interface" IsChecked="{Binding CurrentProject.UseInterface, Mode=TwoWay}"/>
 												<ComboBox IsEnabled="{Binding CurrentProject.UseInterface}" ItemsSource="{Binding InterfaceList}" SelectedItem="{Binding CurrentProject.Interface, Mode=TwoWay}"></ComboBox>
 											</StackPanel>
-											<StackPanel Orientation="Horizontal">
+											<StackPanel Style="{StaticResource HorizontalStack}">
 												<CheckBox  Content="Other:" IsChecked="{Binding CurrentProject.UseParameters, Mode=TwoWay}"/>
 												<TextBox x:Name="Parameters" IsSpellCheckEnabled="False" IsEnabled="{Binding CurrentProject.UseParameters}" Text="{Binding CurrentProject.AdditionalParameters, Mode=TwoWay}"></TextBox>
 											</StackPanel>
@@ -521,7 +521,7 @@
 
 							<Button  Visibility="{Binding IsProjectLoaded}" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}}" Name="Btn_Clear"  Click="Btn_Clear_Click" ToolTipService.ToolTip="Remove auxillary files" >
 								<Button.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<SymbolIcon Symbol="Delete"></SymbolIcon>
 										<TextBlock Text="Clear Workspace" VerticalAlignment="Center"  Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 									</StackPanel>
@@ -530,7 +530,7 @@
 
 							<Button x:Name="Btn_Addproject" Visibility="{Binding IsProjectLoaded, Converter={StaticResource BoolToInvisibility}}" Click="Btnaddproject_Click" ToolTipService.ToolTip="Add a project folder" >
 								<Button.Content>
-									<StackPanel Orientation="Horizontal">
+									<StackPanel Style="{StaticResource HorizontalStack}">
 										<SymbolIcon Symbol="Add"></SymbolIcon>
 										<TextBlock  Text="Add Project" VerticalAlignment="Center"  Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 									</StackPanel>
@@ -544,7 +544,7 @@
 
 				<TabViewItem IsClosable="False" ToolTipService.ToolTip="Editor: Change the editor's appearance and behaviour">
 					<TabViewItem.Header>
-						<StackPanel Orientation="Horizontal">
+						<StackPanel Style="{StaticResource HorizontalStack}">
 							<FontIcon  Glyph="&#xE70F;"></FontIcon>
 							<TextBlock  Text="Editor"></TextBlock>
 						</StackPanel>
@@ -552,15 +552,15 @@
 					<ScrollViewer Style="{StaticResource RibbonView}">
 						<StackPanel Style="{StaticResource RibbonContent}">
 
-							<TextBlock Style="{StaticResource RibbonTextBlock}" Text="Font size: "></TextBlock>
+							<FontIcon Glyph="&#xE8E9;" ></FontIcon>
 							<NumberBox PointerWheelChanged="Tbx_FontSize_Wheel" Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" SpinButtonPlacementMode="Inline" ></NumberBox>
 
-							<TextBlock Style="{StaticResource RibbonTextBlock}" Text="Tab legth: "></TextBlock>
+							<FontIcon Margin="6,0,0,0" Glyph="&#xE7FD;" ></FontIcon>
 							<NumberBox PointerWheelChanged="Tbx_TabLength_Wheel" Value="{Binding Default.TabLength, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Inline" ></NumberBox>
 
 							<ToggleButton IsChecked="{Binding Default.LineNumbers, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xf146;"></FontIcon>
 										<TextBlock  Text="Line numbers" ></TextBlock>
 									</StackPanel>
@@ -569,7 +569,7 @@
 
 							<ToggleButton IsChecked="{Binding Default.LineMarkers, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xE946;"></FontIcon>
 										<TextBlock  Text="Line markers" ></TextBlock>
 									</StackPanel>
@@ -578,7 +578,7 @@
 
 							<ToggleButton IsChecked="{Binding Default.ScrollbarMarkers, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xEA41;"></FontIcon>
 										<TextBlock  Text="Scrollbar markers" ></TextBlock>
 									</StackPanel>
@@ -587,7 +587,7 @@
 
 							<ToggleButton IsChecked="{Binding Default.ShowScrollBars, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xece7;"></FontIcon>
 										<TextBlock  Text="Scrollbars" ></TextBlock>
 									</StackPanel>
@@ -596,7 +596,7 @@
 
 							<ToggleButton IsChecked="{Binding Default.ControlCharacters, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xe751;"></FontIcon>
 										<TextBlock  Text="Control characters" ></TextBlock>
 									</StackPanel>
@@ -605,7 +605,7 @@
 
 							<!--<ToggleButton IsEnabled="False" ToolTipService.ToolTip="Text wrapping is not yet implemented. Please wait for the next releases of ConTeXt IDE." IsChecked="{Binding Default.TextWrapping, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xe8e4;"></FontIcon>
 										<TextBlock  Text="Text wrapping (α)" ></TextBlock>
 									</StackPanel>
@@ -614,7 +614,7 @@
 
 							<!--<ToggleButton IsEnabled="False" IsChecked="{Binding Default.CodeFolding, Mode=TwoWay}">
                                 <ToggleButton.Content>
-                                    <StackPanel Orientation="Horizontal" >
+                                    <StackPanel Style="{StaticResource HorizontalStack}" >
                                         <FontIcon Glyph="&#xE974;"></FontIcon>
                                         <TextBlock  Text="Code folding" ></TextBlock>
                                     </StackPanel>
@@ -623,7 +623,7 @@
 
                             <ToggleButton IsEnabled="False" IsChecked="False">
                                 <ToggleButton.Content>
-                                    <StackPanel Orientation="Horizontal" >
+                                    <StackPanel Style="{StaticResource HorizontalStack}" >
                                         <FontIcon Glyph="&#xE7C4;"></FontIcon>
                                         <TextBlock  Text="Minimap" ></TextBlock>
                                     </StackPanel>
@@ -632,7 +632,7 @@
 
 
 
-							<!--<StackPanel Orientation="Horizontal" Spacing="0" >
+							<!--<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0" >
                                 <TextBox InputScope="Number" BorderThickness="1,1,0,1" Text="{Binding Default.FontSize, Mode=TwoWay}" CornerRadius="0" ></TextBox>
                                 <Button CornerRadius="0" BorderThickness="1" Tag="FontSizeUp" Click="Btn_FontSize_Click">
                                     <Button.Content>
@@ -651,7 +651,7 @@
 
 							<!--<ToggleButton IsChecked="{Binding Default.Hover, Mode=TwoWay}">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xE7C9;"></FontIcon>
 										<TextBlock  Text="Hover info" ></TextBlock>
 									</StackPanel>
@@ -675,7 +675,7 @@
 									</Flyout>
 								</DropDownButton.Flyout>
 								<DropDownButton.Content>
-									<StackPanel Orientation="Horizontal">
+									<StackPanel Style="{StaticResource HorizontalStack}">
 										<FontIcon Glyph="&#xe8fd;"></FontIcon>
 										<TextBlock Text="Suggestions"></TextBlock>
 									</StackPanel>
@@ -683,8 +683,8 @@
 							</DropDownButton>
 							<DropDownButton ToolTipService.ToolTip="Change the syntax highlighting colors" >
 								<DropDownButton.Content>
-									<StackPanel Orientation="Horizontal">
-										<FontIcon Glyph="&#xF354;"></FontIcon>
+									<StackPanel Style="{StaticResource HorizontalStack}">
+										<FontIcon Glyph="&#xE790;"></FontIcon>
 										<TextBlock Text="Syntax colors"></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
@@ -729,37 +729,46 @@
 
 				<TabViewItem IsClosable="False" ToolTipService.ToolTip="Output: Change what should happen after compile">
 					<TabViewItem.Header>
-						<StackPanel Orientation="Horizontal">
+						<StackPanel Style="{StaticResource HorizontalStack}">
 							<FontIcon  Glyph="&#xE945;"></FontIcon>
 							<TextBlock  Text="Output"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
 					<ScrollViewer Style="{StaticResource RibbonView}">
 						<StackPanel Style="{StaticResource RibbonContent}">
-							<StackPanel Orientation="Horizontal" Spacing="0">
-								<ToggleButton CornerRadius="{StaticResource CornerRadiusLeft}" IsChecked="{Binding Default.AutoOpenPDF, Mode=TwoWay}" >
+							<ToggleButton IsChecked="{Binding Default.AutoOpenPDF, Mode=TwoWay}" >
+								<ToggleButton.Content>
+									<StackPanel Style="{StaticResource HorizontalStack}" >
+										<FontIcon Glyph="&#xEA90;"></FontIcon>
+										<TextBlock  Text="Auto-open PDF file"></TextBlock>
+									</StackPanel>
+								</ToggleButton.Content>
+							</ToggleButton>
+
+							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
+								<ToggleButton CornerRadius="{StaticResource CornerRadiusLeft}" IsChecked="{Binding Default.InternalViewer, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
-											<FontIcon Glyph="&#xEA90;"></FontIcon>
-											<TextBlock  Text="Auto-open PDF file"></TextBlock>
+										<StackPanel Style="{StaticResource HorizontalStack}" >
+											<FontIcon Glyph="&#xE89F;"></FontIcon>
+											<TextBlock  Text="Internal viewer"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
-								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1" IsChecked="{Binding Default.InternalViewer, Mode=TwoWay}" >
+								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1" IsChecked="{Binding Default.ShowMarkdownViewer, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
-											<FontIcon Glyph="&#xE89F;"></FontIcon>
-											<TextBlock  Text="open internally"></TextBlock>
+										<StackPanel Style="{StaticResource HorizontalStack}" >
+											<FontIcon Glyph="&#xE8A1;"></FontIcon>
+											<TextBlock Text="Markdown preview (β)" ></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
 							</StackPanel>
 
 							<Border Style="{StaticResource Separator}" ></Border>
-							<StackPanel Orientation="Horizontal" Spacing="0">
+							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusLeft}" IsChecked="{Binding Default.AutoOpenLOG, Mode=TwoWay}">
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xEA37;"></FontIcon>
 											<TextBlock  Text="Auto-open LOG file"></TextBlock>
 										</StackPanel>
@@ -767,7 +776,7 @@
 								</ToggleButton>
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1" IsEnabled="{Binding Default.AutoOpenLOG}" IsChecked="{Binding Default.AutoOpenLOGOnlyOnError, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xE783;"></FontIcon>
 											<TextBlock  Text="only on error"></TextBlock>
 										</StackPanel>
@@ -780,14 +789,14 @@
 
 				<TabViewItem IsClosable="False" ToolTipService.ToolTip="View: Change the appearance of this app">
 					<TabViewItem.Header>
-						<StackPanel Orientation="Horizontal">
+						<StackPanel Style="{StaticResource HorizontalStack}">
 							<FontIcon  Glyph="&#xF246;"></FontIcon>
 							<TextBlock  Text="View"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
 					<ScrollViewer Style="{StaticResource RibbonView}">
 						<StackPanel Style="{StaticResource RibbonContent}">
-							<TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Theme:"></TextBlock>
+							<FontIcon  Glyph="&#xE793;"></FontIcon>
 							<ComboBox CornerRadius="{StaticResource CornerRadiusRight}" ItemsSource="{Binding Default.ThemeOption}" SelectionChangedTrigger="Always" DropDownClosed="CbB_Theme_SelectionChanged" SelectedItem="{Binding Default.Theme, Mode=TwoWay}"  FontFamily="Segoe UI"  >
 								<ComboBox.Resources>
 									<Style TargetType="Popup">
@@ -800,8 +809,8 @@
 									</ItemsPanelTemplate>
 								</ComboBox.ItemsPanel>-->
 							</ComboBox>
-
-							<TextBlock  Style="{StaticResource RibbonTextBlock}" Text="Accent color:"></TextBlock>
+							
+							<FontIcon Margin="6,0,0,0" Glyph="&#xE790;"></FontIcon>
 							<DropDownButton ToolTipService.ToolTip="Select an accent color" Padding="0,0,6,0" CornerRadius="{StaticResource CornerRadiusRight}">
 								<DropDownButton.Content>
 									<Border  Padding="0" Width="36" Height="36" ToolTipService.ToolTip="{Binding AccentColor.Name}" BorderThickness="0" >
@@ -811,9 +820,9 @@
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
 									<Flyout x:Name="ColorsFlyout" Opening="ColorsFlyout_Opening" Placement="Bottom">
-										<StackPanel Orientation="Vertical">
+										<StackPanel Style="{StaticResource VerticalStack}">
 											<Button VerticalAlignment="Center" x:Name="ColorReset" Click="ColorReset_Click">
-												<StackPanel Orientation="Horizontal">
+												<StackPanel Style="{StaticResource HorizontalStack}">
 													<Rectangle VerticalAlignment="Stretch" Height="26" Width="26" HorizontalAlignment="Stretch" >
 														<Rectangle.Fill>
 															<SolidColorBrush Color="{Binding SystemAccentColor}" ></SolidColorBrush>
@@ -847,10 +856,10 @@
 
 							<Border Style="{StaticResource Separator}" ></Border>
 
-							<StackPanel Orientation="Horizontal" Spacing="0">
+							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusLeft}" IsChecked="{Binding Default.ShowProjectPane, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xEA49;"></FontIcon>
 											<TextBlock  Text="Project pane" Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
@@ -858,7 +867,7 @@
 								</ToggleButton>
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1" IsChecked="{Binding Default.ShowOutline, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xe8fd;"></FontIcon>
 											<TextBlock  Text="Document outline"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
@@ -866,10 +875,10 @@
 								</ToggleButton>
 							</StackPanel>
 
-							<StackPanel Orientation="Horizontal" Spacing="0">
+							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusLeft}" IsChecked="{Binding Default.ShowLog, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xEA37;"></FontIcon>
 											<TextBlock  Text="Application log"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
@@ -877,7 +886,7 @@
 								</ToggleButton>
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1" IsEnabled="{Binding Default.ShowLog}" IsChecked="{Binding Default.ShowCompilerOutput, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xe945;"></FontIcon>
 											<TextBlock  Text="Compiler output"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
@@ -887,10 +896,10 @@
 
 							<Border Style="{StaticResource Separator}" ></Border>
 
-							<StackPanel Orientation="Horizontal" Spacing="0">
+							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
 								<ToggleButton  IsChecked="{Binding Default.StartWithLastActiveProject, Mode=TwoWay}">
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xE81C;"></FontIcon>
 											<TextBlock  Text="Auto-open last project"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 										</StackPanel>
@@ -898,7 +907,7 @@
 								</ToggleButton>
 								<!--<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1" IsEnabled="{Binding Default.StartWithLastActiveProject, Mode=OneWay}" IsChecked="{Binding Default.StartWithLastOpenFiles, Mode=TwoWay}" >
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<TextBlock  Text="Remember opened files"></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
@@ -909,7 +918,7 @@
 
 							<ToggleButton IsChecked="{Binding Default.MultiInstance, Mode=TwoWay}" ToolTipService.ToolTip="Allow multiple app instances and file activation">
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xF7ED;"></FontIcon>
 										<TextBlock  Text="Allow multiple app instances (β)"  Foreground="{ThemeResource ForegroundColor}"></TextBlock>
 									</StackPanel>
@@ -922,17 +931,17 @@
 
 				<TabViewItem IsClosable="False" ToolTipService.ToolTip="ConTeXt: Modules and Documentation">
 					<TabViewItem.Header>
-						<StackPanel Orientation="Horizontal">
+						<StackPanel Style="{StaticResource HorizontalStack}">
 							<FontIcon  Glyph="&#xE71D;"></FontIcon>
 							<TextBlock  Text="ConTeXt"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
 					<ScrollViewer Style="{StaticResource RibbonView}">
 						<StackPanel Style="{StaticResource RibbonContent}">
-							<StackPanel Orientation="Horizontal" Spacing="0">
+							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
 								<DropDownButton  ToolTipService.ToolTip="Open a Manual" CornerRadius="{StaticResource CornerRadiusLeft}">
 									<DropDownButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<SymbolIcon Symbol="Help"></SymbolIcon>
 											<TextBlock  Text="PDF Manuals" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 										</StackPanel>
@@ -955,7 +964,7 @@
 								</DropDownButton>
 								<ToggleButton  BorderThickness="0,1,1,1" ToolTipService.ToolTip="Open ConTeXt Manuals in the internal viewer" IsChecked="{Binding Default.HelpPDFInInternalViewer, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer, Mode=OneWay}" CornerRadius="{StaticResource CornerRadiusRight}">
 									<ToggleButton.Content>
-										<StackPanel Orientation="Horizontal" >
+										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xE89F;"></FontIcon>
 											<TextBlock  Text="open internally"  Foreground="{ThemeResource ForegroundColor}" ></TextBlock>
 										</StackPanel>
@@ -965,7 +974,7 @@
 
 							<ToggleButton IsChecked="{Binding Default.ShowCommandReference, Mode=TwoWay}" >
 								<ToggleButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<FontIcon Glyph="&#xF168;"></FontIcon>
 										<TextBlock Text="Command reference" Foreground="{ThemeResource ForegroundColor}" ></TextBlock>
 									</StackPanel>
@@ -978,14 +987,14 @@
 
 							<DropDownButton ToolTipService.ToolTip="Manage ConTeXt modules"  IsEnabled="{Binding IsInstalling, Mode=OneWay, Converter={StaticResource BoolInverter}}" >
 								<DropDownButton.Content>
-									<StackPanel Orientation="Horizontal" >
+									<StackPanel Style="{StaticResource HorizontalStack}" >
 										<SymbolIcon Symbol="AllApps"></SymbolIcon>
 										<TextBlock  Text="Manage Modules" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
 									<Flyout Placement="Bottom" >
-										<ListView SelectionMode="None" IsItemClickEnabled="False" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}, Mode=OneWay}" ItemsSource="{Binding Default.ContextModules}" >
+										<ListView SelectionMode="None" IsItemClickEnabled="False" IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}, Mode=OneWay}" ItemsSource="{Binding ContextModules}" >
 											<ListView.ItemContainerStyle>
 												<Style TargetType="ListViewItem">
 													<Setter Property="HorizontalContentAlignment"  Value="Stretch"></Setter>
@@ -1005,7 +1014,7 @@
 															<TextBlock Text="{Binding Description}" Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="WrapWholeWords"></TextBlock>
 														</StackPanel>
 
-														<StackPanel Grid.Column="1" Spacing="6" Orientation="Horizontal" VerticalAlignment="Center" >
+														<StackPanel Grid.Column="1" Spacing="6" Style="{StaticResource HorizontalStack}" VerticalAlignment="Center" >
 															<Button Click="Btn_InstallModule_Click" ToolTipService.ToolTip="Download and install the latest version">
 																<Button.Content>
 																	<SymbolIcon Symbol="Download"></SymbolIcon>
@@ -1027,7 +1036,7 @@
 
 							<Button Visibility="{Binding Default.DistributionInstalled, Mode=OneWay}" IsEnabled="{Binding IsInstalling, Mode=OneWay, Converter={StaticResource BoolInverter}}" ToolTipService.ToolTip="Update ConTeXt distribution"   Click="Update_Click" >
 								<Button.Content>
-									<StackPanel Orientation="Horizontal">
+									<StackPanel Style="{StaticResource HorizontalStack}">
 										<FontIcon Glyph="&#xECC5;" ></FontIcon>
 										<TextBlock Text="Update ConTeXt" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}" ></TextBlock>
 									</StackPanel>
@@ -1052,7 +1061,7 @@
 				<RowDefinition Height="Auto"></RowDefinition>
 				<RowDefinition Height="*"></RowDefinition>
 			</Grid.RowDefinitions>
-			<InfoBar Grid.Row="0" IsOpen="{Binding InfoOpen, Mode=TwoWay}" Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
+			<InfoBar BorderThickness="0" CornerRadius="0" Grid.Row="0" IsOpen="{Binding InfoOpen, Mode=TwoWay}" Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
 			<Grid Grid.Row="1" x:Name="ContentGrid" >
 				<Grid.RowDefinitions>
 					<RowDefinition Height="*"></RowDefinition>
@@ -1252,7 +1261,7 @@
 											</TabViewItem.ContextFlyout>
 											<TabViewItem.HeaderTemplate>
 												<DataTemplate x:DataType="models:FileItem">
-													<StackPanel MaxWidth="90" Orientation="Horizontal" Spacing="0" Padding="0" Margin="0">
+													<StackPanel MaxWidth="90" Style="{StaticResource HorizontalStack}" Spacing="0" Padding="0" Margin="0">
 														<TextBlock FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" FontFamily="Segoe" Visibility="{Binding IsChanged}" Text="*"></TextBlock>
 														<TextBlock FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" Visibility="{Binding IsPinned, Converter={StaticResource BoolToInvisibility}}" FontFamily="Segoe" Text="{Binding FileName}"></TextBlock>
 													</StackPanel>
@@ -1373,6 +1382,15 @@
 								</animations:Implicit.HideAnimations>
 							</pdfjs:PDFjsViewer>
 
+							<ScrollViewer Visibility="{Binding IsMarkdownViewerActive}" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+								<animations:Implicit.ShowAnimations>
+									<animations:OpacityAnimation Duration="0:0:0.25" From="0" To="1.0"></animations:OpacityAnimation>
+								</animations:Implicit.ShowAnimations>
+								<animations:Implicit.HideAnimations>
+									<animations:OpacityAnimation Duration="0:0:0.25" From="1.0" To="0"></animations:OpacityAnimation>
+								</animations:Implicit.HideAnimations>
+							<toolkit:MarkdownTextBlock Padding="12" TextWrapping="WrapWholeWords" Visibility="{Binding Default.ShowMarkdownViewer}" Text="{Binding CurrentMarkdownText}" ImageMaxWidth="400" ImageMaxHeight="200" />
+								</ScrollViewer>
 						</Grid>
 					</Grid>
 					<toolkit:GridSplitter Style="{StaticResource RowSplitter}" Grid.Row="1" Visibility="{Binding Default.ShowLog}"/>
@@ -1433,12 +1451,13 @@
 						</ListView>
 						<Button Click="ClearLog_Click" HorizontalAlignment="Right">
 							<Button.Content>
-								<StackPanel Orientation="Horizontal" >
+								<StackPanel Style="{StaticResource HorizontalStack}" >
 									<SymbolIcon Symbol="Delete"></SymbolIcon>
 									<TextBlock  Text="Clear" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}"></TextBlock>
 								</StackPanel>
 							</Button.Content>
 						</Button>
+						
 					</Grid>
 				</Grid>
 				<Grid x:Name="DocumentationGrid" Grid.Column="3" BorderThickness="2,0,0,0" BorderBrush="{ThemeResource SolidBackgroundFillColorTertiary}" Width="450" Style="{StaticResource GridCell}" Padding="0" Visibility="{Binding Default.ShowCommandReference, Mode=OneWay}">
@@ -1468,7 +1487,7 @@
 										</MenuFlyout.Items>
 									</MenuFlyout>
 								</ListView.Resources>
-								
+
 								<ListView.ItemContainerTransitions>
 									<TransitionCollection></TransitionCollection>
 								</ListView.ItemContainerTransitions>
@@ -1507,7 +1526,7 @@
 													</ListView.ItemContainerTransitions>
 													<ListView.ItemsPanel>
 														<ItemsPanelTemplate>
-															<ItemsStackPanel Orientation="Horizontal" />
+															<ItemsStackPanel Orientation="Horizontal"/>
 														</ItemsPanelTemplate>
 													</ListView.ItemsPanel>
 													<ListView.ItemContainerStyle>
@@ -1555,7 +1574,7 @@
 																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.1" />
 																			</Storyboard>
 																		</VisualState>
-																		
+
 																		<VisualState x:Name="UncheckedPressed">
 																			<Storyboard>
 																				<ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon" Storyboard.TargetProperty="Glyph">
@@ -1600,7 +1619,7 @@
 																				<DoubleAnimation Storyboard.TargetName="Icon"  Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.1" />
 																			</Storyboard>
 																		</VisualState>
-																		
+
 																	</VisualStateGroup>
 
 																</VisualStateManager.VisualStateGroups>
@@ -1661,7 +1680,7 @@
 						</SemanticZoom.ZoomedOutView>
 					</SemanticZoom>
 
-					<StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Orientation="Horizontal" Margin="0,5,16,0" Spacing="4">
+					<StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Style="{StaticResource HorizontalStack}" Margin="0,5,16,0" Spacing="4">
 						<ToggleButton ToolTipService.ToolTip="Only show favorites" IsChecked="{Binding Default.FilterFavorites, Mode=TwoWay}" Click="FilterFavorites_Checked" Padding="4" Width="32">
 							<FontIcon FontSize="16" Foreground="{ThemeResource ForegroundColor}" Glyph="&#xE735;"></FontIcon>
 						</ToggleButton>
@@ -1686,6 +1705,7 @@
 
 				</Grid>
 			</Grid>
+			
 			<ProgressBar Name="Progressbar" Grid.Row="1" VerticalAlignment="Top" Foreground="{ThemeResource ForegroundColor}" Background="{ThemeResource SolidBackgroundFillColorTertiary }" Visibility="{Binding IsLoadingBarVisible, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" ShowPaused="{Binding IsPaused}" Value="{Binding ProgressValue}" HorizontalAlignment="Stretch"  IsIndeterminate="{Binding IsIndeterminate}" ShowError="{Binding IsError}">
 				<animations:Implicit.ShowAnimations>
 					<animations:OpacityAnimation Duration="0:0:0.5" From="0" To="1"></animations:OpacityAnimation>
@@ -1697,7 +1717,7 @@
 		</Grid>
 		<ContentDialog MinWidth="500" x:Name="AboutDialog" PrimaryButtonText="Close" DefaultButton="Primary"  CornerRadius="{StaticResource LargeCornerRadius}">
 			<ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
-				<StackPanel Orientation="Vertical">
+				<StackPanel  Style="{StaticResource VerticalStack}">
 					<TextBlock Margin="0,6,0,0" Style="{ThemeResource SubheaderTextBlockStyle}" Text="ConTeXt IDE"></TextBlock>
 					<TextBlock Style="{ThemeResource BodyTextBlockStyle}" FontSize="20" Text="About"></TextBlock>
 					<TextBlock x:Name="TB_Version" Style="{ThemeResource BodyTextBlockStyle}" Text=""></TextBlock>
@@ -1715,5 +1735,7 @@
 			<!--<TextBlock x:Name="Ttp_Tbk" TextWrapping="WrapWholeWords" Text="Text"></TextBlock>-->
 		</TeachingTip>
 		<!--<Grid Visibility="Visible" VerticalAlignment="Top" HorizontalAlignment="Right" Width="200" Height="28" x:Name="CustomDragRegion"  IsHitTestVisible="False"/>-->
+
+	
 	</Grid>
 </Page>

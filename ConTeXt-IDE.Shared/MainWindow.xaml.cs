@@ -11,6 +11,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
+using Windows.Graphics;
 using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -37,13 +38,19 @@ namespace ConTeXt_IDE
 			AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets\", @"SquareLogo.ico"));
 			//AW.SetPresenter(VM.Default.LastPresenter);
 
-			if (VM.Default.IsMaximized && AW.Presenter is OverlappedPresenter OP)
+			if (AW.Presenter is OverlappedPresenter OP)
 			{
+				int x = Math.Max(VM.Default.LastSize.X, 0);
+				int y = Math.Max(VM.Default.LastSize.Y, 0);
+				AW.Move(new(x, y));
+
+			
+				
 				// OP.SetBorderAndTitleBar(false, true);
 			}
 			else
 			{
-				AW.MoveAndResize(VM.Default.LastSize);
+			
 			}
 
 			if (IsCustomizationSupported)
@@ -79,7 +86,11 @@ namespace ConTeXt_IDE
 		{
 			args.Cancel = true;
 			bool canceled = false;
-			VM.Default.LastSize = new(sender.Position.X, sender.Position.Y, sender.Size.Width, sender.Size.Height);
+			int x = Math.Max(sender.Position.X, 0);
+			int y = Math.Max(sender.Position.Y, 0);
+			int w = Math.Max(sender.Size.Width, 1024);
+			int h = Math.Max(sender.Size.Height, 576);
+			VM.Default.LastSize = new(x, y, w, h);
 			VM.Default.LastPresenter = sender.Presenter.Kind;
 			if (sender.Presenter is OverlappedPresenter OP)
 			{
@@ -225,11 +236,7 @@ namespace ConTeXt_IDE
 				VM.Default.EvergreenInstalled = true;
 			}
 
-			if (AW.Presenter is OverlappedPresenter OP)
-			{
-				if (VM.Default.IsMaximized)
-					OP.Maximize();
-			}
+		
 
 			try
 			{
@@ -248,6 +255,18 @@ namespace ConTeXt_IDE
 				{
 					VM.IsIndeterminate = true;
 					RootFrame.Navigate(typeof(MainPage));
+
+					if (AW.Presenter is OverlappedPresenter OP)
+					{
+						if (VM.Default.IsMaximized)
+						{
+							OP.Maximize();
+						}
+						else
+						{
+							AW.Resize(new(Math.Max(VM.Default.LastSize.Width, 1024), Math.Max(VM.Default.LastSize.Height, 576)));
+						}
+					}
 				}
 				else
 				{

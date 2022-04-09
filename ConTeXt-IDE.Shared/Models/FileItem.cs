@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Windows.Storage;
@@ -144,17 +145,14 @@ namespace ConTeXt_IDE.Models
 			get => Get("");
 			set
 			{
+
 				Set(value);
+				
 				if (!string.IsNullOrEmpty(value))
 				{
 					IsChanged = value != LastSaveFileContent;
 				}
-				// First idea for the Outline feature:
-				//if (App.VM.Default.ShowOutline)
-				//{
-				//    //App.VM.CurrentEditor.FindMatchesAsync(@"(\\start(sub)*?(section|subject|part|chapter|title)\s*?\[\s*?)(title\s*?=\s*?\{?)(.*?)\}?\s*?([,\]])", false, true, false, null, true, 20);
-				//    //var list = await editor.FindMatchesAsync(@"(\\start(sub)*?(section|subject|part|chapter|title)\s*?\[\s*?)(title\s*?=\s*?\{?)(.*?)\}?\s*?([,\]])", false, true, false, null, true, 20);
-				//}
+
 			}
 		}
 
