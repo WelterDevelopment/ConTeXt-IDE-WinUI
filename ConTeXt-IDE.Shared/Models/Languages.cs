@@ -101,13 +101,15 @@ namespace ConTeXt_IDE.Shared.Models
 				{
 					{ Token.Environment, /*language=regex*/ @"^\s*?#+? .*" },
 					{ Token.Keyword, /*language=regex*/ @"^[\w ]*?(?=>)" },
-					{ Token.Command, /*language=regex*/ @"</?.+?/?>" },
+					{ Token.Command, /*language=regex*/ @"(?<=<\/|<)\w+?\b(?=.*?\/?>)" },
 					{ Token.Function, /*language=regex*/ @"\[.*?\]" },
+					{ Token.Key, /*language=regex*/ @"(?<=\s)\w+?\s*?(?==)" },
 					{ Token.Comment, /*language=regex*/ @"^\s*?> .*" },
-					{ Token.Array, /*language=regex*/ @"^\s*?- .*" },
+					{ Token.String, /*language=regex*/ @"'.*?'" },
 					{ Token.Symbol, /*language=regex*/ @"[:=<>,.!?&%+\|\-*\/\^~;´`]" },
 					{ Token.Bracket, /*language=regex*/ @"[\[\]\(\)\{\}]" },
-					{ Token.Number, /*language=regex*/ @"0[xX][0-9a-fA-F]*|-?\d*\.\d+([eE][\-+]?\d+)?|-?\d+?" },
+					{ Token.Number, /*language=regex*/ @"0[xX][0-9a-fA-F]*\b|-?\d*\.\d+([eE][\-+]?\d+)?\b|-?\d+?\b" },
+					
 				},
 				WordTokens = new()
 				{

@@ -1241,10 +1241,10 @@
 				   TabCloseRequested="Tabs_TabCloseRequested" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
 					  CanDragTabs="True" 
 					  CanReorderTabs="True" TabItemsSource="{Binding FileItems}" SelectedItem="{Binding CurrentFileItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-					  AllowDrop="True" TabStripDragOver="EditorTabViewDrag"  TabStripDrop="EditorTabViewDrop"  FontFamily="Segoe">
+					  AllowDrop="True" TabStripDragOver="EditorTabViewDrag"   TabStripDrop="EditorTabViewDrop"  FontFamily="Segoe">
 
 								<TabView.TabStripFooter>
-									<Grid DragOver="EditorTabViewDrag" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" AllowDrop="True" Drop="EditorTabViewDrop">
+									<Grid Background="Transparent" DragOver="EditorTabViewDrag" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" AllowDrop="True" Drop="EditorTabViewDrop">
 									</Grid>
 								</TabView.TabStripFooter>
 								<TabView.TabItemTemplate>

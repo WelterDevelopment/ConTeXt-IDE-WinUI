@@ -12,32 +12,38 @@
 	\setuppapersize[W1][W1]
 	\setuplayout[topspace=0.2cm]
 \stopmode
-	\setuplayout[
-		backspace=0.4cm,
-		width=fit,
-		header=1cm,
-		footer=0.6cm,
-		cutspace=0cm,
-		margindistance=0cm,
-		margin=0cm,
-		edgedistance=0cm,
-		edge=0.4cm,
-		headerdistance=0.4cm,
-		footerdistance=0.4cm,
-		bottom=0cm,
-		top=0.2cm,
-		topskip=0cm,
-		topdistance=0cm,
-		bottomdistance=0cm,
-		bottomspace=0cm,
-		height=fit,
-		]
 
-\startnotmode[screen] % Printer-friently layout
+\setuplayout[
+	backspace=0.4cm,
+	width=fit,
+	header=1cm,
+	footer=0.6cm,
+	cutspace=0cm,
+	margindistance=0cm,
+	margin=0cm,
+	edgedistance=0cm,
+	edge=0.4cm,
+	headerdistance=0.4cm,
+	footerdistance=0.4cm,
+	bottom=0cm,
+	top=0.2cm,
+	topskip=0cm,
+	topdistance=0cm,
+	bottomdistance=0cm,
+	bottomspace=0cm,
+	height=fit,
+	]
+
+\startmode[handout] % Printer-friently layout
 	\setuppapersize[W1][A4] % This will create space for lecture notes below the actual page content 
 	%\setuplayout[top=0cm,bottom=0cm, topdistance=1cm, topspace=1cm, bottomdistance=1cm, edge=0cm, margin=0cm, edgedistance=1.5cm, backspace=1.5cm, margindistance=0cm, width=fit, height=fit, header=1.2cm, footer=1cm, headerdistance=0.5cm]
 	\setuplayout[location={middle,top}]
-\stopnotmode
+	\setupbackgrounds[page][background=color, framecolor=gray, frame=on]
+\stopmode
+
+\startmode[print]
+	\setuppapersize[A4][A4]
+\stopmode
 
 \setuppagenumbering[alternative=onesided, page=yes]
 
@@ -47,7 +53,7 @@
 %\showmakeup
 %\showsetups
 %\showlayout
-  
+
 % PDF Output Adjustments
 \setupinteraction[state=start, page=yes, menu=on, focus=fit, style=, click=yes, color=, contrastcolor=]
 \placebookmarks[section,subsection,subject][section][force=yes]
@@ -79,25 +85,25 @@
 
 \startsetups[prshead]
 	\startframed[frame=off, align=flushleft, location=high]
-    {\bfa\getmarking[sectionnumber]~\getmarking[section]}\\
-    {\bf\getmarking[subsectionnumber]~\getmarking[subsection]}
-  \stopframed
+		{\bfa\getmarking[sectionnumber]~\getmarking[section]}\\
+		{\bf\getmarking[subsectionnumber]~\getmarking[subsection]}
+	\stopframed
 \stopsetups
 \startsetups[prsheadfront]
 	\startframed[frame=off, align=flushleft, location=high]
-    {\bfa\getmarking[section]}\\
-    {\bf\getmarking[subsection]}
-  \stopframed
+		{\bfa\getmarking[section]}\\
+		{\bf\getmarking[subsection]}
+	\stopframed
 \stopsetups
 \startsetups[prsheadback]
 	\startframed[frame=off, align=flushleft, location=high]
-    {\bfa\getmarking[subject]}\\
-    {\bf\getmarking[subsubject]}
-  \stopframed
+		{\bfa\getmarking[subject]}\\
+		{\bf\getmarking[subsubject]}
+	\stopframed
 \stopsetups
 \startsetups[footerbar]
 	\startframed[frame=off, align=low, location=bottom]
-    \startmode[screen]
+		\startmode[screen]
 			%\interactionbar[alternative=a,width=.3\makeupwidth,step=small,symbol=yes]
 		\doifelse{\lastpage}{0}{\definemeasure[percent][0pt]}{\definemeasure[percent][0.3\textwidth*\currentpage/\lastpage]}%
 		\def\length{\the\textwidth*0.3}%
@@ -113,7 +119,7 @@
 		endfig;
 		\stopMPcode \blank[-2mm]
 		\stopmode
-  \stopframed
+	\stopframed
 \stopsetups
 \startsetups[footertext]
 	\startframed[frame=off, align=center, location=bottom]
@@ -134,27 +140,27 @@
 \startsectionblockenvironment[frontpart]
 %	\setnumber[userpage][0]
 	\setupheadertexts[]
-  \setupheadertexts[\directsetup{prsheadfront}][]
+	\setupheadertexts[\directsetup{prsheadfront}][]
 	\setupfootertexts[\directsetup{footertext}]
   \setupfootertexts[][\userpagenumber]
 \stopsectionblockenvironment
 \startsectionblockenvironment[bodypart]
 	%\setupinterlinespace[distance=1ex, line=3ex]
 	\setupheadertexts[]
-  \setupheadertexts[\directsetup{prshead}][]
-  \setupfootertexts[\directsetup{footertext}]
-  \setupfootertexts[\directsetup{footerbar}][\userpagenumber\doifmode{screen}{\subpagenumber}]
-  \savenumber[userpage]
-  \resetnumber[userpage]
+	\setupheadertexts[\directsetup{prshead}][]
+	\setupfootertexts[\directsetup{footertext}]
+	\setupfootertexts[\directsetup{footerbar}][\userpagenumber\doifmode{screen}{\subpagenumber}]
+	\savenumber[userpage]
+	\resetnumber[userpage]
 \stopsectionblockenvironment
 \startsectionblockenvironment[appendix]
-  \setupheadertexts[]
-  \setupheadertexts[\directsetup{prsheadfront}][]
+	\setupheadertexts[]
+	\setupheadertexts[\directsetup{prsheadfront}][]
 	\setupfootertexts[\directsetup{footertext}]
-  \setupfootertexts[][\userpagenumber]
-  \restorenumber[userpage]
-  \incrementnumber[userpage] % This is to compenesate a bug
-  \decrementnumber[userpage]
+	\setupfootertexts[][\userpagenumber]
+	\restorenumber[userpage]
+	\incrementnumber[userpage] % This is to compenesate a bug
+	\decrementnumber[userpage]
 \stopsectionblockenvironment
 \startsectionblockenvironment[backpart]
   \setupheadertexts[]
