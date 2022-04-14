@@ -17,11 +17,7 @@
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.1" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.197" />
-<<<<<<< Updated upstream
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.1" />
-=======
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
->>>>>>> Stashed changes
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>

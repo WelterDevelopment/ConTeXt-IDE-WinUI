@@ -235,6 +235,7 @@ namespace ConTeXt_IDE.ViewModels
 					int startdepth = 0;
 					int depthgroup = 0;
 					int titlegroup = 0;
+					int level = 0;
 					if (CurrentFileItem.FileLanguage == "ConTeXt")
 					{
 						mc = Regex.Matches(line, @"\\(start)?([sub].*?)?(section|subject|part|title|chapter)(\[.*?title\s*?=\s*)(.+?)(\s*?)(\,|\])");
@@ -255,16 +256,21 @@ namespace ConTeXt_IDE.ViewModels
 
 					if (mc?.Count > 0 && mc.First().Success)
 					{
-						int level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
+						
 						string type = "";
 						string title = "";
 						if (CurrentFileItem.FileLanguage == "ConTeXt")
 						{
+							level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
 							type = string.Concat(mc.First().Groups.Values.ToList().GetRange(1, 3).Select(x => x.Value)).Replace("start", "");
 						}
 						else if (CurrentFileItem.FileLanguage == "Markdown")
 						{
-							type = string.Concat(mc.First().Groups.Values.ElementAt(depthgroup).Value.Replace(depthcounter,"sub"),"section");
+							level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
+							if (level == 0)
+								type = "section";
+							else
+							type = string.Concat(Enumerable.Repeat("sub",level)) + "section";
 						}
 						if (CurrentFileItem.FileLanguage == "ConTeXt")
 						{
@@ -272,7 +278,7 @@ namespace ConTeXt_IDE.ViewModels
 						}
 						else if (CurrentFileItem.FileLanguage == "Markdown")
 						{
-							title = mc.First().Groups.Values.ElementAt(3).Value;
+							title = mc.First().Groups.Values.ElementAt(titlegroup).Value;
 						}
 
 							if (!update)
