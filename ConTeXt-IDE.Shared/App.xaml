@@ -6,6 +6,7 @@
     xmlns:helpers="using:ConTeXt_IDE.Helpers"
     xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+	xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:vm="using:ConTeXt_IDE.ViewModels" 
     >
 	<Application.Resources>
@@ -39,6 +40,7 @@
 				<Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
 			</Style>
 
+			<AcrylicBrush x:Key="CustomAcrylicBackground" TintOpacity="0.7" TintLuminosityOpacity="{ThemeResource TintLuminosityOpacity}" TintColor="{ThemeResource BackgroundColor}" FallbackColor="{ThemeResource BackgroundColor}"></AcrylicBrush>
 
 			<Style TargetType="Grid" x:Key="GridCell">
 				<Setter Property="Padding" Value="12,12,12,12"></Setter>
@@ -46,7 +48,7 @@
 				<Setter Property="RowSpacing" Value="6"></Setter>
 				<Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-				<!--<Setter Property="Background" Value="{ThemeResource ApplicationPageBackgroundThemeBrush}" ></Setter>-->
+				<Setter Property="Background" Value="{ThemeResource CustomAcrylicBackground}" ></Setter>
 			</Style>
 
 			<Style TargetType="toolkit:GridSplitter" x:Key="RowSplitter">
@@ -155,13 +157,24 @@
 				<Setter Property="VerticalAlignment" Value="Center"></Setter>
 			</Style>
 
+			<!--<ui:AttachedDropShadow x:Key="CommonShadow" BlurRadius="6" Offset="6" />-->
+
+			<!--<AcrylicBrush x:Key="CustomAcrylicBrush" TintOpacity="0.2" TintLuminosityOpacity="{ThemeResource TintLuminosityOpacity}" TintColor="{ThemeResource BackgroundColor}" FallbackColor="{ThemeResource BackgroundColor}" TintTransitionDuration="0" />-->
+
+			<SolidColorBrush x:Key="CustomAcrylicBrush" Color="{Binding AccentColorLowLow, Source={StaticResource AccentColorSetting}, Mode=OneWay}" />
+			<StaticResource x:Key="InfoBarInformationalSeverityBackgroundBrush" ResourceKey="CustomAcrylicBrush" />
+			<SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="{ThemeResource BackgroundColorSemiTransparent}" />
+			
 			<Style TargetType="Grid" x:Key="RibbonGrid">
 				<Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary }"></Setter>
 			</Style>
 			<Style TargetType="ScrollViewer" x:Key="RibbonView">
-				<Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary }"></Setter>
+				<Setter Property="Background" Value="{StaticResource CustomAcrylicBrush}"></Setter>
 				<Setter Property="Height" Value="48"></Setter>
+				<!--<Setter Property="CornerRadius" Value="{Binding RibbonCornerRadius, Source={StaticResource VM}, Mode=OneWay}"></Setter>
+				<Setter Property="Margin" Value="6,0,6,6"></Setter>-->
 				<Setter Property="Padding" Value="6,6,6,6"></Setter>
+				<!--<Setter Property="ui:Effects.Shadow" Value="{StaticResource CommonShadow }"></Setter>-->
 				<Setter Property="HorizontalScrollMode" Value="Enabled"></Setter>
 				<Setter Property="HorizontalScrollBarVisibility" Value="Hidden"></Setter>
 				<Setter Property="VerticalScrollMode" Value="Disabled"></Setter>
@@ -174,14 +187,15 @@
 				<Setter Property="animations:Implicit.ShowAnimations">
 					<Setter.Value>
 						<animations:ImplicitAnimationSet>
-							<animations:OpacityAnimation Duration="0:0:0.5" From="0" To="1"></animations:OpacityAnimation>
+							<animations:OpacityAnimation Duration="0:0:0.15" EasingMode="EaseInOut" EasingType="Quadratic" From="0.2" To="1"></animations:OpacityAnimation>
+							<animations:TranslationAnimation Duration="0:0:0.2" EasingMode="EaseInOut" EasingType="Quadratic" From="-12, 0, 0" To="0"></animations:TranslationAnimation>
 						</animations:ImplicitAnimationSet>
 					</Setter.Value>
 				</Setter>
 				<Setter Property="animations:Implicit.HideAnimations">
 					<Setter.Value>
 						<animations:ImplicitAnimationSet>
-							<animations:OpacityAnimation Duration="0:0:0.5" From="1" To="0"></animations:OpacityAnimation>
+							<animations:OpacityAnimation Duration="0:0:0.05" EasingMode="EaseInOut" EasingType="Quadratic" From="1" To="0"></animations:OpacityAnimation>
 						</animations:ImplicitAnimationSet>
 					</Setter.Value>
 				</Setter>
@@ -226,10 +240,12 @@
 			
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Default">
+					
 					<ResourceDictionary.MergedDictionaries>
 						<!--<ColorPaletteResources  Accent="ForestGreen"  BaseHigh="Yellow" BaseLow="Orange" BaseMedium="Red" BaseMediumHigh="Violet" BaseMediumLow="Blue" />-->
 						<!--<ColorPaletteResources Accent="#FFBFCF36" AltHigh="#FFFFFFFF" AltLow="#FFFFFFFF" AltMedium="#FFFFFFFF" AltMediumHigh="#FFFFFFFF" AltMediumLow="#FFFFFFFF" BaseHigh="#FF000000" BaseLow="#FFCCCCCC" BaseMedium="#FF898989" BaseMediumHigh="#FF5D5D5D" BaseMediumLow="#FF737373" ChromeAltLow="#FF5D5D5D" ChromeBlackHigh="#FF000000" ChromeBlackLow="#FFCCCCCC" ChromeBlackMedium="#FF5D5D5D" ChromeBlackMediumLow="#FF898989" ChromeDisabledHigh="#FFCCCCCC" ChromeDisabledLow="#FF898989" ChromeGray="#FF737373" ChromeHigh="#FFCCCCCC" ChromeLow="#FFECECEC" ChromeMedium="#FFE6E6E6" ChromeMediumLow="#FFECECEC" ChromeWhite="#FFFFFFFF" ListLow="#FFE6E6E6" ListMedium="#FFCCCCCC" />-->
 					</ResourceDictionary.MergedDictionaries>
+					
 					<SolidColorBrush x:Key="WindowCaptionForeground">#FFF</SolidColorBrush>
 					<SolidColorBrush x:Key="WindowCaptionForegroundDisabled">#DDD</SolidColorBrush>
 
@@ -241,19 +257,28 @@
 
 					<Color x:Key="ForegroundColor">#FFF</Color>
 					<Color x:Key="BackgroundColor">#000</Color>
+					<Color x:Key="BackgroundColorSemiTransparent">#A000</Color>
 					<Color x:Key="ForegroundLightColor">#AAA</Color>
+
+					<x:Double x:Key="TintLuminosityOpacity">0.1</x:Double>
+					
 				</ResourceDictionary>
 
 				<ResourceDictionary x:Key="HighContrast">
 
 					<SolidColorBrush x:Key="WindowCaptionForeground">White</SolidColorBrush>
 					<SolidColorBrush x:Key="WindowCaptionForegroundDisabled">White</SolidColorBrush>
+					
 					<Color x:Key="SystemAccentColorLight2" >DarkGray</Color>
 					<Color x:Key="SystemAccentColorDark1" >DarkGray</Color>
 
 					<Color x:Key="ForegroundColor">#FFF</Color>
 					<Color x:Key="BackgroundColor">#000</Color>
+					<Color x:Key="BackgroundColorSemiTransparent">#000</Color>
 					<Color x:Key="ForegroundLightColor">#FFF</Color>
+
+					<x:Double x:Key="TintLuminosityOpacity">1.0</x:Double>
+					
 				</ResourceDictionary>
 
 				<ResourceDictionary x:Key="Light">
@@ -268,8 +293,11 @@
 					<Color x:Key="SystemAccentColorDark1" >DarkGray</Color>
 
 					<Color x:Key="ForegroundColor">#000</Color>
-					<Color x:Key="BackgroundColor">#FFF</Color>
+					<Color x:Key="BackgroundColor">#EEE</Color>
+					<Color x:Key="BackgroundColorSemiTransparent">#AFFF</Color>
 					<Color x:Key="ForegroundLightColor">#555</Color>
+
+					<x:Double x:Key="TintLuminosityOpacity">0.1</x:Double>
 
 				</ResourceDictionary>
 			</ResourceDictionary.ThemeDictionaries>

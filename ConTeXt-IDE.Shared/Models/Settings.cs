@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using Windows.ApplicationModel;
 using Windows.Graphics;
 using Windows.Storage;
@@ -120,6 +121,18 @@ namespace ConTeXt_IDE.Models
 																												new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
 									};
 				}
+				if (settings.PDFViewerList.Count == 0)
+				{
+					settings.CurrentPDFViewer = new("Default");
+					settings.PDFViewerList.Add(settings.CurrentPDFViewer);
+				}
+				settings.CurrentPDFViewer = settings.PDFViewerList.FirstOrDefault(x=>x.Name == settings.CurrentPDFViewer.Name); // Ensure that the selected object is not a new object and is actually from within the collection
+
+				if (settings.InstalledContextModules.Count == 0)
+				{
+					settings.InstalledContextModules.Add("pgf");
+					settings.InstalledContextModules.Add("pgfplots");
+				}
 				if (settings.TokenColorDefinitions.Count == 0)
 				{
 					settings.TokenColorDefinitions = new() {
@@ -187,18 +200,8 @@ namespace ConTeXt_IDE.Models
 		public bool ShowCompilerOutput { get => Get(false); set => Set(value); }
 		public bool ShowOutline { get => Get(true); set => Set(value); }
 		public bool ShowProjectPane { get => Get(true); set => Set(value); }
-		public bool ShowCommandReference { get => Get(false); set
-			{
-				try
-				{
-					Set(value);
-				}
-				catch (Exception ex)
-				{
-					App.VM.Log(ex.Message);
-				}
-			} }
 
+		public bool UseModernStyle { get => Get(true); set => Set(value); }
 		public uint CurrentWindowID { get; set; } = (uint)0;
 
 		public bool ShowMarkdownViewer { get => Get(true); set => Set(value); }
@@ -215,7 +218,7 @@ namespace ConTeXt_IDE.Models
 		public bool LineMarkers { get => Get(true); set => Set(value); }
 		public bool ShowScrollBars { get => Get(false); set => Set(value); }
 		public bool ScrollbarMarkers { get => Get(true); set => Set(value); }
-		public bool CodeFolding { get => Get(false); set => Set(value); }
+		public bool CodeFolding { get => Get(true); set => Set(value); }
 		public bool ControlCharacters { get => Get(false); set => Set(value); }
 		public bool FilterFavorites { get => Get(false); set => Set(value); }
 
@@ -240,6 +243,7 @@ namespace ConTeXt_IDE.Models
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }
+		public int RibbonMarginValue { get => Get(5); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value); App.VM.RibbonMargin = new(value, 0, value, value); } } }
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{
@@ -258,11 +262,15 @@ namespace ConTeXt_IDE.Models
 
 		public ObservableCollection<CommandFavorite> CommandFavorites { get => Get(new ObservableCollection<CommandFavorite>()); set => Set(value); }
 
-		public List<string> InstalledContextModules { get => Get(new List<string>() { "pgf", "pgfplots" }); set => Set(value); }
+		public List<string> InstalledContextModules { get => Get(new List<string>()); set => Set(value); }
 		
 
 		public ObservableCollection<Project> ProjectList { get => Get(new ObservableCollection<Project>()); set => Set(value); }
 
+		public PDFViewer CurrentPDFViewer { get => Get(new PDFViewer()); set => Set(value); }
+
+		public ObservableCollection<PDFViewer> PDFViewerList { get => Get(new ObservableCollection<PDFViewer>()); set => Set(value); }
+		
 		public ObservableCollection<HelpItem> HelpItemList { get => Get(new ObservableCollection<HelpItem>()); set => Set(value); }
 		public ObservableCollection<TokenDefinition> TokenColorDefinitions { get => Get(new ObservableCollection<TokenDefinition>()
 		{

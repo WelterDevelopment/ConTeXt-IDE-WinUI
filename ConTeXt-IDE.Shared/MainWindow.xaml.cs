@@ -160,7 +160,7 @@ namespace ConTeXt_IDE
 			{
 				WebClient wc = new WebClient();
 
-				wc.DownloadProgressChanged += (a, b) => { VM.ProgressValue = b.ProgressPercentage; };
+				wc.DownloadProgressChanged += (a, b) => { VM.ProgressValue = (double)b.ProgressPercentage; };
 				wc.DownloadFileCompleted += (a, b) =>
 				{
 					Install();

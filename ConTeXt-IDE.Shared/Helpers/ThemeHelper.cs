@@ -45,8 +45,7 @@ namespace ConTeXt_IDE.Helpers
 			{
 				Set(value);
 
-				var uiSettings = new Windows.UI.ViewManagement.UISettings();
-				var defaultthemecolor = uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+				
 
 				float HighFactor = 1;
 				float LowFactor = -1;
@@ -61,6 +60,8 @@ namespace ConTeXt_IDE.Helpers
 						LowFactor = 1;
 						break;
 					case ElementTheme.Default:
+						var uiSettings = new Windows.UI.ViewManagement.UISettings();
+						var defaultthemecolor = uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
 						if (defaultthemecolor == Colors.Black)
 						{
 							HighFactor = 1;
@@ -74,9 +75,12 @@ namespace ConTeXt_IDE.Helpers
 						break;
 				}
 
+
+
 				AccentColorHigh = ChangeColorBrightness(value, HighFactor * 0.2f);
 				AccentColorLow = ChangeColorBrightness(value, LowFactor * 0.4f);
-				AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.4f), 0.9f);
+				//AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.4f), 0.9f);
+				AccentColorLowLow = ChangeColorBrightness(value, LowFactor * (LowFactor < 0 ? 0.75f : 0.8f));
 				AccentColorLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.6f), 0.9f);
 				AccentColorLowLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.8f), 0.9f);
 

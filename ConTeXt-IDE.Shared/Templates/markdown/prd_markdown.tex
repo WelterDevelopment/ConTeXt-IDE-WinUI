@@ -1,0 +1,30 @@
+\startproduct[prd_markdown]
+\environment[env_markdown]
+\usemodule[filter]
+
+\setvariables[meta][title={Markdown to \ConTeXt}, subtitle={README}, author={Some author}, date={\currentdate}]
+\setupinteraction[title=\getvariable{meta}{title}, subtitle=\getvariable{meta}{subtitle}, author=\getvariable{meta}{author}, date=\getvariable{meta}{date}]
+
+\starttext
+\startfrontmatter
+\component[c_0_frontpart]
+\stopfrontmatter
+
+\startbodymatter
+\defineexternalfilter[markdown][cache=yes, filtercommand={pandoc -f markdown+link_attributes+superscript+subscript -t context -o \externalfilteroutputfile\space \externalfilterinputfile}]
+\processmarkdownfile{prd_markdown.md}
+\stopbodymatter
+
+\startappendices
+\startsection[title={Bibliography}]
+	\placelistofpublications
+\stopsection
+\stopappendices
+
+\startbackmatter
+\startsection[title={The Backmatter}]
+	...
+\stopsection
+\stopbackmatter
+\stoptext
+\stopproduct

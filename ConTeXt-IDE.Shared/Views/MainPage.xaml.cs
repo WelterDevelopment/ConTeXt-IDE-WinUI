@@ -74,20 +74,17 @@ namespace ConTeXt_IDE
 				}
 				VM.FileActivatedEvents.Clear();
 
-				MenuSave.Command = new RelayCommand(() => { Btnsave_Click(null, null); });
-				MenuCompile.Command = new RelayCommand(() => { Btncompile_Click(null, null); });
-
-				MenuSyncTeX.Command = new RelayCommand(() => { FindInPDF(); });
+				MenuSave.Command = new RelayCommand(() => { Btn_Save_Click(null, null); });
 				MenuSave.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.S, Modifiers = VirtualKeyModifiers.Control });
 
-				var compile = new KeyboardAccelerator() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control };
-				//compile.Invoked += (a, b) => { b.Handled = true;};
-				MenuCompile.KeyboardAccelerators.Add(compile);
+				MenuCompile.Command = new RelayCommand(() => { Btn_Compile_Click(null, null); });
+				MenuCompile.KeyboardAccelerators.Add(new() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control });
+				MenuCompile.SetBinding(MenuFlyoutItem.IsEnabledProperty, new Binding() {  Path = new("CurrentFileItem.IsTexFile") });
 
+				MenuSyncTeX.Command = new RelayCommand(() => { FindInPDF(); });
 				MenuSyncTeX.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Space, Modifiers = VirtualKeyModifiers.Control });
-				Binding myBinding = new Binding();
-				myBinding.Path = new("CurrentFileItem.IsTexFile");
-				MenuCompile.SetBinding(MenuFlyoutItem.IsEnabledProperty, myBinding);
+				MenuSyncTeX.SetBinding(MenuFlyoutItem.IsEnabledProperty, new Binding() { Path = new("CurrentFileItem.IsTexFile") });
+				MenuSyncTeX.SetBinding(MenuFlyoutItem.VisibilityProperty, new Binding() { Path = new("CurrentProject.UseSyncTeX") });
 			}
 			catch (Exception ex)
 			{
@@ -142,6 +139,7 @@ namespace ConTeXt_IDE
 		{
 			base.OnNavigatedTo(e);
 			SetColor(VM.AccentColor, (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme), false);
+			//Tbv_Start.AddHandler(PointerReleasedEvent, new PointerEventHandler(Tbv_PointerReleased), true);
 		}
 
 		public async void FirstStart()
@@ -485,6 +483,7 @@ namespace ConTeXt_IDE
 			{
 				var fi = (FileItem)(sender as FrameworkElement).DataContext;
 				RemoveItem(VM.CurrentProject?.Directory, fi);
+				VM.CloseRequested = true;
 				VM.FileItems.Remove(fi);
 				string type = fi.File is StorageFile ? "File" : "Folder";
 				await fi.File.DeleteAsync();
@@ -562,6 +561,11 @@ namespace ConTeXt_IDE
 			}
 		}
 
+		private void Tbv_FileItems_DragStarting(object sender, DragStartingEventArgs e)
+		{ 
+			VM.IsDragging = true;
+		}
+
 		private async void EditorTabViewDrop(object sender, DragEventArgs e)
 		{
 			if (e.DataView.Contains(StandardDataFormats.StorageItems))
@@ -575,11 +579,11 @@ namespace ConTeXt_IDE
 			}
 			else
 			{
-				foreach (var item in DraggedItems)
-				{
-					if (item.Type == FileItem.ExplorerItemType.File)
-						VM.OpenFile(item);
-				}
+					foreach (var item in DraggedItems)
+					{
+						if (item.Type == FileItem.ExplorerItemType.File)
+							VM.OpenFile(item);
+					}
 				DraggedItems.Clear();
 			}
 			e.Handled = true;
@@ -612,7 +616,9 @@ namespace ConTeXt_IDE
 				foreach (FileItem item in args.Items)
 				{
 					DraggedItems.Add(item);
+
 				}
+				
 			}
 			catch (Exception ex)
 			{
@@ -675,7 +681,19 @@ namespace ConTeXt_IDE
 			e.Handled = true;
 		}
 
-		private static async Task<BitmapImage> LoadImage(StorageFile file)
+
+		private void Tbv_PointerReleased(object sender, PointerRoutedEventArgs e)
+		{
+			// ToDo: This workaround to collapse the currently selected ribbon item is the hackiest of hacks, needs better logic
+			FrameworkElement item = sender as FrameworkElement;
+			if (string.Compare((MainRibbon.SelectedItem as TabViewItem)?.Tag as string, item?.Tag as string) == 0)
+			{
+				MainRibbon.SelectedIndex = -1;
+				e.Handled = true;
+			}
+			
+		}
+			private static async Task<BitmapImage> LoadImage(StorageFile file)
 		{
 			BitmapImage bitmapImage = new BitmapImage();
 			FileRandomAccessStream stream = (FileRandomAccessStream)await file.OpenAsync(FileAccessMode.Read);
@@ -825,8 +843,8 @@ namespace ConTeXt_IDE
 									errors.Add(new() { SyntaxErrorType = SyntaxErrorType.Error, iLine = VM.ConTeXtErrorMessage.linenumber - 1, Title = VM.ConTeXtErrorMessage.lasttexerror });
 
 									VM.Codewriter.SyntaxErrors = errors;
-									VM.Codewriter?.SelectLine(new(0, VM.ConTeXtErrorMessage.linenumber - 1));
-									VM.Codewriter?.CenterView();
+									Codewriter.SelectLine(new(0, VM.ConTeXtErrorMessage.linenumber - 1));
+									Codewriter.CenterView();
 								}
 								catch { }
 							}
@@ -859,7 +877,12 @@ namespace ConTeXt_IDE
 								}
 								else
 								{
-									await Launcher.LaunchFileAsync(pdfout);
+									if (VM.Default.CurrentPDFViewer.Name == "Default")
+										await Launcher.LaunchFileAsync(pdfout);
+									else
+									{
+										OpenPDFInExternalViewer(currFolder.Path,VM.Default.CurrentPDFViewer.Path,pdfout.Name);
+									}
 								}
 							}
 						}
@@ -884,7 +907,7 @@ namespace ConTeXt_IDE
 							}
 						}
 					}
-					VM.Codewriter?.Focus(FocusState.Keyboard);
+					Codewriter.Focus(FocusState.Keyboard);
 				}
 				catch (Exception f)
 				{
@@ -941,7 +964,7 @@ namespace ConTeXt_IDE
 			FileItem fi = (sender as FrameworkElement).DataContext as FileItem;
 
 			await VM.SaveAll();
-			VM.Codewriter?.Save();
+			Codewriter.Save();
 			CompileTex(false, fi);
 		}
 
@@ -949,7 +972,7 @@ namespace ConTeXt_IDE
 		{
 
 			await VM.Save((sender as FrameworkElement).DataContext as FileItem);
-			VM.Codewriter?.Save();
+			Codewriter.Save();
 		}
 
 		private async Task<bool> InstallContext()
@@ -1033,6 +1056,35 @@ namespace ConTeXt_IDE
 			return !File.Exists(Path.Combine(workingDirectory, Path.GetFileNameWithoutExtension(texFileName) + @"-error.log"));
 		}
 
+		public void OpenPDFInExternalViewer(string workingDirectory, string exepath, string pdfFileName, string param = "")
+		{
+			try
+			{
+				Process p = new Process();
+				ProcessStartInfo info = new ProcessStartInfo()
+				{
+					RedirectStandardInput = false,
+					RedirectStandardOutput = false,
+					RedirectStandardError = false,
+					CreateNoWindow = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					UseShellExecute = false,
+					WorkingDirectory = workingDirectory
+				};
+
+				p.StartInfo = info;
+				info.FileName = Environment.ExpandEnvironmentVariables(exepath);
+				info.Arguments = " " + param  + " " + pdfFileName;
+
+				p.Exited += (a,b) => { p.Close(); };
+
+				p.Start();
+			}
+			catch
+			{
+			}
+		}
+
 		#endregion
 
 		#region Editor & Viewer
@@ -1052,7 +1104,10 @@ namespace ConTeXt_IDE
 					}
 				}
 				if (VM.FileItems.Contains(fi))
+				{
+					VM.CloseRequested = true;
 					VM.FileItems.Remove(fi);
+				}
 
 				//VM.CurrentProject.LastOpenedFiles = VM.FileItems.Select(x => x.FileName).ToList();
 			}
@@ -1276,6 +1331,8 @@ namespace ConTeXt_IDE
 										switch (project)
 										{
 											case "mwe": rootfile = "c_main.tex"; break;
+											case "markdown": rootfile = "prd_markdown.tex"; break;
+											case "cv": rootfile = "prd_cv.tex"; break;
 											case "projpres": rootfile = "prd_presentation.tex"; proj.Modes.FirstOrDefault(x => x.Name == "screen").IsSelected = true; break;
 											case "projthes": rootfile = "prd_thesis.tex"; break;
 											case "single": rootfile = "prd_main.tex"; break;
@@ -1292,6 +1349,8 @@ namespace ConTeXt_IDE
 
 										VM.Default.ProjectList.Add(proj);
 										VM.CurrentProject = proj;
+										if (project == "markdown")
+											VM.OpenFile("prd_markdown.md");
 
 									}
 								}
@@ -1308,7 +1367,6 @@ namespace ConTeXt_IDE
 				VM.Log("Exception on adding Project: " + ex.Message);
 			}
 		}
-
 		private async void CbB_Theme_SelectionChanged(object sender, object args)
 		{
 			await Task.Delay(50);
@@ -1476,7 +1534,7 @@ namespace ConTeXt_IDE
 									if (percentage <= 100 && percentage >= 0)
 									{
 										VM.IsIndeterminate = false;
-										VM.ProgressValue = percentage;
+										VM.ProgressValue = (double)Math.Max(0.5d, (double)percentage) ;
 									}
 								}
 							}
@@ -1579,37 +1637,37 @@ namespace ConTeXt_IDE
 
 		#region Ribbon : Start
 
-		private async void Btncompile_Click(object sender, RoutedEventArgs e)
+		private async void Btn_Compile_Click(object sender, RoutedEventArgs e)
 		{
 			await VM.SaveAll();
-			VM.Codewriter?.Save();
+			Codewriter.Save();
 			CompileTex();
 		}
 
-		private async void Btncompileroot_Click(object sender, RoutedEventArgs e)
+		private async void Btn_CompileRoot_Click(object sender, RoutedEventArgs e)
 		{
 			await VM.SaveAll();
-			VM.Codewriter?.Save();
+			Codewriter.Save();
 			CompileTex(true);
 		}
 
 
 		private void Undo_Click(object sender, SplitButtonClickEventArgs e)
 		{
-			VM.Codewriter?.TextAction_Undo();
-			VM.Codewriter?.Focus(FocusState.Keyboard);
+			Codewriter.TextAction_Undo();
+			Codewriter.Focus(FocusState.Keyboard);
 		}
 
-		private async void Btnsave_Click(object sender, RoutedEventArgs e)
+		private async void Btn_Save_Click(object sender, RoutedEventArgs e)
 		{
 			await VM.Save();
-			VM.Codewriter?.Save();
+			Codewriter.Save();
 		}
 
-		private async void btnsaveall_Click(object sender, RoutedEventArgs e)
+		private async void Btn_SaveAll_Click(object sender, RoutedEventArgs e)
 		{
 			await VM.SaveAll();
-			VM.Codewriter?.Save();
+			Codewriter.Save();
 		}
 
 		private void Modes_Click(object sender, RoutedEventArgs e)
@@ -1632,7 +1690,7 @@ namespace ConTeXt_IDE
 				VM.Default.ProjectList.Clear();
 				Settings.Default = Settings.RestoreSettings();
 				Unload_Click(null, null);
-				VM.Default.ShowCommandReference = false;
+				VM.ShowCommandReference = false;
 				VM.PopulateJumpList();
 			}
 		}
@@ -1651,6 +1709,34 @@ namespace ConTeXt_IDE
 				VM.CurrentProject.Modes.Add(mode);
 				VM.Default.SaveSettings();
 			}
+		}
+
+		private async void Btn_AddPDFViewer_Click(object sender, RoutedEventArgs e)
+		{
+			PDFViewer viewer = new PDFViewer();
+			string name = "";
+			var cd = new ContentDialog() { XamlRoot = XamlRoot, Title = "Add external PDF viewer", PrimaryButtonText = "Ok", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+			TextBox tbn = new TextBox() { Header = "Name" };
+			TextBox tbp = new TextBox() { Header = "Executable" };
+			TextBlock tbph = new() { Text = @"You can simply enter the name of your viewer (e.g. 'sumatrapdf'), but only if it is added to your PATH environment variable! If not, you need to enter the full path to the .exe file, like '%USERPROFILE%\AppData\Local\SumatraPDF\SumatraPDF.exe'" };
+			StackPanel stk = new();
+			stk.Children.Add(tbn);
+			stk.Children.Add(tbp);
+			stk.Children.Add(tbph);
+			cd.Content = stk;
+			if (await cd.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrEmpty(tbn.Text) && !string.IsNullOrEmpty(tbp.Text))
+			{
+				viewer.Name = tbn.Text;
+				viewer.Path = tbp.Text;
+				VM.Default.PDFViewerList.Add(viewer);
+				VM.Default.CurrentPDFViewer = viewer;
+				VM.Default.SaveSettings();
+			}
+		}
+
+		private void Fly_PDFViewer_Closing(object sender, FlyoutBaseClosingEventArgs e)
+		{
+			VM.Default.SaveSettings();
 		}
 
 		private async void addEnvironment_Click(object sender, RoutedEventArgs e)
@@ -1701,7 +1787,15 @@ namespace ConTeXt_IDE
 					await OpenPDF(sf);
 				}
 				else
-					await Launcher.LaunchFileAsync(sf);
+				{
+					if (VM.Default.CurrentPDFViewer.Name == "Default")
+						await Launcher.LaunchFileAsync(sf);
+					else
+					{
+						OpenPDFInExternalViewer(lsf.Path + hf.Path, VM.Default.CurrentPDFViewer.Path, sf.Name);
+					}
+				}
+					
 			}
 			catch (Exception ex)
 			{
@@ -1754,14 +1848,15 @@ namespace ConTeXt_IDE
 
 		private void Tbx_FontSize_Wheel(object sender, PointerRoutedEventArgs e)
 		{
+			NumberBox nbx = sender as NumberBox;
 			var point = e.GetCurrentPoint(sender as UIElement);
 			int wheeldelta = point.Properties.MouseWheelDelta;
 			if (wheeldelta > 0)
 			{
-				if (VM.Default.FontSize < 100)
+				if (VM.Default.FontSize < nbx.Maximum)
 					VM.Default.FontSize++;
 			}
-			else if (VM.Default.FontSize > 6)
+			else if (VM.Default.FontSize > nbx.Minimum)
 			{
 				VM.Default.FontSize--;
 			}
@@ -1769,16 +1864,34 @@ namespace ConTeXt_IDE
 		}
 		private void Tbx_TabLength_Wheel(object sender, PointerRoutedEventArgs e)
 		{
+			NumberBox nbx = sender as NumberBox;
 			var point = e.GetCurrentPoint(sender as UIElement);
 			int wheeldelta = point.Properties.MouseWheelDelta;
 			if (wheeldelta > 0)
 			{
-				if (VM.Default.TabLength < 5)
+				if (VM.Default.TabLength < nbx.Maximum)
 					VM.Default.TabLength++;
 			}
-			else if (VM.Default.TabLength > 0)
+			else if (VM.Default.TabLength > nbx.Minimum)
 			{
 				VM.Default.TabLength--;
+			}
+			e.Handled = true;
+		}
+
+		private void Nbx_RibbonMarginValue_Wheel(object sender, PointerRoutedEventArgs e)
+		{
+			NumberBox nbx = sender as NumberBox;
+			var point = e.GetCurrentPoint(sender as UIElement);
+			int wheeldelta = point.Properties.MouseWheelDelta;
+			if (wheeldelta > 0)
+			{
+				if (VM.Default.RibbonMarginValue < nbx.Maximum)
+					VM.Default.RibbonMarginValue++;
+			}
+			else if (VM.Default.RibbonMarginValue > nbx.Minimum)
+			{
+				VM.Default.RibbonMarginValue--;
 			}
 			e.Handled = true;
 		}
@@ -2106,290 +2219,330 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
-
-				XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
-				string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
-				using (StringReader reader = new StringReader(xml))
+				await Task.Run(() =>
 				{
-
-					Interface contextinterface = (Interface)serializer.Deserialize(reader);
-					List<Command> commands = contextinterface.InterfaceList.SelectMany(x => x.Command).ToList();
-
-					List<string> commandnames = new();
-
-					foreach (Command command in commands)
+					XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
+					string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
+					using (StringReader reader = new StringReader(xml))
 					{
-						if (command?.Arguments?.ArgumentsList != null)
-						{
-							int i = 0;
-							foreach (Models.Argument argument in command?.Arguments?.ArgumentsList)
-							{
-								if (argument != null)
-								{
-									i++;
-									argument.Number = i;
-								}
-								if (argument is Assignments assignments)
-								{
-									if (assignments?.Parameter != null)
-										foreach (var param in assignments?.Parameter)
-											if (param?.Resolve != null)
-											{
-												if (param.Constant == null)
-													param.Constant = new();
-												foreach (var res in param?.Resolve)
-													if (res != null)
-														param.Constant.Add(new() { Type = res.Name });
-											}
-									if (assignments?.Inherit != null)
-										foreach (var inherit in assignments?.Inherit)
-											if (inherit?.Name != null)
-											{
 
-												string inheritedcommandname = inherit.Name;
-												Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
-												if (inheritedcommand != null)
+						Interface contextinterface = (Interface)serializer.Deserialize(reader);
+						List<Command> commands = contextinterface.InterfaceList.SelectMany(x => x.Command).ToList();
+
+						List<string> commandnames = new();
+
+						foreach (Command command in commands)
+						{
+							if (command?.Arguments?.ArgumentsList != null)
+							{
+								int i = 0;
+								foreach (Models.Argument argument in command?.Arguments?.ArgumentsList)
+								{
+									if (argument != null)
+									{
+										i++;
+										argument.Number = i;
+									}
+									if (argument is Assignments assignments)
+									{
+										if (assignments?.Parameter != null)
+											foreach (var param in assignments?.Parameter)
+												if (param?.Resolve != null)
 												{
-													Assignments inheritasmt = (Assignments)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Assignments asmt && asmt?.List == "yes");
-													if (inheritasmt?.Parameter != null)
-													{
-														//assignments.Parameter = new();
-														assignments.Parameter.Add(new() { Name = $"Inherited from \\{inheritedcommandname}:", Constant = null });
-														foreach (var param in inheritasmt?.Parameter)
-															assignments.Parameter.Add(param);
-														//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
-													}
+													if (param.Constant == null)
+														param.Constant = new();
+													foreach (var res in param?.Resolve)
+														if (res != null)
+															param.Constant.Add(new() { Type = res.Name });
 												}
-											}
-									if (assignments?.Parameter != null)
-										foreach (var parameter in assignments?.Parameter)
-										{
-											if (parameter?.Inherit != null)
-												foreach (var inh in parameter?.Inherit)
+										if (assignments?.Inherit != null)
+											foreach (var inherit in assignments?.Inherit)
+												if (inherit?.Name != null)
 												{
-													string inheritedcommandname = inh.Name;
+
+													string inheritedcommandname = inherit.Name;
 													Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
 													if (inheritedcommand != null)
 													{
-														//if (parameter.Constant == null)
-														parameter.Constant = new();
-														Keywords inheritkeyw = (Keywords)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
-														if (inheritkeyw?.Constant != null)
+														Assignments inheritasmt = (Assignments)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Assignments asmt && asmt?.List == "yes");
+														if (inheritasmt?.Parameter != null)
 														{
-															parameter.Constant.Add(new() { Type = $"\\{inheritedcommandname}->" });
-															foreach (var cons in inheritkeyw?.Constant)
-																parameter.Constant.Add(cons);
+															//assignments.Parameter = new();
+															assignments.Parameter.Add(new() { Name = $"Inherited from \\{inheritedcommandname}:", Constant = null });
+															foreach (var param in inheritasmt?.Parameter)
+																assignments.Parameter.Add(param);
 															//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
 														}
-														//if (inheritkeyw?.Inherit != null)
-														//{
-														//	string ininheritedcommandname = inheritkeyw?.Inherit?.Name;
-														//	Command ininheritedcommand = commands.FirstOrDefault(x => x.Name == ininheritedcommandname);
-														//	Keywords ininheritkeyw = (Keywords)ininheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
-														//	parameter.Constant.Add(new() { Type = $"\\{ininheritedcommandname}->" });
-														//	foreach (var cons in ininheritkeyw?.Constant)
-														//		parameter.Constant.Add(cons);
-														//	//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
-														//}
 													}
 												}
-										}
-								}
-								if (argument is Keywords keywords)
-								{
-									if (keywords?.Inherit != null)
-										if (keywords?.Inherit?.Name != null)
-										{
-											string inheritedcommandname = keywords?.Inherit.Name;
-											Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
-											if (inheritedcommand != null)
+										if (assignments?.Parameter != null)
+											foreach (var parameter in assignments?.Parameter)
 											{
-												Keywords inheritkeyw = (Keywords)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
-												if (inheritkeyw?.Constant != null)
+												if (parameter?.Inherit != null)
+													foreach (var inh in parameter?.Inherit)
+													{
+														string inheritedcommandname = inh.Name;
+														Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
+														if (inheritedcommand != null)
+														{
+															//if (parameter.Constant == null)
+															parameter.Constant = new();
+															Keywords inheritkeyw = (Keywords)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
+															if (inheritkeyw?.Constant != null)
+															{
+																parameter.Constant.Add(new() { Type = $"\\{inheritedcommandname}->" });
+																foreach (var cons in inheritkeyw?.Constant)
+																	parameter.Constant.Add(cons);
+																//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
+															}
+															//if (inheritkeyw?.Inherit != null)
+															//{
+															//	string ininheritedcommandname = inheritkeyw?.Inherit?.Name;
+															//	Command ininheritedcommand = commands.FirstOrDefault(x => x.Name == ininheritedcommandname);
+															//	Keywords ininheritkeyw = (Keywords)ininheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
+															//	parameter.Constant.Add(new() { Type = $"\\{ininheritedcommandname}->" });
+															//	foreach (var cons in ininheritkeyw?.Constant)
+															//		parameter.Constant.Add(cons);
+															//	//VM.Log(string.Join(", ", assignments.Parameter.Select(x => x.Name)));
+															//}
+														}
+													}
+											}
+									}
+									if (argument is Keywords keywords)
+									{
+										if (keywords?.Inherit != null)
+											if (keywords?.Inherit?.Name != null)
+											{
+												string inheritedcommandname = keywords?.Inherit.Name;
+												Command inheritedcommand = commands.FirstOrDefault(x => x.Name == inheritedcommandname);
+												if (inheritedcommand != null)
 												{
-													keywords.Constant.Add(new() { Type = $"\\{inheritedcommandname}->" });
-													foreach (var param in inheritkeyw?.Constant)
-														keywords.Constant.Add(param);
+													Keywords inheritkeyw = (Keywords)inheritedcommand?.Arguments?.ArgumentsList?.FirstOrDefault(x => x is Keywords keyw && keyw?.List == "yes");
+													if (inheritkeyw?.Constant != null)
+													{
+														keywords.Constant.Add(new() { Type = $"\\{inheritedcommandname}->" });
+														foreach (var param in inheritkeyw?.Constant)
+															keywords.Constant.Add(param);
+													}
 												}
 											}
-										}
+									}
 								}
 							}
 						}
-					}
 
-					List<Command> commandstoiterate = new(commands);
+						List<Command> commandstoiterate = new(commands);
 
-					foreach (var instancecommand in commandstoiterate.Where(x => x.Variant?.ToLower() == "instance"))
-					{
-						if (instancecommand?.Instances?.Constant != null)
+						foreach (var instancecommand in commandstoiterate.Where(x => x.Variant?.ToLower() == "instance"))
 						{
-							foreach (var constant in instancecommand?.Instances?.Constant)
+							if (instancecommand?.Instances?.Constant != null)
 							{
-								string sequence = "";
-								if (instancecommand?.Sequence?.String?.Count > 0)
-									sequence = instancecommand?.Sequence?.String?.First()?.Value ?? "";
-								Command newcommand = (Command)instancecommand.DeepClone();
-								newcommand.Name = sequence + constant.Value;
-								commands.Insert(commands.IndexOf(instancecommand), newcommand);
+								foreach (var constant in instancecommand?.Instances?.Constant)
+								{
+									string sequence = "";
+									if (instancecommand?.Sequence?.String?.Count > 0)
+										sequence = instancecommand?.Sequence?.String?.First()?.Value ?? "";
+									Command newcommand = (Command)instancecommand.DeepClone();
+									newcommand.Name = sequence + constant.Value;
+									commands.Insert(commands.IndexOf(instancecommand), newcommand);
+								}
+								commands.Remove(instancecommand);
 							}
-							commands.Remove(instancecommand);
 						}
+
+						foreach (var command in commands)
+						{
+							int count = commandnames.Count(x => x == command.Name);
+							command.ID = count;
+							commandnames.Add(command.Name);
+							command.IsFavorite = VM.Default.CommandFavorites.Any(x => x.Name == @"\" + (command.Type == "environment" ? "start" : "") + command.Name && x.ID == command.ID);
+						}
+
+						contextcommands = commands;
+
+
+
+						IOrderedEnumerable<IGrouping<string, Command>> query = from item in contextcommands
+																																																													group item by item?.Category into g
+																																																													where !string.IsNullOrWhiteSpace(g.Key)
+																																																													orderby g.Key
+																																																													select g;
+
+						DispatcherQueue.TryEnqueue(() =>
+						{
+							VM.ContextCommandGroupList = query.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+							if (VM.Default.CommandGroups.Count == 0)
+							{
+								VM.Default.CommandGroups = VM.ContextCommandGroupList.Select(x => new CommandGroup() { Name = x, IsSelected = !disableGroups.Contains(x) }).ToList();
+							}
+						});
+
+						
 					}
 
-					foreach (var command in commands)
-					{
-						int count = commandnames.Count(x => x == command.Name);
-						command.ID = count;
-						commandnames.Add(command.Name);
-						command.IsFavorite = VM.Default.CommandFavorites.Any(x => x.Name == @"\" + (command.Type == "environment" ? "start" : "") + command.Name && x.ID == command.ID);
-					}
+				});
 
-					contextcommands = commands;
-
-
-
-					IOrderedEnumerable<IGrouping<string, Command>> query = from item in contextcommands
-																																																												group item by item?.Category into g
-																																																												where !string.IsNullOrWhiteSpace(g.Key)
-																																																												orderby g.Key
-																																																												select g;
-
-					VM.ContextCommandGroupList = query.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
-					if (VM.Default.CommandGroups.Count == 0)
-					{
-						VM.Default.CommandGroups = VM.ContextCommandGroupList.Select(x => new CommandGroup() { Name = x, IsSelected = !disableGroups.Contains(x) }).ToList();
-					}
-
-					IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
-					string text = Searchtext.Text;
-					await Task.Run(() => { filtered = UpdateSearchFilter(text, VM.Default.FilterFavorites); });
+				IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
+				string text = Searchtext.Text;
+				await Task.Run(() => { filtered = UpdateSearchFilter(text, VM.Default.FilterFavorites); });
 
 					VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
 					cvs.Source = filtered;
+				
 
 					//DocumentationView.SelectedIndex = -1;
 
 
 					PopulateIntelliSense("ConTeXt");
-				}
+				
 			}
 			catch (Exception ex)
 			{
-				VM.InfoMessage("Error", ex.Message, InfoBarSeverity.Error);
+				VM.InfoMessage("IntelliSense initialization error", ex.Message, InfoBarSeverity.Error);
 			}
 
 		}
 
+		private string ConvertCDName(string value)
+		{
+			if (value is string parametertype && value != null)
+			{
+				if (parametertype.StartsWith("cd:"))
+				{
+					string type = parametertype.Remove(0, 3);
+					return type.ToUpper();
+				}
+				else return parametertype;
+			}
+			else return value;
+		}
+
 		private void PopulateIntelliSense(string name)
 		{
-			var lang = FileLanguages.LanguageList.First(x => x.Name == name);
-			if (lang.Commands == null)
-				lang.Commands = new();
-			lang.Commands.Clear();
-			foreach (Command command in contextcommands)
+			try
 			{
-				string snippet = "";
-				string commandname = @"\" + (command.Type == "environment" ? "start" : "") + command.Name;
-				if (command.Type == "environment")
+				var lang = FileLanguages.LanguageList.First(x => x.Name == name);
+				Task.Run(() =>
 				{
-					if (command?.Sequence?.Instance?.Value == "section")
-						snippet = "[title={}]";
-					else
+					
+					if (lang.Commands == null)
+						lang.Commands = new();
+					lang.Commands.Clear();
+					foreach (Command command in contextcommands)
 					{
-						switch (command?.Name)
+						string snippet = "";
+						string commandname = @"\" + (command.Type == "environment" ? "start" : "") + command.Name;
+						if (command.Type == "environment")
 						{
-							case "mode": snippet = "[]"; break;
-							case "placeformula": snippet = "[reference=eq:]"; break;
-							case "placefigure": snippet = "[title={}, location=here, reference=fig:]"; break;
-							case "placetable": snippet = "[title={}, location=here, reference=tab:]"; break;
-							case "component": snippet = "[]"; break;
-							case "environment": snippet = "[]"; break;
-							case "product": snippet = "[]"; break;
-							case "project": snippet = "[]"; break;
-						}
-					}
-					snippet += "\n\t\n\\stop" + command.Name;
-				}
-				else
-				{
-					switch (command?.Name)
-					{
-						case "cite": snippet = "[]"; break;
-						case "color": snippet = "[]{}"; break;
-						case "blank": snippet = "[medium]"; break;
-						case "unit": snippet = "{}"; break;
-
-						case "frac": snippet = "{}"; break;
-
-						case "component": snippet = "[]"; break;
-						case "environment": snippet = "[]"; break;
-						case "product": snippet = "[]"; break;
-						case "project": snippet = "[]"; break;
-
-						case "definecolor": snippet = "[r=1, g=1, b=1]"; break;
-						case "definestructureconversionset": snippet = "[frontpart:pagenumber][][Romannumerals]"; break;
-
-						case "setupinteraction": snippet = @"[title={}, subtitle={}, author={}, date={}, state=start, focus=standard, style=, click=yes, color=, contrastcolor=]"; break;
-						case "placebookmarks": snippet = @"[chapter,section,subsection,subject][force=yes]"; break;
-
-						case "setuplayout": snippet = "[topspace=2cm, backspace=2cm, header=24pt, footer=36pt, height=middle, width=middle]"; break;
-						case "setuppapersize": snippet = "[A4][A4]"; break;
-						case "setuppapenumbering": snippet = "[alternative=siglesided]"; break;
-						case "setupwhitespace": snippet = "[medium]"; break;
-						case "setupindenting": snippet = "[no]"; break;
-						case "setupbodyfont": snippet = "[sans, 11pt]"; break;
-						case "setupfooter": snippet = @"[style=\tf]"; break;
-						case "setupheader": snippet = @"[style=\tf]"; break;
-						case "setuphead": snippet = @"[section][style=\bfc, before=\bigskip, after=\medskip, page=yes, header=empty]"; break;
-					}
-				}
-				if ((command.Type == "environment" && VM.Default.SuggestStartStop) | (command.Type != "environment" && VM.Default.SuggestCommands))
-				{
-					IntelliSense intelliSense = new(commandname) { Snippet = snippet, Description = "Category: " + command.Category, IntelliSenseType = IntelliSenseType.Command };
-					if (VM.Default.SuggestArguments && command.Arguments?.ArgumentsList != null)
-						foreach (var item in command.Arguments?.ArgumentsList)
-						{
-							if (item is Assignments assignments)
+							if (command?.Sequence?.Instance?.Value == "section")
+								snippet = "[title={}]";
+							else
 							{
-								intelliSense.ArgumentsList.Add(new()
+								switch (command?.Name)
 								{
-									Delimiters = assignments?.Delimiters,
-									IntelliSenseType = IntelliSenseType.Argument,
-									Name = assignments?.Inherit?.FirstOrDefault()?.Name ?? "",
-									Parameters = assignments?.Parameter?.Select(x => new CodeEditorControl_WinUI.KeyValue() { Name = x.Name, Description = "Type: " + x.Constant?.FirstOrDefault()?.Type, Values = x.Constant?.Select(x => x.Type).ToList() } as CodeEditorControl_WinUI.Parameter).ToList(),
-								});
+									case "mode": snippet = "[]"; break;
+									case "placeformula": snippet = "[reference=eq:]"; break;
+									case "placefigure": snippet = "[title={}, location=here, reference=fig:]"; break;
+									case "placetable": snippet = "[title={}, location=here, reference=tab:]"; break;
+									case "component": snippet = "[]"; break;
+									case "environment": snippet = "[]"; break;
+									case "product": snippet = "[]"; break;
+									case "project": snippet = "[]"; break;
+								}
+							}
+							snippet += "\n\t\n\\stop" + command.Name;
+						}
+						else
+						{
+							switch (command?.Name)
+							{
+								case "cite": snippet = "[]"; break;
+								case "color": snippet = "[]{}"; break;
+								case "blank": snippet = "[medium]"; break;
+								case "unit": snippet = "{}"; break;
+
+								case "frac": snippet = "{}"; break;
+
+								case "component": snippet = "[]"; break;
+								case "environment": snippet = "[]"; break;
+								case "product": snippet = "[]"; break;
+								case "project": snippet = "[]"; break;
+
+								case "definecolor": snippet = "[r=1, g=1, b=1]"; break;
+								case "definestructureconversionset": snippet = "[frontpart:pagenumber][][Romannumerals]"; break;
+
+								case "setupinteraction": snippet = @"[title={}, subtitle={}, author={}, date={}, state=start, focus=standard, style=, click=yes, color=, contrastcolor=]"; break;
+								case "placebookmarks": snippet = @"[chapter,section,subsection,subject][force=yes]"; break;
+
+								case "setuplayout": snippet = "[topspace=2cm, backspace=2cm, header=24pt, footer=36pt, height=middle, width=middle]"; break;
+								case "setuppapersize": snippet = "[A4][A4]"; break;
+								case "setuppapenumbering": snippet = "[alternative=siglesided]"; break;
+								case "setupwhitespace": snippet = "[medium]"; break;
+								case "setupindenting": snippet = "[no]"; break;
+								case "setupbodyfont": snippet = "[sans, 11pt]"; break;
+								case "setupfooter": snippet = @"[style=\tf]"; break;
+								case "setupheader": snippet = @"[style=\tf]"; break;
+								case "setuphead": snippet = @"[section][style=\bfc, before=\bigskip, after=\medskip, page=yes, header=empty]"; break;
 							}
 						}
-					intelliSense.Token = command.Type == "environment" ? Token.Environment : Token.Command;
-					//intelliSense.ArgumentsList = command.Arguments?.ArgumentsList?.Select(x=> x is Assignments assignments ? new CodeEditorControl_WinUI.() { Delimiters = x.Delimiters, List = x.List, Name = assignments.Inherit?.Name, } : null ).ToList();
-					lang.Commands.Add(intelliSense);
-				}
-			}
-			if (VM.Default.SuggestPrimitives)
-			{
-				string primitives = "year|xtokspre|xtoksapp|xtoks|xspaceskip|xleaders|xdefcsname|xdef|wrapuppar|wordboundary|widowpenalty|widowpenalties|wd|vtop|vss|vsplit|vskip|vsize|vrule|vpack|vfuzz|vfilneg|vfill|vfil|vcenter|vbox|vbadness|valign|vadjust|uppercase|unvpack|unvcopy|unvbox|untraced|unskip|unpenalty|unletprotected|unletfrozen|unless|unkern|unhpack|unhcopy|unhbox|unexpandedloop|underline|undent|uchyph|uccode|tracingstats|tracingrestores|tracingparagraphs|tracingpages|tracingoutput|tracingonline|tracingnodes|tracingnesting|tracingmath|tracingmarks|tracingmacros|tracinglostchars|tracinglevels|tracinginserts|tracingifs|tracinghyphenation|tracinggroups|tracingfullboxes|tracingfonts|tracingexpressions|tracingcommands|tracingassigns|tracingalignments|tracingadjusts|tpack|toscaled|topskip|topmarks|topmark|tomathstyle|tolerant|tolerance|tokspre|toksdef|toksapp|toks|tokenized|tointeger|todimension|time|thinmuskip|thickmuskip|thewithoutunit|the|textstyle|textfont|textdirection|tabskip|tabsize|swapcsvalues|supmarkmode|string|splittopskip|splitmaxdepth|splitfirstmarks|splitfirstmark|splitdiscards|splitbotmarks|splitbotmark|span|spaceskip|spacefactor|snapshotpar|skipdef|skip|skewchar|showtokens|showthe|shownodedetails|showlists|showifs|showgroups|showboxdepth|showboxbreadth|showbox|show|shipout|shapingpenalty|shapingpenaltiesmode|sfcode|setlanguage|setfontid|setbox|semiprotected|semiexpanded|scrollmode|scriptstyle|scriptspace|scriptscriptstyle|scriptscriptfont|scriptfont|scantokens|scantextokens|scaledfontdimen|savingvdiscards|savinghyphcodes|savecatcodetable|rpcode|romannumeral|rightskip|rightmarginkern|righthyphenmin|right|retokenized|relpenalty|relax|raise|radical|quitvmode|quitloop|pxdimen|protrusionboundary|protrudechars|protected|prevgraf|prevdepth|pretolerance|prerelpenalty|prehyphenchar|preexhyphenchar|predisplaysize|predisplaypenalty|predisplaygapfactor|predisplaydirection|prebinoppenalty|posthyphenchar|postexhyphenchar|postdisplaypenalty|permanent|penalty|pdfximage|pdfxformresources|pdfxformname|pdfxformmargin|pdfxformattr|pdfxform|pdfvorigin|pdfuniqueresname|pdfuniformdeviate|pdftrailerid|pdftrailer|pdftracingfonts|pdfthreadmargin|pdfthread|pdftexversion|pdftexrevision|pdftexbanner|pdfsuppressptexinfo|pdfsuppressoptionalinfo|pdfstartthread|pdfstartlink|pdfsetrandomseed|pdfsetmatrix|pdfsavepos|pdfsave|pdfretval|pdfrestore|pdfreplacefont|pdfrefximage|pdfrefxform|pdfrefobj|pdfrecompress|pdfrandomseed|pdfpxdimen|pdfprotrudechars|pdfprimitive|pdfpkresolution|pdfpkmode|pdfpkfixeddpi|pdfpagewidth|pdfpagesattr|pdfpageresources|pdfpageref|pdfpageheight|pdfpagebox|pdfpageattr|pdfoutput|pdfoutline|pdfomitcidset|pdfomitcharset|pdfobjcompresslevel|pdfobj|pdfnormaldeviate|pdfnoligatures|pdfnames|pdfminorversion|pdfmapline|pdfmapfile|pdfmajorversion|pdfliteral|pdflinkmargin|pdflastypos|pdflastxpos|pdflastximagepages|pdflastximage|pdflastxform|pdflastobj|pdflastlink|pdflastlinedepth|pdflastannot|pdfinsertht|pdfinfoomitdate|pdfinfo|pdfinclusionerrorlevel|pdfinclusioncopyfonts|pdfincludechars|pdfimageresolution|pdfimagehicolor|pdfimagegamma|pdfimageapplygamma|pdfimageaddfilename|pdfignoreunknownimages|pdfignoreddimen|pdfhorigin|pdfglyphtounicode|pdfgentounicode|pdfgamma|pdffontsize|pdffontobjnum|pdffontname|pdffontexpand|pdffontattr|pdffirstlineheight|pdfendthread|pdfendlink|pdfeachlineheight|pdfeachlinedepth|pdfdraftmode|pdfdestmargin|pdfdest|pdfdecimaldigits|pdfcreationdate|pdfcopyfont|pdfcompresslevel|pdfcolorstackinit|pdfcolorstack|pdfcatalog|pdfannot|pdfadjustspacing|pausing|patterns|parskip|parshapelength|parshapeindent|parshapedimen|parshape|parindent|parfillskip|pardirection|parattribute|parametermark|parametercount|par|pagevsize|pagetotal|pagestretch|pageshrink|pagegoal|pagefilstretch|pagefillstretch|pagefilllstretch|pagediscards|pagedepth|pageboundarypenalty|pageboundary|overwithdelims|overshoot|overloadmode|overloaded|overline|overfullrule|over|outputpenalty|outputbox|output|outer|orunless|orphanpenalty|orphanpenalties|orelse|or|omit|numexpression|numexpr|numericscale|number|nullfont|nulldelimiterspace|novrule|nospaces|normalyear|normalxtokspre|normalxtoksapp|normalxtoks|normalxspaceskip|normalxleaders|normalxdefcsname|normalxdef|normalwrapuppar|normalwordboundary|normalwidowpenalty|normalwidowpenalties|normalwd|normalvtop|normalvss|normalvsplit|normalvskip|normalvsize|normalvrule|normalvpack|normalvfuzz|normalvfilneg|normalvfill|normalvfil|normalvcenter|normalvbox|normalvbadness|normalvalign|normalvadjust|normaluppercase|normalunvpack|normalunvcopy|normalunvbox|normaluntraced|normalunskip|normalunpenalty|normalunletprotected|normalunletfrozen|normalunless|normalunkern|normalunhpack|normalunhcopy|normalunhbox|normalunexpandedloop|normalunexpanded|normalunderline|normalundent|normaluchyph|normaluccode|normaltracingstats|normaltracingrestores|normaltracingparagraphs|normaltracingpages|normaltracingoutput|normaltracingonline|normaltracingnodes|normaltracingnesting|normaltracingmath|normaltracingmarks|normaltracingmacros|normaltracinglostchars|normaltracinglevels|normaltracinginserts|normaltracingifs|normaltracinghyphenation|normaltracinggroups|normaltracingfullboxes|normaltracingfonts|normaltracingexpressions|normaltracingcommands|normaltracingassigns|normaltracingalignments|normaltracingadjusts|normaltpack|normaltoscaled|normaltopskip|normaltopmarks|normaltopmark|normaltomathstyle|normaltolerant|normaltolerance|normaltokspre|normaltoksdef|normaltoksapp|normaltoks|normaltokenized|normaltointeger|normaltodimension|normaltime|normalthinmuskip|normalthickmuskip|normalthewithoutunit|normalthe|normaltextstyle|normaltextfont|normaltextdirection|normaltabskip|normaltabsize|normalswapcsvalues|normalsupmarkmode|normalstring|normalsplittopskip|normalsplitmaxdepth|normalsplitfirstmarks|normalsplitfirstmark|normalsplitdiscards|normalsplitbotmarks|normalsplitbotmark|normalspan|normalspaceskip|normalspacefactor|normalsnapshotpar|normalskipdef|normalskip|normalskewchar|normalshowtokens|normalshowthe|normalshownodedetails|normalshowlists|normalshowifs|normalshowgroups|normalshowboxdepth|normalshowboxbreadth|normalshowbox|normalshow|normalshipout|normalshapingpenalty|normalshapingpenaltiesmode|normalsfcode|normalsetlanguage|normalsetfontid|normalsetbox|normalsemiprotected|normalsemiexpanded|normalscrollmode|normalscriptstyle|normalscriptspace|normalscriptscriptstyle|normalscriptscriptfont|normalscriptfont|normalscantokens|normalscantextokens|normalscaledfontdimen|normalsavingvdiscards|normalsavinghyphcodes|normalsavecatcodetable|normalrpcode|normalromannumeral|normalrightskip|normalrightmarginkern|normalrighthyphenmin|normalright|normalretokenized|normalrelpenalty|normalrelax|normalraise|normalradical|normalquitvmode|normalquitloop|normalpxdimen|normalprotrusionboundary|normalprotrudechars|normalprotected|normalprevgraf|normalprevdepth|normalpretolerance|normalprerelpenalty|normalprehyphenchar|normalpreexhyphenchar|normalpredisplaysize|normalpredisplaypenalty|normalpredisplaygapfactor|normalpredisplaydirection|normalprebinoppenalty|normalposthyphenchar|normalpostexhyphenchar|normalpostdisplaypenalty|normalpermanent|normalpenalty|normalpdfximage|normalpdfxformresources|normalpdfxformname|normalpdfxformmargin|normalpdfxformattr|normalpdfxform|normalpdfvorigin|normalpdfuniqueresname|normalpdfuniformdeviate|normalpdftrailerid|normalpdftrailer|normalpdftracingfonts|normalpdfthreadmargin|normalpdfthread|normalpdftexversion|normalpdftexrevision|normalpdftexbanner|normalpdfsuppressptexinfo|normalpdfsuppressoptionalinfo|normalpdfstartthread|normalpdfstartlink|normalpdfsetrandomseed|normalpdfsetmatrix|normalpdfsavepos|normalpdfsave|normalpdfretval|normalpdfrestore|normalpdfreplacefont|normalpdfrefximage|normalpdfrefxform|normalpdfrefobj|normalpdfrecompress|normalpdfrandomseed|normalpdfpxdimen|normalpdfprotrudechars|normalpdfprimitive|normalpdfpkresolution|normalpdfpkmode|normalpdfpkfixeddpi|normalpdfpagewidth|normalpdfpagesattr|normalpdfpageresources|normalpdfpageref|normalpdfpageheight|normalpdfpagebox|normalpdfpageattr|normalpdfoutput|normalpdfoutline|normalpdfomitcidset|normalpdfomitcharset|normalpdfobjcompresslevel|normalpdfobj|normalpdfnormaldeviate|normalpdfnoligatures|normalpdfnames|normalpdfminorversion|normalpdfmapline|normalpdfmapfile|normalpdfmajorversion|normalpdfliteral|normalpdflinkmargin|normalpdflastypos|normalpdflastxpos|normalpdflastximagepages|normalpdflastximage|normalpdflastxform|normalpdflastobj|normalpdflastlink|normalpdflastlinedepth|normalpdflastannot|normalpdfinsertht|normalpdfinfoomitdate|normalpdfinfo|normalpdfinclusionerrorlevel|normalpdfinclusioncopyfonts|normalpdfincludechars|normalpdfimageresolution|normalpdfimagehicolor|normalpdfimagegamma|normalpdfimageapplygamma|normalpdfimageaddfilename|normalpdfignoreunknownimages|normalpdfignoreddimen|normalpdfhorigin|normalpdfglyphtounicode|normalpdfgentounicode|normalpdfgamma|normalpdffontsize|normalpdffontobjnum|normalpdffontname|normalpdffontexpand|normalpdffontattr|normalpdffirstlineheight|normalpdfendthread|normalpdfendlink|normalpdfeachlineheight|normalpdfeachlinedepth|normalpdfdraftmode|normalpdfdestmargin|normalpdfdest|normalpdfdecimaldigits|normalpdfcreationdate|normalpdfcopyfont|normalpdfcompresslevel|normalpdfcolorstackinit|normalpdfcolorstack|normalpdfcatalog|normalpdfannot|normalpdfadjustspacing|normalpausing|normalpatterns|normalparskip|normalparshapelength|normalparshapeindent|normalparshapedimen|normalparshape|normalparindent|normalparfillskip|normalparfillleftskip|normalpardirection|normalparattribute|normalparametermark|normalparametercount|normalpar|normalpagevsize|normalpagetotal|normalpagestretch|normalpageshrink|normalpagegoal|normalpagefilstretch|normalpagefillstretch|normalpagefilllstretch|normalpagediscards|normalpagedepth|normalpageboundarypenalty|normalpageboundary|normaloverwithdelims|normalovershoot|normaloverloadmode|normaloverloaded|normaloverline|normaloverfullrule|normalover|normaloutputpenalty|normaloutputbox|normaloutput|normalouter|normalorunless|normalorphanpenalty|normalorphanpenalties|normalorelse|normalor|normalomit|normalnumexpression|normalnumexpr|normalnumericscale|normalnumber|normalnullfont|normalnulldelimiterspace|normalnovrule|normalnospaces|normalnormalizelinemode|normalnorelax|normalnonstopmode|normalnonscript|normalnolimits|normalnoindent|normalnohrule|normalnoexpand|normalnoboundary|normalnoaligned|normalnoalign|normalnewlinechar|normalmutoglue|normalmutable|normalmuskipdef|normalmuskip|normalmultiply|normalmugluespecdef|normalmuexpr|normalmskip|normalmoveright|normalmoveleft|normalmonth|normalmkern|normalmiddle|normalmessage|normalmedmuskip|normalmeaningless|normalmeaningfull|normalmeaningasis|normalmeaning|normalmaxdepth|normalmaxdeadcycles|normalmathsurroundskip|normalmathsurroundmode|normalmathsurround|normalmathstyle|normalmathscriptsmode|normalmathscriptcharmode|normalmathscriptboxmode|normalmathscale|normalmathrulethicknessmode|normalmathrulesmode|normalmathrulesfam|normalmathrel|normalmathrad|normalmathpunct|normalmathpenaltiesmode|normalmathord|normalmathopen|normalmathop|normalmathnolimitsmode|normalmathlimitsmode|normalmathinner|normalmathfrac|normalmathfontcontrol|normalmathflattenmode|normalmatheqnogapstep|normalmathdisplayskipmode|normalmathdirection|normalmathdelimitersmode|normalmathcontrolmode|normalmathcode|normalmathclose|normalmathchoice|normalmathchardef|normalmathchar|normalmathbin|normalmathaccent|normalmarks|normalmark|normalluatexversion|normalluatexrevision|normalluatexbanner|normalluafunctioncall|normalluafunction|normalluaescapestring|normalluadef|normalluacopyinputnodes|normalluabytecodecall|normalluabytecode|normallpcode|normallowercase|normallower|normallooseness|normallong|normallocalrightboxbox|normallocalrightbox|normallocalmiddleboxbox|normallocalmiddlebox|normallocalleftboxbox|normallocalleftbox|normallocalinterlinepenalty|normallocalcontrolledloop|normallocalcontrolled|normallocalcontrol|normallocalbrokenpenalty|normallineskiplimit|normallineskip|normallinepenalty|normallinedirection|normallimits|normallettonothing|normalletprotected|normalletfrozen|normalletcsname|normalletcharcode|normallet|normalleqno|normalleftskip|normalleftmarginkern|normallefthyphenmin|normalleft|normalleaders|normallccode|normallastskip|normallastpenalty|normallastparcontext|normallastnodetype|normallastnodesubtype|normallastnamedcs|normallastlinefit|normallastkern|normallastchknum|normallastchkdim|normallastbox|normallastarguments|normallanguage|normalkern|normaljobname|normalizelinemode|normalinterlinepenalty|normalinterlinepenalties|normalinteractionmode|normalintegerdef|normalinstance|normalinsertwidth|normalinsertuncopy|normalinsertunbox|normalinsertstoring|normalinsertstorage|normalinsertprogress|normalinsertpenalty|normalinsertpenalties|normalinsertmultiplier|normalinsertmode|normalinsertmaxdepth|normalinsertlimit|normalinsertheights|normalinsertheight|normalinsertdistance|normalinsertdepth|normalinsertcopy|normalinsertbox|normalinsert|normalinputlineno|normalinput|normalinitcatcodetable|normalinherited|normalindent|normalimmutable|normalimmediate|normalignorespaces|normalignorepars|normalignorearguments|normalifx|normalifvoid|normalifvmode|normalifvbox|normaliftrue|normaliftok|normalifrelax|normalifpdfprimitive|normalifpdfabsnum|normalifpdfabsdim|normalifparameters|normalifparameter|normalifodd|normalifnumval|normalifnumexpression|normalifnum|normalifmmode|normalifmathstyle|normalifmathparameter|normalifinsert|normalifinner|normalifincsname|normalifhmode|normalifhbox|normalifhasxtoks|normalifhastoks|normalifhastok|normalifhaschar|normaliffontchar|normalifflags|normaliffalse|normalifempty|normalifdimval|normalifdimexpression|normalifdim|normalifdefined|normalifcstok|normalifcsname|normalifcondition|normalifcmpnum|normalifcmpdim|normalifchknum|normalifchkdim|normalifcat|normalifcase|normalifboolean|normalifarguments|normalifabsnum|normalifabsdim|normalif|normalhyphenpenalty|normalhyphenchar|normalhyphenationmode|normalhyphenationmin|normalhyphenation|normalht|normalhss|normalhskip|normalhsize|normalhrule|normalhpack|normalholdinginserts|normalhjcode|normalhfuzz|normalhfilneg|normalhfill|normalhfil|normalhccode|normalhbox|normalhbadness|normalhangindent|normalhangafter|normalhalign|normalgtokspre|normalgtoksapp|normalglyphyscale|normalglyphyoffset|normalglyphxscale|normalglyphxoffset|normalglyphtextscale|normalglyphstatefield|normalglyphscriptscriptscale|normalglyphscriptscale|normalglyphscriptfield|normalglyphscale|normalglyphoptions|normalglyphdatafield|normalglyph|normalgluetomu|normalgluestretchorder|normalgluestretch|normalgluespecdef|normalglueshrinkorder|normalglueshrink|normalglueexpr|normalglobaldefs|normalglobal|normalglettonothing|normalgletcsname|normalglet|normalgleaders|normalgdefcsname|normalgdef|normalfuturelet|normalfutureexpandisap|normalfutureexpandis|normalfutureexpand|normalfuturedef|normalfuturecsname|normalfrozen|normalformatname|normalfonttextcontrol|normalfontspecyscale|normalfontspecxscale|normalfontspecscale|normalfontspecifiedsize|normalfontspecifiedname|normalfontspecid|normalfontspecdef|normalfontname|normalfontmathcontrol|normalfontid|normalfontdimen|normalfontcharwd|normalfontcharic|normalfontcharht|normalfontchardp|normalfont|normalflushmarks|normalfloatingpenalty|normalfirstvalidlanguage|normalfirstmarks|normalfirstmark|normalfinalhyphendemerits|normalfi|normalfam|normalexplicithyphenpenalty|normalexplicitdiscretionary|normalexpandtoken|normalexpandedloop|normalexpandedafter|normalexpanded|normalexpandcstoken|normalexpandafterspaces|normalexpandafterpars|normalexpandafter|normalexpand|normalexhyphenpenalty|normalexhyphenchar|normalexceptionpenalty|normaleveryvbox|normaleverytab|normaleverypar|normaleverymath|normaleveryjob|normaleveryhbox|normaleveryeof|normaleverydisplay|normaleverycr|normaleverybeforepar|normaletokspre|normaletoksapp|normaletoks|normalescapechar|normalerrorstopmode|normalerrorcontextlines|normalerrmessage|normalerrhelp|normaleqno|normalenforced|normalendsimplegroup|normalendmathgroup|normalendlocalcontrol|normalendlinechar|normalendinput|normalendgroup|normalendcsname|normalend|normalemergencystretch|normalelse|normalefcode|normaledefcsname|normaledef|normaldump|normaldp|normaldoublehyphendemerits|normaldivide|normaldisplaywidth|normaldisplaywidowpenalty|normaldisplaywidowpenalties|normaldisplaystyle|normaldisplaylimits|normaldisplayindent|normaldiscretionary|normaldirectlua|normaldimexpression|normaldimexpr|normaldimensiondef|normaldimendef|normaldimen|normaldetokenize|normaldelimitershortfall|normaldelimiterfactor|normaldelimiter|normaldelcode|normaldefcsname|normaldefaultskewchar|normaldefaulthyphenchar|normaldef|normaldeadcycles|normalday|normalcurrentmarks|normalcurrentloopnesting|normalcurrentloopiterator|normalcurrentiftype|normalcurrentiflevel|normalcurrentifbranch|normalcurrentgrouptype|normalcurrentgrouplevel|normalcsstring|normalcsname|normalcrcr|normalcrampedtextstyle|normalcrampedscriptstyle|normalcrampedscriptscriptstyle|normalcrampeddisplaystyle|normalcr|normalcountdef|normalcount|normalcopy|normalclubpenalty|normalclubpenalties|normalclearmarks|normalcleaders|normalchardef|normalchar|normalcatcodetable|normalcatcode|normalbrokenpenalty|normalboxyoffset|normalboxymove|normalboxxoffset|normalboxxmove|normalboxtotal|normalboxtarget|normalboxsource|normalboxshift|normalboxorientation|normalboxmaxdepth|normalboxgeometry|normalboxdirection|normalboxattribute|normalboxanchors|normalboxanchor|normalbox|normalboundary|normalbotmarks|normalbotmark|normalbinoppenalty|normalbelowdisplayskip|normalbelowdisplayshortskip|normalbeginsimplegroup|normalbeginmathgroup|normalbeginlocalcontrol|normalbegingroup|normalbegincsname|normalbatchmode|normalbaselineskip|normalbadness|normalautoparagraphmode|normalautomigrationmode|normalautomatichyphenpenalty|normalautomaticdiscretionary|normalattributedef|normalattribute|normalatopwithdelims|normalatop|normalatendofgrouped|normalatendofgroup|normalalltextstyles|normalallsplitstyles|normalallscriptstyles|normalallmathstyles|normalaligntab|normalalignmark|normalaligncontent|normalaliased|normalaftergrouped|normalaftergroup|normalafterassignment|normalafterassigned|normaladvance|normaladjustspacingstretch|normaladjustspacingstep|normaladjustspacingshrink|normaladjustspacing|normaladjdemerits|normalaccent|normalabovewithdelims|normalabovedisplayskip|normalabovedisplayshortskip|normalabove|normalXeTeXversion|normalUvextensible|normalUunderdelimiter|normalUsuperscript|normalUsuperprescript|normalUsubscript|normalUsubprescript|normalUstyle|normalUstopmath|normalUstopdisplaymath|normalUstartmath|normalUstartdisplaymath|normalUstack|normalUskewedwithdelims|normalUskewed|normalUroot|normalUright|normalUradical|normalUoverwithdelims|normalUoverdelimiter|normalUover|normalUnosuperscript|normalUnosuperprescript|normalUnosubscript|normalUnosubprescript|normalUmiddle|normalUmathyscale|normalUmathxscale|normalUmathvoid|normalUmathvextensiblevariant|normalUmathunderlinevariant|normalUmathunderdelimitervgap|normalUmathunderdelimitervariant|normalUmathunderdelimiterbgap|normalUmathunderbarvgap|normalUmathunderbarrule|normalUmathunderbarkern|normalUmathtopaccentvariant|normalUmathsupsubbottommax|normalUmathsupshiftup|normalUmathsupshiftdrop|normalUmathsuperscriptvariant|normalUmathsupbottommin|normalUmathsubtopmax|normalUmathsubsupvgap|normalUmathsubsupshiftdown|normalUmathsubshiftdrop|normalUmathsubshiftdown|normalUmathsubscriptvariant|normalUmathstackvgap|normalUmathstackvariant|normalUmathstacknumup|normalUmathstackdenomdown|normalUmathspacingmode|normalUmathspacebeforescript|normalUmathspaceafterscript|normalUmathskewedfractionvgap|normalUmathskewedfractionhgap|normalUmathrelrelspacing|normalUmathrelradspacing|normalUmathrelpunctspacing|normalUmathrelordspacing|normalUmathrelopspacing|normalUmathrelopenspacing|normalUmathrelinnerspacing|normalUmathrelfracspacing|normalUmathrelclosespacing|normalUmathrelbinspacing|normalUmathradrelspacing|normalUmathradradspacing|normalUmathradpunctspacing|normalUmathradordspacing|normalUmathradopspacing|normalUmathradopenspacing|normalUmathradinnerspacing|normalUmathradicalvgap|normalUmathradicalvariant|normalUmathradicalrule|normalUmathradicalkern|normalUmathradicaldegreeraise|normalUmathradicaldegreebefore|normalUmathradicaldegreeafter|normalUmathradfracspacing|normalUmathradclosespacing|normalUmathradbinspacing|normalUmathquad|normalUmathpunctrelspacing|normalUmathpunctradspacing|normalUmathpunctpunctspacing|normalUmathpunctordspacing|normalUmathpunctopspacing|normalUmathpunctopenspacing|normalUmathpunctinnerspacing|normalUmathpunctfracspacing|normalUmathpunctclosespacing|normalUmathpunctbinspacing|normalUmathphantom|normalUmathoverlinevariant|normalUmathoverlayaccentvariant|normalUmathoverdelimitervgap|normalUmathoverdelimitervariant|normalUmathoverdelimiterbgap|normalUmathoverbarvgap|normalUmathoverbarrule|normalUmathoverbarkern|normalUmathordrelspacing|normalUmathordradspacing|normalUmathordpunctspacing|normalUmathordordspacing|normalUmathordopspacing|normalUmathordopenspacing|normalUmathordinnerspacing|normalUmathordfracspacing|normalUmathordclosespacing|normalUmathordbinspacing|normalUmathoprelspacing|normalUmathopradspacing|normalUmathoppunctspacing|normalUmathopordspacing|normalUmathopopspacing|normalUmathopopenspacing|normalUmathopinnerspacing|normalUmathopfracspacing|normalUmathoperatorsize|normalUmathopenupheight|normalUmathopenupdepth|normalUmathopenrelspacing|normalUmathopenradspacing|normalUmathopenpunctspacing|normalUmathopenordspacing|normalUmathopenopspacing|normalUmathopenopenspacing|normalUmathopeninnerspacing|normalUmathopenfracspacing|normalUmathopenclosespacing|normalUmathopenbinspacing|normalUmathopclosespacing|normalUmathopbinspacing|normalUmathnumeratorvariant|normalUmathnolimitsupfactor|normalUmathnolimitsubfactor|normalUmathnolimits|normalUmathnoaxis|normalUmathlimits|normalUmathlimitbelowvgap|normalUmathlimitbelowkern|normalUmathlimitbelowbgap|normalUmathlimitabovevgap|normalUmathlimitabovekern|normalUmathlimitabovebgap|normalUmathinnerrelspacing|normalUmathinnerradspacing|normalUmathinnerpunctspacing|normalUmathinnerordspacing|normalUmathinneropspacing|normalUmathinneropenspacing|normalUmathinnerinnerspacing|normalUmathinnerfracspacing|normalUmathinnerclosespacing|normalUmathinnerbinspacing|normalUmathhextensiblevariant|normalUmathfractionvariant|normalUmathfractionrule|normalUmathfractionnumvgap|normalUmathfractionnumup|normalUmathfractiondenomvgap|normalUmathfractiondenomdown|normalUmathfractiondelsize|normalUmathfracrelspacing|normalUmathfracradspacing|normalUmathfracpunctspacing|normalUmathfracordspacing|normalUmathfracopspacing|normalUmathfracopenspacing|normalUmathfracinnerspacing|normalUmathfracfracspacing|normalUmathfracclosespacing|normalUmathfracbinspacing|normalUmathextrasupspace|normalUmathextrasupshift|normalUmathextrasupprespace|normalUmathextrasuppreshift|normalUmathextrasubspace|normalUmathextrasubshift|normalUmathextrasubprespace|normalUmathextrasubpreshift|normalUmathdenominatorvariant|normalUmathdelimiterundervariant|normalUmathdelimiterovervariant|normalUmathdegreevariant|normalUmathconnectoroverlapmin|normalUmathcodenum|normalUmathcode|normalUmathcloserelspacing|normalUmathcloseradspacing|normalUmathclosepunctspacing|normalUmathcloseordspacing|normalUmathcloseopspacing|normalUmathcloseopenspacing|normalUmathcloseinnerspacing|normalUmathclosefracspacing|normalUmathcloseclosespacing|normalUmathclosebinspacing|normalUmathclass|normalUmathcharslot|normalUmathcharnumdef|normalUmathcharnum|normalUmathcharfam|normalUmathchardef|normalUmathcharclass|normalUmathchar|normalUmathbotaccentvariant|normalUmathbinrelspacing|normalUmathbinradspacing|normalUmathbinpunctspacing|normalUmathbinordspacing|normalUmathbinopspacing|normalUmathbinopenspacing|normalUmathbininnerspacing|normalUmathbinfracspacing|normalUmathbinclosespacing|normalUmathbinbinspacing|normalUmathaxis|normalUmathadapttoright|normalUmathadapttoleft|normalUmathaccentvariant|normalUmathaccentbaseheight|normalUmathaccent|normalUleft|normalUhextensible|normalUdelimiterunder|normalUdelimiterover|normalUdelimiter|normalUdelcodenum|normalUdelcode|normalUchar|normalUatopwithdelims|normalUatop|normalUabovewithdelims|normalUabove|normalUUskewedwithdelims|normalUUskewed|normalOmegaversion|normalOmegarevision|normalOmegaminorversion|normalAlephversion|normalAlephrevision|normalAlephminorversion|normal |norelax|nonstopmode|nonscript|nolimits|noindent|nohrule|noexpand|noboundary|noaligned|noalign|newlinechar|mutoglue|mutable|muskipdef|muskip|multiply|mugluespecdef|muexpr|mskip|moveright|moveleft|month|mkern|middle|message|medmuskip|meaningless|meaningfull|meaningasis|meaning|maxdepth|maxdeadcycles|mathsurroundskip|mathsurroundmode|mathsurround|mathstyle|mathscriptsmode|mathscriptcharmode|mathscriptboxmode|mathscale|mathrulethicknessmode|mathrulesmode|mathrulesfam|mathrel|mathrad|mathpunct|mathpenaltiesmode|mathord|mathopen|mathop|mathnolimitsmode|mathlimitsmode|mathinner|mathfrac|mathfontcontrol|mathflattenmode|matheqnogapstep|mathdisplayskipmode|mathdirection|mathdelimitersmode|mathcontrolmode|mathcode|mathclose|mathchoice|mathchardef|mathchar|mathbin|mathaccent|marks|mark|luatexversion|luatexrevision|luatexbanner|luafunctioncall|luafunction|luaescapestring|luadef|luacopyinputnodes|luabytecodecall|luabytecode|lpcode|lowercase|lower|looseness|long|localrightboxbox|localrightbox|localmiddleboxbox|localmiddlebox|localleftboxbox|localleftbox|localinterlinepenalty|localcontrolledloop|localcontrolled|localcontrol|localbrokenpenalty|lineskiplimit|lineskip|linepenalty|linedirection|limits|lettonothing|letprotected|letfrozen|letcsname|letcharcode|let|leqno|leftskip|leftmarginkern|lefthyphenmin|left|leaders|lccode|lastskip|lastpenalty|lastparcontext|lastnodetype|lastnodesubtype|lastnamedcs|lastlinefit|lastkern|lastchknum|lastchkdim|lastbox|lastarguments|language|kern|jobname|interlinepenalty|interlinepenalties|interactionmode|integerdef|instance|insertwidth|insertuncopy|insertunbox|insertstoring|insertstorage|insertprogress|insertpenalty|insertpenalties|insertmultiplier|insertmode|insertmaxdepth|insertlimit|insertheights|insertheight|insertdistance|insertdepth|insertcopy|insertbox|insert|inputlineno|input|initcatcodetable|inherited|indent|immutable|immediate|ignorespaces|ignorepars|ignorearguments|ifx|ifvoid|ifvmode|ifvbox|iftrue|iftok|ifrelax|ifpdfprimitive|ifpdfabsnum|ifpdfabsdim|ifparameters|ifparameter|ifodd|ifnumval|ifnumexpression|ifnum|ifmmode|ifmathstyle|ifmathparameter|ifinsert|ifinner|ifincsname|ifhmode|ifhbox|ifhasxtoks|ifhastoks|ifhastok|ifhaschar|iffontchar|ifflags|iffalse|ifempty|ifdimval|ifdimexpression|ifdim|ifdefined|ifcstok|ifcsname|ifcondition|ifcmpnum|ifcmpdim|ifchknum|ifchkdim|ifcat|ifcase|ifboolean|ifarguments|ifabsnum|ifabsdim|if|hyphenpenalty|hyphenchar|hyphenationmode|hyphenationmin|hyphenation|ht|hss|hskip|hsize|hrule|hpack|holdinginserts|hjcode|hfuzz|hfilneg|hfill|hfil|hccode|hbox|hbadness|hangindent|hangafter|halign|gtokspre|gtoksapp|glyphyscale|glyphyoffset|glyphxscale|glyphxoffset|glyphtextscale|glyphstatefield|glyphscriptscriptscale|glyphscriptscale|glyphscriptfield|glyphscale|glyphoptions|glyphdatafield|glyph|gluetomu|gluestretchorder|gluestretch|gluespecdef|glueshrinkorder|glueshrink|glueexpr|globaldefs|global|glettonothing|gletcsname|glet|gleaders|gdefcsname|gdef|futurelet|futureexpandisap|futureexpandis|futureexpand|futuredef|futurecsname|frozen|formatname|fonttextcontrol|fontspecyscale|fontspecxscale|fontspecscale|fontspecifiedsize|fontspecifiedname|fontspecid|fontspecdef|fontname|fontmathcontrol|fontid|fontdimen|fontcharwd|fontcharic|fontcharht|fontchardp|font|flushmarks|floatingpenalty|firstvalidlanguage|firstmarks|firstmark|finalhyphendemerits|fi|fam|explicithyphenpenalty|explicitdiscretionary|expandtoken|expandedloop|expandedafter|expandcstoken|expandafterspaces|expandafterpars|expandafter|expand|exhyphenpenalty|exhyphenchar|exceptionpenalty|everyvbox|everytab|everypar|everymath|everyjob|everyhbox|everyeof|everydisplay|everycr|everybeforepar|etokspre|etoksapp|etoks|escapechar|errorstopmode|errorcontextlines|errmessage|errhelp|eqno|enforced|endsimplegroup|endmathgroup|endlocalcontrol|endlinechar|endinput|endgroup|endcsname|end|emergencystretch|else|efcode|edefcsname|edef|dump|dp|doublehyphendemerits|divide|displaywidth|displaywidowpenalty|displaywidowpenalties|displaystyle|displaylimits|displayindent|discretionary|directlua|dimexpression|dimexpr|dimensiondef|dimendef|dimen|detokenize|delimitershortfall|delimiterfactor|delimiter|delcode|defcsname|defaultskewchar|defaulthyphenchar|def|deadcycles|day|currentmarks|currentloopnesting|currentloopiterator|currentiftype|currentiflevel|currentifbranch|currentgrouptype|currentgrouplevel|csstring|csname|crcr|crampedtextstyle|crampedscriptstyle|crampedscriptscriptstyle|crampeddisplaystyle|cr|countdef|count|copy|clubpenalty|clubpenalties|clearmarks|cleaders|chardef|char|catcodetable|catcode|brokenpenalty|boxyoffset|boxymove|boxxoffset|boxxmove|boxtotal|boxtarget|boxsource|boxshift|boxorientation|boxmaxdepth|boxgeometry|boxdirection|boxattribute|boxanchors|boxanchor|box|boundary|botmarks|botmark|binoppenalty|belowdisplayskip|belowdisplayshortskip|beginsimplegroup|beginmathgroup|beginlocalcontrol|begingroup|begincsname|batchmode|baselineskip|badness|autoparagraphmode|automigrationmode|automatichyphenpenalty|automaticdiscretionary|attributedef|attribute|atopwithdelims|atop|atendofgrouped|atendofgroup|alltextstyles|allsplitstyles|allscriptstyles|allmathstyles|aligntab|alignmark|aligncontent|aliased|aftergrouped|aftergroup|afterassignment|afterassigned|advance|adjustspacingstretch|adjustspacingstep|adjustspacingshrink|adjustspacing|adjdemerits|accent|abovewithdelims|abovedisplayskip|abovedisplayshortskip|above|XeTeXversion|Uvextensible|Uunderdelimiter|Usuperscript|Usuperprescript|Usubscript|Usubprescript|Ustyle|Ustopmath|Ustopdisplaymath|Ustartmath|Ustartdisplaymath|Ustack|Uskewedwithdelims|Uskewed|Uroot|Uright|Uradical|Uoverwithdelims|Uoverdelimiter|Uover|Unosuperscript|Unosuperprescript|Unosubscript|Unosubprescript|Umiddle|Umathyscale|Umathxscale|Umathvoid|Umathvextensiblevariant|Umathunderlinevariant|Umathunderdelimitervgap|Umathunderdelimitervariant|Umathunderdelimiterbgap|Umathunderbarvgap|Umathunderbarrule|Umathunderbarkern|Umathtopaccentvariant|Umathsupsubbottommax|Umathsupshiftup|Umathsupshiftdrop|Umathsuperscriptvariant|Umathsupbottommin|Umathsubtopmax|Umathsubsupvgap|Umathsubsupshiftdown|Umathsubshiftdrop|Umathsubshiftdown|Umathsubscriptvariant|Umathstackvgap|Umathstackvariant|Umathstacknumup|Umathstackdenomdown|Umathspacingmode|Umathspacebeforescript|Umathspaceafterscript|Umathskewedfractionvgap|Umathskewedfractionhgap|Umathrelrelspacing|Umathrelradspacing|Umathrelpunctspacing|Umathrelordspacing|Umathrelopspacing|Umathrelopenspacing|Umathrelinnerspacing|Umathrelfracspacing|Umathrelclosespacing|Umathrelbinspacing|Umathradrelspacing|Umathradradspacing|Umathradpunctspacing|Umathradordspacing|Umathradopspacing|Umathradopenspacing|Umathradinnerspacing|Umathradicalvgap|Umathradicalvariant|Umathradicalrule|Umathradicalkern|Umathradicaldegreeraise|Umathradicaldegreebefore|Umathradicaldegreeafter|Umathradfracspacing|Umathradclosespacing|Umathradbinspacing|Umathquad|Umathpunctrelspacing|Umathpunctradspacing|Umathpunctpunctspacing|Umathpunctordspacing|Umathpunctopspacing|Umathpunctopenspacing|Umathpunctinnerspacing|Umathpunctfracspacing|Umathpunctclosespacing|Umathpunctbinspacing|Umathphantom|Umathoverlinevariant|Umathoverlayaccentvariant|Umathoverdelimitervgap|Umathoverdelimitervariant|Umathoverdelimiterbgap|Umathoverbarvgap|Umathoverbarrule|Umathoverbarkern|Umathordrelspacing|Umathordradspacing|Umathordpunctspacing|Umathordordspacing|Umathordopspacing|Umathordopenspacing|Umathordinnerspacing|Umathordfracspacing|Umathordclosespacing|Umathordbinspacing|Umathoprelspacing|Umathopradspacing|Umathoppunctspacing|Umathopordspacing|Umathopopspacing|Umathopopenspacing|Umathopinnerspacing|Umathopfracspacing|Umathoperatorsize|Umathopenupheight|Umathopenupdepth|Umathopenrelspacing|Umathopenradspacing|Umathopenpunctspacing|Umathopenordspacing|Umathopenopspacing|Umathopenopenspacing|Umathopeninnerspacing|Umathopenfracspacing|Umathopenclosespacing|Umathopenbinspacing|Umathopclosespacing|Umathopbinspacing|Umathnumeratorvariant|Umathnolimitsupfactor|Umathnolimitsubfactor|Umathnolimits|Umathnoaxis|Umathlimits|Umathlimitbelowvgap|Umathlimitbelowkern|Umathlimitbelowbgap|Umathlimitabovevgap|Umathlimitabovekern|Umathlimitabovebgap|Umathinnerrelspacing|Umathinnerradspacing|Umathinnerpunctspacing|Umathinnerordspacing|Umathinneropspacing|Umathinneropenspacing|Umathinnerinnerspacing|Umathinnerfracspacing|Umathinnerclosespacing|Umathinnerbinspacing|Umathhextensiblevariant|Umathfractionvariant|Umathfractionrule|Umathfractionnumvgap|Umathfractionnumup|Umathfractiondenomvgap|Umathfractiondenomdown|Umathfractiondelsize|Umathfracrelspacing|Umathfracradspacing|Umathfracpunctspacing|Umathfracordspacing|Umathfracopspacing|Umathfracopenspacing|Umathfracinnerspacing|Umathfracfracspacing|Umathfracclosespacing|Umathfracbinspacing|Umathextrasupspace|Umathextrasupshift|Umathextrasupprespace|Umathextrasuppreshift|Umathextrasubspace|Umathextrasubshift|Umathextrasubprespace|Umathextrasubpreshift|Umathdenominatorvariant|Umathdelimiterundervariant|Umathdelimiterovervariant|Umathdegreevariant|Umathconnectoroverlapmin|Umathcodenum|Umathcode|Umathcloserelspacing|Umathcloseradspacing|Umathclosepunctspacing|Umathcloseordspacing|Umathcloseopspacing|Umathcloseopenspacing|Umathcloseinnerspacing|Umathclosefracspacing|Umathcloseclosespacing|Umathclosebinspacing|Umathclass|Umathcharslot|Umathcharnumdef|Umathcharnum|Umathcharfam|Umathchardef|Umathcharclass|Umathchar|Umathbotaccentvariant|Umathbinrelspacing|Umathbinradspacing|Umathbinpunctspacing|Umathbinordspacing|Umathbinopspacing|Umathbinopenspacing|Umathbininnerspacing|Umathbinfracspacing|Umathbinclosespacing|Umathbinbinspacing|Umathaxis|Umathadapttoright|Umathadapttoleft|Umathaccentvariant|Umathaccentbaseheight|Umathaccent|Uleft|Uhextensible|Udelimiterunder|Udelimiterover|Udelimiter|Udelcodenum|Udelcode|Uchar|Uatopwithdelims|Uatop|Uabovewithdelims|Uabove|UUskewedwithdelims|UUskewed|Omegaversion|Omegarevision|Omegaminorversion|Alephversion|Alephrevision|Alephminorversion";
-				//string[] primitives = new string[] { "year", "xtokspre", "xtoksapp", "xspaceskip", "xleaders", "xdef", "write", "wordboundary", "widowpenalty", "widowpenalties", "wd", "vtop", "vss", "vsplit", "vskip", "vsize", "vrule", "vpack", "voffset", "vfuzz", "vfilneg", "vfill", "vfil", "vcenter", "vbox", "vbadness", "valign", "vadjust", "useimageresource", "useboxresource", "uppercase", "unvcopy", "unvbox", "unskip", "unpenalty", "unless", "unkern", "uniformdeviate", "unhcopy", "unhbox", "underline", "uchyph", "uccode", "tracingstats", "tracingscantokens", "tracingrestores", "tracingparagraphs", "tracingpages", "tracingoutput", "tracingonline", "tracingnesting", "tracingmacros", "tracinglostchars", "tracingifs", "tracinggroups", "tracingfonts", "tracingcommands", "tracingassigns", "tpack", "topskip", "topmarks", "topmark", "tolerance", "tokspre", "toksdef", "toksapp", "toks", "time", "thinmuskip", "thickmuskip", "the", "textstyle", "textfont", "textdirection", "textdir", "tagcode", "tabskip", "synctex", "suppressprimitiveerror", "suppressoutererror", "suppressmathparerror", "suppresslongerror", "suppressifcsnameerror", "suppressfontnotfounderror", "string", "splittopskip", "splitmaxdepth", "splitfirstmarks", "splitfirstmark", "splitdiscards", "splitbotmarks", "splitbotmark", "special", "span", "spaceskip", "spacefactor", "skipdef", "skip", "skewchar", "showtokens", "showthe", "showlists", "showifs", "showgroups", "showboxdepth", "showboxbreadth", "showbox", "show", "shipout", "shapemode", "sfcode", "setrandomseed", "setlanguage", "setfontid", "setbox", "scrollmode", "scriptstyle", "scriptspace", "scriptscriptstyle", "scriptscriptfont", "scriptfont", "scantokens", "scantextokens", "savingvdiscards", "savinghyphcodes", "savepos", "saveimageresource", "savecatcodetable", "saveboxresource", "rpcode", "romannumeral", "rightskip", "rightmarginkern", "righthyphenmin", "rightghost", "right", "relpenalty", "relax", "readline", "read", "randomseed", "raise", "radical", "quitvmode", "pxdimen", "protrusionboundary", "protrudechars", "primitive", "prevgraf", "prevdepth", "pretolerance", "prerelpenalty", "prehyphenchar", "preexhyphenchar", "predisplaysize", "predisplaypenalty", "predisplaygapfactor", "predisplaydirection", "prebinoppenalty", "posthyphenchar", "postexhyphenchar", "postdisplaypenalty", "penalty", "pdfximage", "pdfxformresources", "pdfxformname", "pdfxformmargin", "pdfxformattr", "pdfxform", "pdfvorigin", "pdfvariable", "pdfuniqueresname", "pdfuniformdeviate", "pdftrailerid", "pdftrailer", "pdftracingfonts", "pdfthreadmargin", "pdfthread", "pdftexversion", "pdftexrevision", "pdftexbanner", "pdfsuppressptexinfo", "pdfsuppressoptionalinfo", "pdfstartthread", "pdfstartlink", "pdfsetrandomseed", "pdfsetmatrix", "pdfsavepos", "pdfsave", "pdfretval", "pdfrestore", "pdfreplacefont", "pdfrefximage", "pdfrefxform", "pdfrefobj", "pdfrecompress", "pdfrandomseed", "pdfpxdimen", "pdfprotrudechars", "pdfprimitive", "pdfpkresolution", "pdfpkmode", "pdfpkfixeddpi", "pdfpagewidth", "pdfpagesattr", "pdfpageresources", "pdfpageref", "pdfpageheight", "pdfpagebox", "pdfpageattr", "pdfoutput", "pdfoutline", "pdfomitcidset", "pdfomitcharset", "pdfobjcompresslevel", "pdfobj", "pdfnormaldeviate", "pdfnoligatures", "pdfnames", "pdfminorversion", "pdfmapline", "pdfmapfile", "pdfmajorversion", "pdfliteral", "pdflinkmargin", "pdflastypos", "pdflastxpos", "pdflastximagepages", "pdflastximage", "pdflastxform", "pdflastobj", "pdflastlink", "pdflastlinedepth", "pdflastannot", "pdfinsertht", "pdfinfoomitdate", "pdfinfo", "pdfinclusionerrorlevel", "pdfinclusioncopyfonts", "pdfincludechars", "pdfimageresolution", "pdfimagehicolor", "pdfimagegamma", "pdfimageapplygamma", "pdfimageaddfilename", "pdfignoreunknownimages", "pdfignoreddimen", "pdfhorigin", "pdfglyphtounicode", "pdfgentounicode", "pdfgamma", "pdffontsize", "pdffontobjnum", "pdffontname", "pdffontexpand", "pdffontattr", "pdffirstlineheight", "pdffeedback", "pdfextension", "pdfendthread", "pdfendlink", "pdfeachlineheight", "pdfeachlinedepth", "pdfdraftmode", "pdfdestmargin", "pdfdest", "pdfdecimaldigits", "pdfcreationdate", "pdfcopyfont", "pdfcompresslevel", "pdfcolorstackinit", "pdfcolorstack", "pdfcatalog", "pdfannot", "pdfadjustspacing", "pausing", "patterns", "parskip", "parshapelength", "parshapeindent", "parshapedimen", "parshape", "parindent", "parfillskip", "pardirection", "pardir", "par", "pagewidth", "pagetotal", "pagetopoffset", "pagestretch", "pageshrink", "pagerightoffset", "pageleftoffset", "pageheight", "pagegoal", "pagefilstretch", "pagefillstretch", "pagefilllstretch", "pagediscards", "pagedirection", "pagedir", "pagedepth", "pagebottomoffset", "overwithdelims", "overline", "overfullrule", "over", "outputpenalty", "outputmode", "outputbox", "output", "outer", "or", "openout", "openin", "omit", "numexpr", "number", "nullfont", "nulldelimiterspace", "novrule", "nospaces", "normalyear", "normalxtokspre", "normalxtoksapp", "normalxspaceskip", "normalxleaders", "normalxdef", "normalwrite", "normalwordboundary", "normalwidowpenalty", "normalwidowpenalties", "normalwd", "normalvtop", "normalvss", "normalvsplit", "normalvskip", "normalvsize", "normalvrule", "normalvpack", "normalvoffset", "normalvfuzz", "normalvfilneg", "normalvfill", "normalvfil", "normalvcenter", "normalvbox", "normalvbadness", "normalvalign", "normalvadjust", "normaluseimageresource", "normaluseboxresource", "normaluppercase", "normalunvcopy", "normalunvbox", "normalunskip", "normalunpenalty", "normalunless", "normalunkern", "normaluniformdeviate", "normalunhcopy", "normalunhbox", "normalunexpanded", "normalunderline", "normaluchyph", "normaluccode", "normaltracingstats", "normaltracingscantokens", "normaltracingrestores", "normaltracingparagraphs", "normaltracingpages", "normaltracingoutput", "normaltracingonline", "normaltracingnesting", "normaltracingmacros", "normaltracinglostchars", "normaltracingifs", "normaltracinggroups", "normaltracingfonts", "normaltracingcommands", "normaltracingassigns", "normaltpack", "normaltopskip", "normaltopmarks", "normaltopmark", "normaltolerance", "normaltokspre", "normaltoksdef", "normaltoksapp", "normaltoks", "normaltime", "normalthinmuskip", "normalthickmuskip", "normalthe", "normaltextstyle", "normaltextfont", "normaltextdirection", "normaltextdir", "normaltagcode", "normaltabskip", "normalsynctex", "normalsuppressprimitiveerror", "normalsuppressoutererror", "normalsuppressmathparerror", "normalsuppresslongerror", "normalsuppressifcsnameerror", "normalsuppressfontnotfounderror", "normalstring", "normalsplittopskip", "normalsplitmaxdepth", "normalsplitfirstmarks", "normalsplitfirstmark", "normalsplitdiscards", "normalsplitbotmarks", "normalsplitbotmark", "normalspecial", "normalspan", "normalspaceskip", "normalspacefactor", "normalskipdef", "normalskip", "normalskewchar", "normalshowtokens", "normalshowthe", "normalshowlists", "normalshowifs", "normalshowgroups", "normalshowboxdepth", "normalshowboxbreadth", "normalshowbox", "normalshow", "normalshipout", "normalshapemode", "normalsfcode", "normalsetrandomseed", "normalsetlanguage", "normalsetfontid", "normalsetbox", "normalscrollmode", "normalscriptstyle", "normalscriptspace", "normalscriptscriptstyle", "normalscriptscriptfont", "normalscriptfont", "normalscantokens", "normalscantextokens", "normalsavingvdiscards", "normalsavinghyphcodes", "normalsavepos", "normalsaveimageresource", "normalsavecatcodetable", "normalsaveboxresource", "normalrpcode", "normalromannumeral", "normalrightskip", "normalrightmarginkern", "normalrighthyphenmin", "normalrightghost", "normalright", "normalrelpenalty", "normalrelax", "normalreadline", "normalread", "normalrandomseed", "normalraise", "normalradical", "normalquitvmode", "normalpxdimen", "normalprotrusionboundary", "normalprotrudechars", "normalprotected", "normalprimitive", "normalprevgraf", "normalprevdepth", "normalpretolerance", "normalprerelpenalty", "normalprehyphenchar", "normalpreexhyphenchar", "normalpredisplaysize", "normalpredisplaypenalty", "normalpredisplaygapfactor", "normalpredisplaydirection", "normalprebinoppenalty", "normalposthyphenchar", "normalpostexhyphenchar", "normalpostdisplaypenalty", "normalpenalty", "normalpdfximage", "normalpdfxformresources", "normalpdfxformname", "normalpdfxformmargin", "normalpdfxformattr", "normalpdfxform", "normalpdfvorigin", "normalpdfvariable", "normalpdfuniqueresname", "normalpdfuniformdeviate", "normalpdftrailerid", "normalpdftrailer", "normalpdftracingfonts", "normalpdfthreadmargin", "normalpdfthread", "normalpdftexversion", "normalpdftexrevision", "normalpdftexbanner", "normalpdfsuppressptexinfo", "normalpdfsuppressoptionalinfo", "normalpdfstartthread", "normalpdfstartlink", "normalpdfsetrandomseed", "normalpdfsetmatrix", "normalpdfsavepos", "normalpdfsave", "normalpdfretval", "normalpdfrestore", "normalpdfreplacefont", "normalpdfrefximage", "normalpdfrefxform", "normalpdfrefobj", "normalpdfrecompress", "normalpdfrandomseed", "normalpdfpxdimen", "normalpdfprotrudechars", "normalpdfprimitive", "normalpdfpkresolution", "normalpdfpkmode", "normalpdfpkfixeddpi", "normalpdfpagewidth", "normalpdfpagesattr", "normalpdfpageresources", "normalpdfpageref", "normalpdfpageheight", "normalpdfpagebox", "normalpdfpageattr", "normalpdfoutput", "normalpdfoutline", "normalpdfomitcidset", "normalpdfomitcharset", "normalpdfobjcompresslevel", "normalpdfobj", "normalpdfnormaldeviate", "normalpdfnoligatures", "normalpdfnames", "normalpdfminorversion", "normalpdfmapline", "normalpdfmapfile", "normalpdfmajorversion", "normalpdfliteral", "normalpdflinkmargin", "normalpdflastypos", "normalpdflastxpos", "normalpdflastximagepages", "normalpdflastximage", "normalpdflastxform", "normalpdflastobj", "normalpdflastlink", "normalpdflastlinedepth", "normalpdflastannot", "normalpdfinsertht", "normalpdfinfoomitdate", "normalpdfinfo", "normalpdfinclusionerrorlevel", "normalpdfinclusioncopyfonts", "normalpdfincludechars", "normalpdfimageresolution", "normalpdfimagehicolor", "normalpdfimagegamma", "normalpdfimageapplygamma", "normalpdfimageaddfilename", "normalpdfignoreunknownimages", "normalpdfignoreddimen", "normalpdfhorigin", "normalpdfglyphtounicode", "normalpdfgentounicode", "normalpdfgamma", "normalpdffontsize", "normalpdffontobjnum", "normalpdffontname", "normalpdffontexpand", "normalpdffontattr", "normalpdffirstlineheight", "normalpdffeedback", "normalpdfextension", "normalpdfendthread", "normalpdfendlink", "normalpdfeachlineheight", "normalpdfeachlinedepth", "normalpdfdraftmode", "normalpdfdestmargin", "normalpdfdest", "normalpdfdecimaldigits", "normalpdfcreationdate", "normalpdfcopyfont", "normalpdfcompresslevel", "normalpdfcolorstackinit", "normalpdfcolorstack", "normalpdfcatalog", "normalpdfannot", "normalpdfadjustspacing", "normalpausing", "normalpatterns", "normalparskip", "normalparshapelength", "normalparshapeindent", "normalparshapedimen", "normalparshape", "normalparindent", "normalparfillskip", "normalpardirection", "normalpardir", "normalpar", "normalpagewidth", "normalpagetotal", "normalpagetopoffset", "normalpagestretch", "normalpageshrink", "normalpagerightoffset", "normalpageleftoffset", "normalpageheight", "normalpagegoal", "normalpagefilstretch", "normalpagefillstretch", "normalpagefilllstretch", "normalpagediscards", "normalpagedirection", "normalpagedir", "normalpagedepth", "normalpagebottomoffset", "normaloverwithdelims", "normaloverline", "normaloverfullrule", "normalover", "normaloutputpenalty", "normaloutputmode", "normaloutputbox", "normaloutput", "normalouter", "normalor", "normalopenout", "normalopenin", "normalomit", "normalnumexpr", "normalnumber", "normalnullfont", "normalnulldelimiterspace", "normalnovrule", "normalnospaces", "normalnormaldeviate", "normalnonstopmode", "normalnonscript", "normalnolimits", "normalnoligs", "normalnokerns", "normalnoindent", "normalnohrule", "normalnoexpand", "normalnoboundary", "normalnoalign", "normalnewlinechar", "normalmutoglue", "normalmuskipdef", "normalmuskip", "normalmultiply", "normalmuexpr", "normalmskip", "normalmoveright", "normalmoveleft", "normalmonth", "normalmkern", "normalmiddle", "normalmessage", "normalmedmuskip", "normalmeaning", "normalmaxdepth", "normalmaxdeadcycles", "normalmathsurroundskip", "normalmathsurroundmode", "normalmathsurround", "normalmathstyle", "normalmathscriptsmode", "normalmathscriptcharmode", "normalmathscriptboxmode", "normalmathrulethicknessmode", "normalmathrulesmode", "normalmathrulesfam", "normalmathrel", "normalmathpunct", "normalmathpenaltiesmode", "normalmathord", "normalmathoption", "normalmathopen", "normalmathop", "normalmathnolimitsmode", "normalmathitalicsmode", "normalmathinner", "normalmathflattenmode", "normalmatheqnogapstep", "normalmathdisplayskipmode", "normalmathdirection", "normalmathdir", "normalmathdelimitersmode", "normalmathcode", "normalmathclose", "normalmathchoice", "normalmathchardef", "normalmathchar", "normalmathbin", "normalmathaccent", "normalmarks", "normalmark", "normalmag", "normalluatexversion", "normalluatexrevision", "normalluatexbanner", "normalluafunctioncall", "normalluafunction", "normalluaescapestring", "normalluadef", "normalluacopyinputnodes", "normalluabytecodecall", "normalluabytecode", "normallpcode", "normallowercase", "normallower", "normallooseness", "normallong", "normallocalrightbox", "normallocalleftbox", "normallocalinterlinepenalty", "normallocalbrokenpenalty", "normallinepenalty", "normallinedirection", "normallinedir", "normallimits", "normalletterspacefont", "normalletcharcode", "normallet", "normalleqno", "normalleftskip", "normalleftmarginkern", "normallefthyphenmin", "normalleftghost", "normalleft", "normalleaders", "normallccode", "normallateluafunction", "normallatelua", "normallastypos", "normallastxpos", "normallastskip", "normallastsavedimageresourcepages", "normallastsavedimageresourceindex", "normallastsavedboxresourceindex", "normallastpenalty", "normallastnodetype", "normallastnamedcs", "normallastlinefit", "normallastkern", "normallastbox", "normallanguage", "normalkern", "normaljobname", "normalinterlinepenalty", "normalinterlinepenalties", "normalinteractionmode", "normalinsertpenalties", "normalinsertht", "normalinsert", "normalinputlineno", "normalinput", "normalinitcatcodetable", "normalindent", "normalimmediateassignment", "normalimmediateassigned", "normalimmediate", "normalignorespaces", "normalignoreligaturesinfont", "normalifx", "normalifvoid", "normalifvmode", "normalifvbox", "normaliftrue", "normalifprimitive", "normalifpdfprimitive", "normalifpdfabsnum", "normalifpdfabsdim", "normalifodd", "normalifnum", "normalifmmode", "normalifinner", "normalifincsname", "normalifhmode", "normalifhbox", "normaliffontchar", "normaliffalse", "normalifeof", "normalifdim", "normalifdefined", "normalifcsname", "normalifcondition", "normalifcat", "normalifcase", "normalifabsnum", "normalifabsdim", "normalif", "normalhyphenpenaltymode", "normalhyphenpenalty", "normalhyphenchar", "normalhyphenationmin", "normalhyphenationbounds", "normalhyphenation", "normalht", "normalhss", "normalhskip", "normalhsize", "normalhrule", "normalhpack", "normalholdinginserts", "normalhoffset", "normalhjcode", "normalhfuzz", "normalhfilneg", "normalhfill", "normalhfil", "normalhbox", "normalhbadness", "normalhangindent", "normalhangafter", "normalhalign", "normalgtokspre", "normalgtoksapp", "normalgluetomu", "normalgluestretchorder", "normalgluestretch", "normalglueshrinkorder", "normalglueshrink", "normalglueexpr", "normalglobaldefs", "normalglobal", "normalglet", "normalgleaders", "normalgdef", "normalfuturelet", "normalfutureexpandis", "normalfutureexpand", "normalformatname", "normalfontname", "normalfontid", "normalfontdimen", "normalfontcharwd", "normalfontcharic", "normalfontcharht", "normalfontchardp", "normalfont", "normalfloatingpenalty", "normalfixupboxesmode", "normalfirstvalidlanguage", "normalfirstmarks", "normalfirstmark", "normalfinalhyphendemerits", "normalfi", "normalfam", "normalexplicithyphenpenalty", "normalexplicitdiscretionary", "normalexpandglyphsinfont", "normalexpanded", "normalexpandafter", "normalexhyphenpenalty", "normalexhyphenchar", "normalexceptionpenalty", "normaleveryvbox", "normaleverypar", "normaleverymath", "normaleveryjob", "normaleveryhbox", "normaleveryeof", "normaleverydisplay", "normaleverycr", "normaletokspre", "normaletoksapp", "normalescapechar", "normalerrorstopmode", "normalerrorcontextlines", "normalerrmessage", "normalerrhelp", "normaleqno", "normalendlocalcontrol", "normalendlinechar", "normalendinput", "normalendgroup", "normalendcsname", "normalend", "normalemergencystretch", "normalelse", "normalefcode", "normaledef", "normaleTeXversion", "normaleTeXrevision", "normaleTeXminorversion", "normaleTeXVersion", "normaldvivariable", "normaldvifeedback", "normaldviextension", "normaldump", "normaldraftmode", "normaldp", "normaldoublehyphendemerits", "normaldivide", "normaldisplaywidth", "normaldisplaywidowpenalty", "normaldisplaywidowpenalties", "normaldisplaystyle", "normaldisplaylimits", "normaldisplayindent", "normaldiscretionary", "normaldirectlua", "normaldimexpr", "normaldimendef", "normaldimen", "normaldeviate", "normaldetokenize", "normaldelimitershortfall", "normaldelimiterfactor", "normaldelimiter", "normaldelcode", "normaldefaultskewchar", "normaldefaulthyphenchar", "normaldef", "normaldeadcycles", "normalday", "normalcurrentiftype", "normalcurrentiflevel", "normalcurrentifbranch", "normalcurrentgrouptype", "normalcurrentgrouplevel", "normalcsstring", "normalcsname", "normalcrcr", "normalcrampedtextstyle", "normalcrampedscriptstyle", "normalcrampedscriptscriptstyle", "normalcrampeddisplaystyle", "normalcr", "normalcountdef", "normalcount", "normalcopyfont", "normalcopy", "normalcompoundhyphenmode", "normalclubpenalty", "normalclubpenalties", "normalcloseout", "normalclosein", "normalclearmarks", "normalcleaders", "normalchardef", "normalchar", "normalcatcodetable", "normalcatcode", "normalbrokenpenalty", "normalbreakafterdirmode", "normalboxmaxdepth", "normalboxdirection", "normalboxdir", "normalbox", "normalboundary", "normalbotmarks", "normalbotmark", "normalbodydirection", "normalbodydir", "normalbinoppenalty", "normalbelowdisplayskip", "normalbelowdisplayshortskip", "normalbegingroup", "normalbegincsname", "normalbatchmode", "normalbadness", "normalautomatichyphenpenalty", "normalautomatichyphenmode", "normalautomaticdiscretionary", "normalattributedef", "normalattribute", "normalatopwithdelims", "normalatop", "normalaligntab", "normalalignmark", "normalaftergroup", "normalafterassignment", "normaladvance", "normaladjustspacing", "normaladjdemerits", "normalaccent", "normalabovewithdelims", "normalabovedisplayskip", "normalabovedisplayshortskip", "normalabove", "normalXeTeXversion", "normalUvextensible", "normalUunderdelimiter", "normalUsuperscript", "normalUsubscript", "normalUstopmath", "normalUstopdisplaymath", "normalUstartmath", "normalUstartdisplaymath", "normalUstack", "normalUskewedwithdelims", "normalUskewed", "normalUroot", "normalUright", "normalUradical", "normalUoverdelimiter", "normalUnosuperscript", "normalUnosubscript", "normalUmiddle", "normalUmathunderdelimitervgap", "normalUmathunderdelimiterbgap", "normalUmathunderbarvgap", "normalUmathunderbarrule", "normalUmathunderbarkern", "normalUmathsupsubbottommax", "normalUmathsupshiftup", "normalUmathsupshiftdrop", "normalUmathsupbottommin", "normalUmathsubtopmax", "normalUmathsubsupvgap", "normalUmathsubsupshiftdown", "normalUmathsubshiftdrop", "normalUmathsubshiftdown", "normalUmathstackvgap", "normalUmathstacknumup", "normalUmathstackdenomdown", "normalUmathspaceafterscript", "normalUmathskewedfractionvgap", "normalUmathskewedfractionhgap", "normalUmathrelrelspacing", "normalUmathrelpunctspacing", "normalUmathrelordspacing", "normalUmathrelopspacing", "normalUmathrelopenspacing", "normalUmathrelinnerspacing", "normalUmathrelclosespacing", "normalUmathrelbinspacing", "normalUmathradicalvgap", "normalUmathradicalrule", "normalUmathradicalkern", "normalUmathradicaldegreeraise", "normalUmathradicaldegreebefore", "normalUmathradicaldegreeafter", "normalUmathquad", "normalUmathpunctrelspacing", "normalUmathpunctpunctspacing", "normalUmathpunctordspacing", "normalUmathpunctopspacing", "normalUmathpunctopenspacing", "normalUmathpunctinnerspacing", "normalUmathpunctclosespacing", "normalUmathpunctbinspacing", "normalUmathoverdelimitervgap", "normalUmathoverdelimiterbgap", "normalUmathoverbarvgap", "normalUmathoverbarrule", "normalUmathoverbarkern", "normalUmathordrelspacing", "normalUmathordpunctspacing", "normalUmathordordspacing", "normalUmathordopspacing", "normalUmathordopenspacing", "normalUmathordinnerspacing", "normalUmathordclosespacing", "normalUmathordbinspacing", "normalUmathoprelspacing", "normalUmathoppunctspacing", "normalUmathopordspacing", "normalUmathopopspacing", "normalUmathopopenspacing", "normalUmathopinnerspacing", "normalUmathoperatorsize", "normalUmathopenrelspacing", "normalUmathopenpunctspacing", "normalUmathopenordspacing", "normalUmathopenopspacing", "normalUmathopenopenspacing", "normalUmathopeninnerspacing", "normalUmathopenclosespacing", "normalUmathopenbinspacing", "normalUmathopclosespacing", "normalUmathopbinspacing", "normalUmathnolimitsupfactor", "normalUmathnolimitsubfactor", "normalUmathlimitbelowvgap", "normalUmathlimitbelowkern", "normalUmathlimitbelowbgap", "normalUmathlimitabovevgap", "normalUmathlimitabovekern", "normalUmathlimitabovebgap", "normalUmathinnerrelspacing", "normalUmathinnerpunctspacing", "normalUmathinnerordspacing", "normalUmathinneropspacing", "normalUmathinneropenspacing", "normalUmathinnerinnerspacing", "normalUmathinnerclosespacing", "normalUmathinnerbinspacing", "normalUmathfractionrule", "normalUmathfractionnumvgap", "normalUmathfractionnumup", "normalUmathfractiondenomvgap", "normalUmathfractiondenomdown", "normalUmathfractiondelsize", "normalUmathconnectoroverlapmin", "normalUmathcodenum", "normalUmathcode", "normalUmathcloserelspacing", "normalUmathclosepunctspacing", "normalUmathcloseordspacing", "normalUmathcloseopspacing", "normalUmathcloseopenspacing", "normalUmathcloseinnerspacing", "normalUmathcloseclosespacing", "normalUmathclosebinspacing", "normalUmathcharslot", "normalUmathcharnumdef", "normalUmathcharnum", "normalUmathcharfam", "normalUmathchardef", "normalUmathcharclass", "normalUmathchar", "normalUmathbinrelspacing", "normalUmathbinpunctspacing", "normalUmathbinordspacing", "normalUmathbinopspacing", "normalUmathbinopenspacing", "normalUmathbininnerspacing", "normalUmathbinclosespacing", "normalUmathbinbinspacing", "normalUmathaxis", "normalUmathaccent", "normalUleft", "normalUhextensible", "normalUdelimiterunder", "normalUdelimiterover", "normalUdelimiter", "normalUdelcodenum", "normalUdelcode", "normalUchar", "normalOmegaversion", "normalOmegarevision", "normalOmegaminorversion", "normalAlephversion", "normalAlephrevision", "normalAlephminorversion", "normal ", "nonstopmode", "nonscript", "nolimits", "noligs", "nokerns", "noindent", "nohrule", "noexpand", "noboundary", "noalign", "newlinechar", "mutoglue", "muskipdef", "muskip", "multiply", "muexpr", "mskip", "moveright", "moveleft", "month", "mkern", "middle", "message", "medmuskip", "meaning", "maxdepth", "maxdeadcycles", "mathsurroundskip", "mathsurroundmode", "mathsurround", "mathstyle", "mathscriptsmode", "mathscriptcharmode", "mathscriptboxmode", "mathrulethicknessmode", "mathrulesmode", "mathrulesfam", "mathrel", "mathpunct", "mathpenaltiesmode", "mathord", "mathoption", "mathopen", "mathop", "mathnolimitsmode", "mathitalicsmode", "mathinner", "mathflattenmode", "matheqnogapstep", "mathdisplayskipmode", "mathdirection", "mathdir", "mathdelimitersmode", "mathcode", "mathclose", "mathchoice", "mathchardef", "mathchar", "mathbin", "mathaccent", "marks", "mark", "mag", "luatexversion", "luatexrevision", "luatexbanner", "luafunctioncall", "luafunction", "luaescapestring", "luadef", "luacopyinputnodes", "luabytecodecall", "luabytecode", "lpcode", "lowercase", "lower", "looseness", "long", "localrightbox", "localleftbox", "localinterlinepenalty", "localbrokenpenalty", "lineskiplimit", "lineskip", "linepenalty", "linedirection", "linedir", "limits", "letterspacefont", "letcharcode", "let", "leqno", "leftskip", "leftmarginkern", "lefthyphenmin", "leftghost", "left", "leaders", "lccode", "lateluafunction", "latelua", "lastypos", "lastxpos", "lastskip", "lastsavedimageresourcepages", "lastsavedimageresourceindex", "lastsavedboxresourceindex", "lastpenalty", "lastnodetype", "lastnamedcs", "lastlinefit", "lastkern", "lastbox", "language", "kern", "jobname", "interlinepenalty", "interlinepenalties", "interactionmode", "insertpenalties", "insertht", "insert", "inputlineno", "input", "initcatcodetable", "indent", "immediateassignment", "immediateassigned", "immediate", "ignorespaces", "ignoreligaturesinfont", "ifx", "ifvoid", "ifvmode", "ifvbox", "iftrue", "ifprimitive", "ifpdfprimitive", "ifpdfabsnum", "ifpdfabsdim", "ifodd", "ifnum", "ifmmode", "ifinner", "ifincsname", "ifhmode", "ifhbox", "iffontchar", "iffalse", "ifeof", "ifdim", "ifdefined", "ifcsname", "ifcondition", "ifcat", "ifcase", "ifabsnum", "ifabsdim", "if", "hyphenpenaltymode", "hyphenpenalty", "hyphenchar", "hyphenationmin", "hyphenationbounds", "hyphenation", "ht", "hss", "hskip", "hsize", "hrule", "hpack", "holdinginserts", "hoffset", "hjcode", "hfuzz", "hfilneg", "hfill", "hfil", "hbox", "hbadness", "hangindent", "hangafter", "halign", "gtokspre", "gtoksapp", "gluetomu", "gluestretchorder", "gluestretch", "glueshrinkorder", "glueshrink", "glueexpr", "globaldefs", "global", "gleaders", "gdef", "futurelet", "futureexpandis", "futureexpand", "formatname", "fontname", "fontid", "fontdimen", "fontcharwd", "fontcharic", "fontcharht", "fontchardp", "font", "floatingpenalty", "fixupboxesmode", "firstvalidlanguage", "firstmarks", "firstmark", "finalhyphendemerits", "fi", "fam", "explicithyphenpenalty", "explicitdiscretionary", "expandglyphsinfont", "expandafter", "exhyphenpenalty", "exhyphenchar", "exceptionpenalty", "everyvbox", "everypar", "everymath", "everyjob", "everyhbox", "everyeof", "everydisplay", "everycr", "etokspre", "etoksapp", "escapechar", "errorstopmode", "errorcontextlines", "errmessage", "errhelp", "eqno", "endlocalcontrol", "endlinechar", "endinput", "endgroup", "endcsname", "end", "emergencystretch", "else", "efcode", "edef", "eTeXversion", "eTeXrevision", "eTeXminorversion", "eTeXVersion", "dvivariable", "dvifeedback", "dviextension", "dump", "draftmode", "dp", "doublehyphendemerits", "divide", "displaywidth", "displaywidowpenalty", "displaywidowpenalties", "displaystyle", "displaylimits", "displayindent", "discretionary", "directlua", "dimexpr", "dimendef", "dimen", "detokenize", "delimitershortfall", "delimiterfactor", "delimiter", "delcode", "defaultskewchar", "defaulthyphenchar", "def", "deadcycles", "day", "currentiftype", "currentiflevel", "currentifbranch", "currentgrouptype", "currentgrouplevel", "csstring", "csname", "crcr", "crampedtextstyle", "crampedscriptstyle", "crampedscriptscriptstyle", "crampeddisplaystyle", "cr", "countdef", "count", "copyfont", "copy", "compoundhyphenmode", "clubpenalty", "clubpenalties", "closeout", "closein", "clearmarks", "cleaders", "chardef", "char", "catcodetable", "catcode", "brokenpenalty", "breakafterdirmode", "boxmaxdepth", "boxdirection", "boxdir", "box", "boundary", "botmarks", "botmark", "bodydirection", "bodydir", "binoppenalty", "belowdisplayskip", "belowdisplayshortskip", "begingroup", "begincsname", "batchmode", "baselineskip", "badness", "automatichyphenpenalty", "automatichyphenmode", "automaticdiscretionary", "attributedef", "attribute", "atopwithdelims", "atop", "aligntab", "alignmark", "aftergroup", "afterassignment", "advance", "adjustspacing", "adjdemerits", "accent", "abovewithdelims", "abovedisplayskip", "abovedisplayshortskip", "above", "XeTeXversion", "Uvextensible", "Uunderdelimiter", "Usuperscript", "Usubscript", "Ustopmath", "Ustopdisplaymath", "Ustartmath", "Ustartdisplaymath", "Ustack", "Uskewedwithdelims", "Uskewed", "Uroot", "Uright", "Uradical", "Uoverdelimiter", "Unosuperscript", "Unosubscript", "Umiddle", "Umathunderdelimitervgap", "Umathunderdelimiterbgap", "Umathunderbarvgap", "Umathunderbarrule", "Umathunderbarkern", "Umathsupsubbottommax", "Umathsupshiftup", "Umathsupshiftdrop", "Umathsupbottommin", "Umathsubtopmax", "Umathsubsupvgap", "Umathsubsupshiftdown", "Umathsubshiftdrop", "Umathsubshiftdown", "Umathstackvgap", "Umathstacknumup", "Umathstackdenomdown", "Umathspaceafterscript", "Umathskewedfractionvgap", "Umathskewedfractionhgap", "Umathrelrelspacing", "Umathrelpunctspacing", "Umathrelordspacing", "Umathrelopspacing", "Umathrelopenspacing", "Umathrelinnerspacing", "Umathrelclosespacing", "Umathrelbinspacing", "Umathradicalvgap", "Umathradicalrule", "Umathradicalkern", "Umathradicaldegreeraise", "Umathradicaldegreebefore", "Umathradicaldegreeafter", "Umathquad", "Umathpunctrelspacing", "Umathpunctpunctspacing", "Umathpunctordspacing", "Umathpunctopspacing", "Umathpunctopenspacing", "Umathpunctinnerspacing", "Umathpunctclosespacing", "Umathpunctbinspacing", "Umathoverdelimitervgap", "Umathoverdelimiterbgap", "Umathoverbarvgap", "Umathoverbarrule", "Umathoverbarkern", "Umathordrelspacing", "Umathordpunctspacing", "Umathordordspacing", "Umathordopspacing", "Umathordopenspacing", "Umathordinnerspacing", "Umathordclosespacing", "Umathordbinspacing", "Umathoprelspacing", "Umathoppunctspacing", "Umathopordspacing", "Umathopopspacing", "Umathopopenspacing", "Umathopinnerspacing", "Umathoperatorsize", "Umathopenrelspacing", "Umathopenpunctspacing", "Umathopenordspacing", "Umathopenopspacing", "Umathopenopenspacing", "Umathopeninnerspacing", "Umathopenclosespacing", "Umathopenbinspacing", "Umathopclosespacing", "Umathopbinspacing", "Umathnolimitsupfactor", "Umathnolimitsubfactor", "Umathlimitbelowvgap", "Umathlimitbelowkern", "Umathlimitbelowbgap", "Umathlimitabovevgap", "Umathlimitabovekern", "Umathlimitabovebgap", "Umathinnerrelspacing", "Umathinnerpunctspacing", "Umathinnerordspacing", "Umathinneropspacing", "Umathinneropenspacing", "Umathinnerinnerspacing", "Umathinnerclosespacing", "Umathinnerbinspacing", "Umathfractionrule", "Umathfractionnumvgap", "Umathfractionnumup", "Umathfractiondenomvgap", "Umathfractiondenomdown", "Umathfractiondelsize", "Umathconnectoroverlapmin", "Umathcodenum", "Umathcode", "Umathcloserelspacing", "Umathclosepunctspacing", "Umathcloseordspacing", "Umathcloseopspacing", "Umathcloseopenspacing", "Umathcloseinnerspacing", "Umathcloseclosespacing", "Umathclosebinspacing", "Umathcharslot", "Umathcharnumdef", "Umathcharnum", "Umathcharfam", "Umathchardef", "Umathcharclass", "Umathchar", "Umathbinrelspacing", "Umathbinpunctspacing", "Umathbinordspacing", "Umathbinopspacing", "Umathbinopenspacing", "Umathbininnerspacing", "Umathbinclosespacing", "Umathbinbinspacing", "Umathaxis", "Umathaccent", "Uleft", "Uhextensible", "Udelimiterunder", "Udelimiterover", "Udelimiter", "Udelcodenum", "Udelcode", "Uchar", "Omegaversion", "Omegarevision", "Omegaminorversion", "Alephversion", "Alephrevision", "Alephminorversion" };
-				foreach (string command in primitives.Split('|').Select(x => @"\" + x))
-				{
-					lang.Commands.Add(new IntelliSense(command) { IntelliSenseType = IntelliSenseType.Command, Token = Token.Primitive });
-				}
-			}
-			if (VM.Default.SuggestFontSwitches)
-			{
-				string[] mainstyles = new string[] { "rm", "ss", "tt" };
-				string[] fontalternatives = new string[] { "tf", "bf", "it", "sl", "bi", "bs", "sc" };
-				string[] fontsizemodifiers = new string[] { "xx", "x", "", "a", "b", "c", "d" };
-				string[] allfontswitches = mainstyles.Concat(fontalternatives.SelectMany(a => fontsizemodifiers.Select(m => a + m).ToArray()).ToArray()).ToArray();
+						if ((command.Type == "environment" && VM.Default.SuggestStartStop) | (command.Type != "environment" && VM.Default.SuggestCommands))
+						{
+							IntelliSense intelliSense = new(commandname) { Snippet = snippet, Description = "Category: " + command.Category, IntelliSenseType = IntelliSenseType.Command };
+							if (VM.Default.SuggestArguments && command.Arguments?.ArgumentsList != null)
+								foreach (var item in command.Arguments?.ArgumentsList)
+								{
+									if (item is Assignments assignments)
+									{
+										intelliSense.ArgumentsList.Add(new()
+										{
+											Delimiters = assignments?.Delimiters,
+											IntelliSenseType = IntelliSenseType.Argument,
+											Name = assignments?.Inherit?.FirstOrDefault()?.Name ?? "",
+											Parameters = assignments?.Parameter?.Select(x => new CodeEditorControl_WinUI.KeyValue() { Name = x.Name, Description = "Type: " + x.Constant?.FirstOrDefault()?.Type, Values = x.Constant?.Select(x => ConvertCDName(x.Type)).ToList() } as CodeEditorControl_WinUI.Parameter).ToList(),
+										});
+									}
+								}
+							intelliSense.Token = command.Type == "environment" ? Token.Environment : Token.Command;
+						//intelliSense.ArgumentsList = command.Arguments?.ArgumentsList?.Select(x=> x is Assignments assignments ? new CodeEditorControl_WinUI.() { Delimiters = x.Delimiters, List = x.List, Name = assignments.Inherit?.Name, } : null ).ToList();
+							lang.Commands.Add(intelliSense);
+						}
+					}
+					if (VM.Default.SuggestPrimitives)
+					{
+						string primitives = "year|xtokspre|xtoksapp|xtoks|xspaceskip|xleaders|xdefcsname|xdef|wrapuppar|wordboundary|widowpenalty|widowpenalties|wd|vtop|vss|vsplit|vskip|vsize|vrule|vpack|vfuzz|vfilneg|vfill|vfil|vcenter|vbox|vbadness|valign|vadjust|uppercase|unvpack|unvcopy|unvbox|untraced|unskip|unpenalty|unletprotected|unletfrozen|unless|unkern|unhpack|unhcopy|unhbox|unexpandedloop|underline|undent|uchyph|uccode|tracingstats|tracingrestores|tracingparagraphs|tracingpages|tracingoutput|tracingonline|tracingnodes|tracingnesting|tracingmath|tracingmarks|tracingmacros|tracinglostchars|tracinglevels|tracinginserts|tracingifs|tracinghyphenation|tracinggroups|tracingfullboxes|tracingfonts|tracingexpressions|tracingcommands|tracingassigns|tracingalignments|tracingadjusts|tpack|toscaled|topskip|topmarks|topmark|tomathstyle|tolerant|tolerance|tokspre|toksdef|toksapp|toks|tokenized|tointeger|todimension|time|thinmuskip|thickmuskip|thewithoutunit|the|textstyle|textfont|textdirection|tabskip|tabsize|swapcsvalues|supmarkmode|string|splittopskip|splitmaxdepth|splitfirstmarks|splitfirstmark|splitdiscards|splitbotmarks|splitbotmark|span|spaceskip|spacefactor|snapshotpar|skipdef|skip|skewchar|showtokens|showthe|shownodedetails|showlists|showifs|showgroups|showboxdepth|showboxbreadth|showbox|show|shipout|shapingpenalty|shapingpenaltiesmode|sfcode|setlanguage|setfontid|setbox|semiprotected|semiexpanded|scrollmode|scriptstyle|scriptspace|scriptscriptstyle|scriptscriptfont|scriptfont|scantokens|scantextokens|scaledfontdimen|savingvdiscards|savinghyphcodes|savecatcodetable|rpcode|romannumeral|rightskip|rightmarginkern|righthyphenmin|right|retokenized|relpenalty|relax|raise|radical|quitvmode|quitloop|pxdimen|protrusionboundary|protrudechars|protected|prevgraf|prevdepth|pretolerance|prerelpenalty|prehyphenchar|preexhyphenchar|predisplaysize|predisplaypenalty|predisplaygapfactor|predisplaydirection|prebinoppenalty|posthyphenchar|postexhyphenchar|postdisplaypenalty|permanent|penalty|pdfximage|pdfxformresources|pdfxformname|pdfxformmargin|pdfxformattr|pdfxform|pdfvorigin|pdfuniqueresname|pdfuniformdeviate|pdftrailerid|pdftrailer|pdftracingfonts|pdfthreadmargin|pdfthread|pdftexversion|pdftexrevision|pdftexbanner|pdfsuppressptexinfo|pdfsuppressoptionalinfo|pdfstartthread|pdfstartlink|pdfsetrandomseed|pdfsetmatrix|pdfsavepos|pdfsave|pdfretval|pdfrestore|pdfreplacefont|pdfrefximage|pdfrefxform|pdfrefobj|pdfrecompress|pdfrandomseed|pdfpxdimen|pdfprotrudechars|pdfprimitive|pdfpkresolution|pdfpkmode|pdfpkfixeddpi|pdfpagewidth|pdfpagesattr|pdfpageresources|pdfpageref|pdfpageheight|pdfpagebox|pdfpageattr|pdfoutput|pdfoutline|pdfomitcidset|pdfomitcharset|pdfobjcompresslevel|pdfobj|pdfnormaldeviate|pdfnoligatures|pdfnames|pdfminorversion|pdfmapline|pdfmapfile|pdfmajorversion|pdfliteral|pdflinkmargin|pdflastypos|pdflastxpos|pdflastximagepages|pdflastximage|pdflastxform|pdflastobj|pdflastlink|pdflastlinedepth|pdflastannot|pdfinsertht|pdfinfoomitdate|pdfinfo|pdfinclusionerrorlevel|pdfinclusioncopyfonts|pdfincludechars|pdfimageresolution|pdfimagehicolor|pdfimagegamma|pdfimageapplygamma|pdfimageaddfilename|pdfignoreunknownimages|pdfignoreddimen|pdfhorigin|pdfglyphtounicode|pdfgentounicode|pdfgamma|pdffontsize|pdffontobjnum|pdffontname|pdffontexpand|pdffontattr|pdffirstlineheight|pdfendthread|pdfendlink|pdfeachlineheight|pdfeachlinedepth|pdfdraftmode|pdfdestmargin|pdfdest|pdfdecimaldigits|pdfcreationdate|pdfcopyfont|pdfcompresslevel|pdfcolorstackinit|pdfcolorstack|pdfcatalog|pdfannot|pdfadjustspacing|pausing|patterns|parskip|parshapelength|parshapeindent|parshapedimen|parshape|parindent|parfillskip|pardirection|parattribute|parametermark|parametercount|par|pagevsize|pagetotal|pagestretch|pageshrink|pagegoal|pagefilstretch|pagefillstretch|pagefilllstretch|pagediscards|pagedepth|pageboundarypenalty|pageboundary|overwithdelims|overshoot|overloadmode|overloaded|overline|overfullrule|over|outputpenalty|outputbox|output|outer|orunless|orphanpenalty|orphanpenalties|orelse|or|omit|numexpression|numexpr|numericscale|number|nullfont|nulldelimiterspace|novrule|nospaces|normalyear|normalxtokspre|normalxtoksapp|normalxtoks|normalxspaceskip|normalxleaders|normalxdefcsname|normalxdef|normalwrapuppar|normalwordboundary|normalwidowpenalty|normalwidowpenalties|normalwd|normalvtop|normalvss|normalvsplit|normalvskip|normalvsize|normalvrule|normalvpack|normalvfuzz|normalvfilneg|normalvfill|normalvfil|normalvcenter|normalvbox|normalvbadness|normalvalign|normalvadjust|normaluppercase|normalunvpack|normalunvcopy|normalunvbox|normaluntraced|normalunskip|normalunpenalty|normalunletprotected|normalunletfrozen|normalunless|normalunkern|normalunhpack|normalunhcopy|normalunhbox|normalunexpandedloop|normalunexpanded|normalunderline|normalundent|normaluchyph|normaluccode|normaltracingstats|normaltracingrestores|normaltracingparagraphs|normaltracingpages|normaltracingoutput|normaltracingonline|normaltracingnodes|normaltracingnesting|normaltracingmath|normaltracingmarks|normaltracingmacros|normaltracinglostchars|normaltracinglevels|normaltracinginserts|normaltracingifs|normaltracinghyphenation|normaltracinggroups|normaltracingfullboxes|normaltracingfonts|normaltracingexpressions|normaltracingcommands|normaltracingassigns|normaltracingalignments|normaltracingadjusts|normaltpack|normaltoscaled|normaltopskip|normaltopmarks|normaltopmark|normaltomathstyle|normaltolerant|normaltolerance|normaltokspre|normaltoksdef|normaltoksapp|normaltoks|normaltokenized|normaltointeger|normaltodimension|normaltime|normalthinmuskip|normalthickmuskip|normalthewithoutunit|normalthe|normaltextstyle|normaltextfont|normaltextdirection|normaltabskip|normaltabsize|normalswapcsvalues|normalsupmarkmode|normalstring|normalsplittopskip|normalsplitmaxdepth|normalsplitfirstmarks|normalsplitfirstmark|normalsplitdiscards|normalsplitbotmarks|normalsplitbotmark|normalspan|normalspaceskip|normalspacefactor|normalsnapshotpar|normalskipdef|normalskip|normalskewchar|normalshowtokens|normalshowthe|normalshownodedetails|normalshowlists|normalshowifs|normalshowgroups|normalshowboxdepth|normalshowboxbreadth|normalshowbox|normalshow|normalshipout|normalshapingpenalty|normalshapingpenaltiesmode|normalsfcode|normalsetlanguage|normalsetfontid|normalsetbox|normalsemiprotected|normalsemiexpanded|normalscrollmode|normalscriptstyle|normalscriptspace|normalscriptscriptstyle|normalscriptscriptfont|normalscriptfont|normalscantokens|normalscantextokens|normalscaledfontdimen|normalsavingvdiscards|normalsavinghyphcodes|normalsavecatcodetable|normalrpcode|normalromannumeral|normalrightskip|normalrightmarginkern|normalrighthyphenmin|normalright|normalretokenized|normalrelpenalty|normalrelax|normalraise|normalradical|normalquitvmode|normalquitloop|normalpxdimen|normalprotrusionboundary|normalprotrudechars|normalprotected|normalprevgraf|normalprevdepth|normalpretolerance|normalprerelpenalty|normalprehyphenchar|normalpreexhyphenchar|normalpredisplaysize|normalpredisplaypenalty|normalpredisplaygapfactor|normalpredisplaydirection|normalprebinoppenalty|normalposthyphenchar|normalpostexhyphenchar|normalpostdisplaypenalty|normalpermanent|normalpenalty|normalpdfximage|normalpdfxformresources|normalpdfxformname|normalpdfxformmargin|normalpdfxformattr|normalpdfxform|normalpdfvorigin|normalpdfuniqueresname|normalpdfuniformdeviate|normalpdftrailerid|normalpdftrailer|normalpdftracingfonts|normalpdfthreadmargin|normalpdfthread|normalpdftexversion|normalpdftexrevision|normalpdftexbanner|normalpdfsuppressptexinfo|normalpdfsuppressoptionalinfo|normalpdfstartthread|normalpdfstartlink|normalpdfsetrandomseed|normalpdfsetmatrix|normalpdfsavepos|normalpdfsave|normalpdfretval|normalpdfrestore|normalpdfreplacefont|normalpdfrefximage|normalpdfrefxform|normalpdfrefobj|normalpdfrecompress|normalpdfrandomseed|normalpdfpxdimen|normalpdfprotrudechars|normalpdfprimitive|normalpdfpkresolution|normalpdfpkmode|normalpdfpkfixeddpi|normalpdfpagewidth|normalpdfpagesattr|normalpdfpageresources|normalpdfpageref|normalpdfpageheight|normalpdfpagebox|normalpdfpageattr|normalpdfoutput|normalpdfoutline|normalpdfomitcidset|normalpdfomitcharset|normalpdfobjcompresslevel|normalpdfobj|normalpdfnormaldeviate|normalpdfnoligatures|normalpdfnames|normalpdfminorversion|normalpdfmapline|normalpdfmapfile|normalpdfmajorversion|normalpdfliteral|normalpdflinkmargin|normalpdflastypos|normalpdflastxpos|normalpdflastximagepages|normalpdflastximage|normalpdflastxform|normalpdflastobj|normalpdflastlink|normalpdflastlinedepth|normalpdflastannot|normalpdfinsertht|normalpdfinfoomitdate|normalpdfinfo|normalpdfinclusionerrorlevel|normalpdfinclusioncopyfonts|normalpdfincludechars|normalpdfimageresolution|normalpdfimagehicolor|normalpdfimagegamma|normalpdfimageapplygamma|normalpdfimageaddfilename|normalpdfignoreunknownimages|normalpdfignoreddimen|normalpdfhorigin|normalpdfglyphtounicode|normalpdfgentounicode|normalpdfgamma|normalpdffontsize|normalpdffontobjnum|normalpdffontname|normalpdffontexpand|normalpdffontattr|normalpdffirstlineheight|normalpdfendthread|normalpdfendlink|normalpdfeachlineheight|normalpdfeachlinedepth|normalpdfdraftmode|normalpdfdestmargin|normalpdfdest|normalpdfdecimaldigits|normalpdfcreationdate|normalpdfcopyfont|normalpdfcompresslevel|normalpdfcolorstackinit|normalpdfcolorstack|normalpdfcatalog|normalpdfannot|normalpdfadjustspacing|normalpausing|normalpatterns|normalparskip|normalparshapelength|normalparshapeindent|normalparshapedimen|normalparshape|normalparindent|normalparfillskip|normalparfillleftskip|normalpardirection|normalparattribute|normalparametermark|normalparametercount|normalpar|normalpagevsize|normalpagetotal|normalpagestretch|normalpageshrink|normalpagegoal|normalpagefilstretch|normalpagefillstretch|normalpagefilllstretch|normalpagediscards|normalpagedepth|normalpageboundarypenalty|normalpageboundary|normaloverwithdelims|normalovershoot|normaloverloadmode|normaloverloaded|normaloverline|normaloverfullrule|normalover|normaloutputpenalty|normaloutputbox|normaloutput|normalouter|normalorunless|normalorphanpenalty|normalorphanpenalties|normalorelse|normalor|normalomit|normalnumexpression|normalnumexpr|normalnumericscale|normalnumber|normalnullfont|normalnulldelimiterspace|normalnovrule|normalnospaces|normalnormalizelinemode|normalnorelax|normalnonstopmode|normalnonscript|normalnolimits|normalnoindent|normalnohrule|normalnoexpand|normalnoboundary|normalnoaligned|normalnoalign|normalnewlinechar|normalmutoglue|normalmutable|normalmuskipdef|normalmuskip|normalmultiply|normalmugluespecdef|normalmuexpr|normalmskip|normalmoveright|normalmoveleft|normalmonth|normalmkern|normalmiddle|normalmessage|normalmedmuskip|normalmeaningless|normalmeaningfull|normalmeaningasis|normalmeaning|normalmaxdepth|normalmaxdeadcycles|normalmathsurroundskip|normalmathsurroundmode|normalmathsurround|normalmathstyle|normalmathscriptsmode|normalmathscriptcharmode|normalmathscriptboxmode|normalmathscale|normalmathrulethicknessmode|normalmathrulesmode|normalmathrulesfam|normalmathrel|normalmathrad|normalmathpunct|normalmathpenaltiesmode|normalmathord|normalmathopen|normalmathop|normalmathnolimitsmode|normalmathlimitsmode|normalmathinner|normalmathfrac|normalmathfontcontrol|normalmathflattenmode|normalmatheqnogapstep|normalmathdisplayskipmode|normalmathdirection|normalmathdelimitersmode|normalmathcontrolmode|normalmathcode|normalmathclose|normalmathchoice|normalmathchardef|normalmathchar|normalmathbin|normalmathaccent|normalmarks|normalmark|normalluatexversion|normalluatexrevision|normalluatexbanner|normalluafunctioncall|normalluafunction|normalluaescapestring|normalluadef|normalluacopyinputnodes|normalluabytecodecall|normalluabytecode|normallpcode|normallowercase|normallower|normallooseness|normallong|normallocalrightboxbox|normallocalrightbox|normallocalmiddleboxbox|normallocalmiddlebox|normallocalleftboxbox|normallocalleftbox|normallocalinterlinepenalty|normallocalcontrolledloop|normallocalcontrolled|normallocalcontrol|normallocalbrokenpenalty|normallineskiplimit|normallineskip|normallinepenalty|normallinedirection|normallimits|normallettonothing|normalletprotected|normalletfrozen|normalletcsname|normalletcharcode|normallet|normalleqno|normalleftskip|normalleftmarginkern|normallefthyphenmin|normalleft|normalleaders|normallccode|normallastskip|normallastpenalty|normallastparcontext|normallastnodetype|normallastnodesubtype|normallastnamedcs|normallastlinefit|normallastkern|normallastchknum|normallastchkdim|normallastbox|normallastarguments|normallanguage|normalkern|normaljobname|normalizelinemode|normalinterlinepenalty|normalinterlinepenalties|normalinteractionmode|normalintegerdef|normalinstance|normalinsertwidth|normalinsertuncopy|normalinsertunbox|normalinsertstoring|normalinsertstorage|normalinsertprogress|normalinsertpenalty|normalinsertpenalties|normalinsertmultiplier|normalinsertmode|normalinsertmaxdepth|normalinsertlimit|normalinsertheights|normalinsertheight|normalinsertdistance|normalinsertdepth|normalinsertcopy|normalinsertbox|normalinsert|normalinputlineno|normalinput|normalinitcatcodetable|normalinherited|normalindent|normalimmutable|normalimmediate|normalignorespaces|normalignorepars|normalignorearguments|normalifx|normalifvoid|normalifvmode|normalifvbox|normaliftrue|normaliftok|normalifrelax|normalifpdfprimitive|normalifpdfabsnum|normalifpdfabsdim|normalifparameters|normalifparameter|normalifodd|normalifnumval|normalifnumexpression|normalifnum|normalifmmode|normalifmathstyle|normalifmathparameter|normalifinsert|normalifinner|normalifincsname|normalifhmode|normalifhbox|normalifhasxtoks|normalifhastoks|normalifhastok|normalifhaschar|normaliffontchar|normalifflags|normaliffalse|normalifempty|normalifdimval|normalifdimexpression|normalifdim|normalifdefined|normalifcstok|normalifcsname|normalifcondition|normalifcmpnum|normalifcmpdim|normalifchknum|normalifchkdim|normalifcat|normalifcase|normalifboolean|normalifarguments|normalifabsnum|normalifabsdim|normalif|normalhyphenpenalty|normalhyphenchar|normalhyphenationmode|normalhyphenationmin|normalhyphenation|normalht|normalhss|normalhskip|normalhsize|normalhrule|normalhpack|normalholdinginserts|normalhjcode|normalhfuzz|normalhfilneg|normalhfill|normalhfil|normalhccode|normalhbox|normalhbadness|normalhangindent|normalhangafter|normalhalign|normalgtokspre|normalgtoksapp|normalglyphyscale|normalglyphyoffset|normalglyphxscale|normalglyphxoffset|normalglyphtextscale|normalglyphstatefield|normalglyphscriptscriptscale|normalglyphscriptscale|normalglyphscriptfield|normalglyphscale|normalglyphoptions|normalglyphdatafield|normalglyph|normalgluetomu|normalgluestretchorder|normalgluestretch|normalgluespecdef|normalglueshrinkorder|normalglueshrink|normalglueexpr|normalglobaldefs|normalglobal|normalglettonothing|normalgletcsname|normalglet|normalgleaders|normalgdefcsname|normalgdef|normalfuturelet|normalfutureexpandisap|normalfutureexpandis|normalfutureexpand|normalfuturedef|normalfuturecsname|normalfrozen|normalformatname|normalfonttextcontrol|normalfontspecyscale|normalfontspecxscale|normalfontspecscale|normalfontspecifiedsize|normalfontspecifiedname|normalfontspecid|normalfontspecdef|normalfontname|normalfontmathcontrol|normalfontid|normalfontdimen|normalfontcharwd|normalfontcharic|normalfontcharht|normalfontchardp|normalfont|normalflushmarks|normalfloatingpenalty|normalfirstvalidlanguage|normalfirstmarks|normalfirstmark|normalfinalhyphendemerits|normalfi|normalfam|normalexplicithyphenpenalty|normalexplicitdiscretionary|normalexpandtoken|normalexpandedloop|normalexpandedafter|normalexpanded|normalexpandcstoken|normalexpandafterspaces|normalexpandafterpars|normalexpandafter|normalexpand|normalexhyphenpenalty|normalexhyphenchar|normalexceptionpenalty|normaleveryvbox|normaleverytab|normaleverypar|normaleverymath|normaleveryjob|normaleveryhbox|normaleveryeof|normaleverydisplay|normaleverycr|normaleverybeforepar|normaletokspre|normaletoksapp|normaletoks|normalescapechar|normalerrorstopmode|normalerrorcontextlines|normalerrmessage|normalerrhelp|normaleqno|normalenforced|normalendsimplegroup|normalendmathgroup|normalendlocalcontrol|normalendlinechar|normalendinput|normalendgroup|normalendcsname|normalend|normalemergencystretch|normalelse|normalefcode|normaledefcsname|normaledef|normaldump|normaldp|normaldoublehyphendemerits|normaldivide|normaldisplaywidth|normaldisplaywidowpenalty|normaldisplaywidowpenalties|normaldisplaystyle|normaldisplaylimits|normaldisplayindent|normaldiscretionary|normaldirectlua|normaldimexpression|normaldimexpr|normaldimensiondef|normaldimendef|normaldimen|normaldetokenize|normaldelimitershortfall|normaldelimiterfactor|normaldelimiter|normaldelcode|normaldefcsname|normaldefaultskewchar|normaldefaulthyphenchar|normaldef|normaldeadcycles|normalday|normalcurrentmarks|normalcurrentloopnesting|normalcurrentloopiterator|normalcurrentiftype|normalcurrentiflevel|normalcurrentifbranch|normalcurrentgrouptype|normalcurrentgrouplevel|normalcsstring|normalcsname|normalcrcr|normalcrampedtextstyle|normalcrampedscriptstyle|normalcrampedscriptscriptstyle|normalcrampeddisplaystyle|normalcr|normalcountdef|normalcount|normalcopy|normalclubpenalty|normalclubpenalties|normalclearmarks|normalcleaders|normalchardef|normalchar|normalcatcodetable|normalcatcode|normalbrokenpenalty|normalboxyoffset|normalboxymove|normalboxxoffset|normalboxxmove|normalboxtotal|normalboxtarget|normalboxsource|normalboxshift|normalboxorientation|normalboxmaxdepth|normalboxgeometry|normalboxdirection|normalboxattribute|normalboxanchors|normalboxanchor|normalbox|normalboundary|normalbotmarks|normalbotmark|normalbinoppenalty|normalbelowdisplayskip|normalbelowdisplayshortskip|normalbeginsimplegroup|normalbeginmathgroup|normalbeginlocalcontrol|normalbegingroup|normalbegincsname|normalbatchmode|normalbaselineskip|normalbadness|normalautoparagraphmode|normalautomigrationmode|normalautomatichyphenpenalty|normalautomaticdiscretionary|normalattributedef|normalattribute|normalatopwithdelims|normalatop|normalatendofgrouped|normalatendofgroup|normalalltextstyles|normalallsplitstyles|normalallscriptstyles|normalallmathstyles|normalaligntab|normalalignmark|normalaligncontent|normalaliased|normalaftergrouped|normalaftergroup|normalafterassignment|normalafterassigned|normaladvance|normaladjustspacingstretch|normaladjustspacingstep|normaladjustspacingshrink|normaladjustspacing|normaladjdemerits|normalaccent|normalabovewithdelims|normalabovedisplayskip|normalabovedisplayshortskip|normalabove|normalXeTeXversion|normalUvextensible|normalUunderdelimiter|normalUsuperscript|normalUsuperprescript|normalUsubscript|normalUsubprescript|normalUstyle|normalUstopmath|normalUstopdisplaymath|normalUstartmath|normalUstartdisplaymath|normalUstack|normalUskewedwithdelims|normalUskewed|normalUroot|normalUright|normalUradical|normalUoverwithdelims|normalUoverdelimiter|normalUover|normalUnosuperscript|normalUnosuperprescript|normalUnosubscript|normalUnosubprescript|normalUmiddle|normalUmathyscale|normalUmathxscale|normalUmathvoid|normalUmathvextensiblevariant|normalUmathunderlinevariant|normalUmathunderdelimitervgap|normalUmathunderdelimitervariant|normalUmathunderdelimiterbgap|normalUmathunderbarvgap|normalUmathunderbarrule|normalUmathunderbarkern|normalUmathtopaccentvariant|normalUmathsupsubbottommax|normalUmathsupshiftup|normalUmathsupshiftdrop|normalUmathsuperscriptvariant|normalUmathsupbottommin|normalUmathsubtopmax|normalUmathsubsupvgap|normalUmathsubsupshiftdown|normalUmathsubshiftdrop|normalUmathsubshiftdown|normalUmathsubscriptvariant|normalUmathstackvgap|normalUmathstackvariant|normalUmathstacknumup|normalUmathstackdenomdown|normalUmathspacingmode|normalUmathspacebeforescript|normalUmathspaceafterscript|normalUmathskewedfractionvgap|normalUmathskewedfractionhgap|normalUmathrelrelspacing|normalUmathrelradspacing|normalUmathrelpunctspacing|normalUmathrelordspacing|normalUmathrelopspacing|normalUmathrelopenspacing|normalUmathrelinnerspacing|normalUmathrelfracspacing|normalUmathrelclosespacing|normalUmathrelbinspacing|normalUmathradrelspacing|normalUmathradradspacing|normalUmathradpunctspacing|normalUmathradordspacing|normalUmathradopspacing|normalUmathradopenspacing|normalUmathradinnerspacing|normalUmathradicalvgap|normalUmathradicalvariant|normalUmathradicalrule|normalUmathradicalkern|normalUmathradicaldegreeraise|normalUmathradicaldegreebefore|normalUmathradicaldegreeafter|normalUmathradfracspacing|normalUmathradclosespacing|normalUmathradbinspacing|normalUmathquad|normalUmathpunctrelspacing|normalUmathpunctradspacing|normalUmathpunctpunctspacing|normalUmathpunctordspacing|normalUmathpunctopspacing|normalUmathpunctopenspacing|normalUmathpunctinnerspacing|normalUmathpunctfracspacing|normalUmathpunctclosespacing|normalUmathpunctbinspacing|normalUmathphantom|normalUmathoverlinevariant|normalUmathoverlayaccentvariant|normalUmathoverdelimitervgap|normalUmathoverdelimitervariant|normalUmathoverdelimiterbgap|normalUmathoverbarvgap|normalUmathoverbarrule|normalUmathoverbarkern|normalUmathordrelspacing|normalUmathordradspacing|normalUmathordpunctspacing|normalUmathordordspacing|normalUmathordopspacing|normalUmathordopenspacing|normalUmathordinnerspacing|normalUmathordfracspacing|normalUmathordclosespacing|normalUmathordbinspacing|normalUmathoprelspacing|normalUmathopradspacing|normalUmathoppunctspacing|normalUmathopordspacing|normalUmathopopspacing|normalUmathopopenspacing|normalUmathopinnerspacing|normalUmathopfracspacing|normalUmathoperatorsize|normalUmathopenupheight|normalUmathopenupdepth|normalUmathopenrelspacing|normalUmathopenradspacing|normalUmathopenpunctspacing|normalUmathopenordspacing|normalUmathopenopspacing|normalUmathopenopenspacing|normalUmathopeninnerspacing|normalUmathopenfracspacing|normalUmathopenclosespacing|normalUmathopenbinspacing|normalUmathopclosespacing|normalUmathopbinspacing|normalUmathnumeratorvariant|normalUmathnolimitsupfactor|normalUmathnolimitsubfactor|normalUmathnolimits|normalUmathnoaxis|normalUmathlimits|normalUmathlimitbelowvgap|normalUmathlimitbelowkern|normalUmathlimitbelowbgap|normalUmathlimitabovevgap|normalUmathlimitabovekern|normalUmathlimitabovebgap|normalUmathinnerrelspacing|normalUmathinnerradspacing|normalUmathinnerpunctspacing|normalUmathinnerordspacing|normalUmathinneropspacing|normalUmathinneropenspacing|normalUmathinnerinnerspacing|normalUmathinnerfracspacing|normalUmathinnerclosespacing|normalUmathinnerbinspacing|normalUmathhextensiblevariant|normalUmathfractionvariant|normalUmathfractionrule|normalUmathfractionnumvgap|normalUmathfractionnumup|normalUmathfractiondenomvgap|normalUmathfractiondenomdown|normalUmathfractiondelsize|normalUmathfracrelspacing|normalUmathfracradspacing|normalUmathfracpunctspacing|normalUmathfracordspacing|normalUmathfracopspacing|normalUmathfracopenspacing|normalUmathfracinnerspacing|normalUmathfracfracspacing|normalUmathfracclosespacing|normalUmathfracbinspacing|normalUmathextrasupspace|normalUmathextrasupshift|normalUmathextrasupprespace|normalUmathextrasuppreshift|normalUmathextrasubspace|normalUmathextrasubshift|normalUmathextrasubprespace|normalUmathextrasubpreshift|normalUmathdenominatorvariant|normalUmathdelimiterundervariant|normalUmathdelimiterovervariant|normalUmathdegreevariant|normalUmathconnectoroverlapmin|normalUmathcodenum|normalUmathcode|normalUmathcloserelspacing|normalUmathcloseradspacing|normalUmathclosepunctspacing|normalUmathcloseordspacing|normalUmathcloseopspacing|normalUmathcloseopenspacing|normalUmathcloseinnerspacing|normalUmathclosefracspacing|normalUmathcloseclosespacing|normalUmathclosebinspacing|normalUmathclass|normalUmathcharslot|normalUmathcharnumdef|normalUmathcharnum|normalUmathcharfam|normalUmathchardef|normalUmathcharclass|normalUmathchar|normalUmathbotaccentvariant|normalUmathbinrelspacing|normalUmathbinradspacing|normalUmathbinpunctspacing|normalUmathbinordspacing|normalUmathbinopspacing|normalUmathbinopenspacing|normalUmathbininnerspacing|normalUmathbinfracspacing|normalUmathbinclosespacing|normalUmathbinbinspacing|normalUmathaxis|normalUmathadapttoright|normalUmathadapttoleft|normalUmathaccentvariant|normalUmathaccentbaseheight|normalUmathaccent|normalUleft|normalUhextensible|normalUdelimiterunder|normalUdelimiterover|normalUdelimiter|normalUdelcodenum|normalUdelcode|normalUchar|normalUatopwithdelims|normalUatop|normalUabovewithdelims|normalUabove|normalUUskewedwithdelims|normalUUskewed|normalOmegaversion|normalOmegarevision|normalOmegaminorversion|normalAlephversion|normalAlephrevision|normalAlephminorversion|normal |norelax|nonstopmode|nonscript|nolimits|noindent|nohrule|noexpand|noboundary|noaligned|noalign|newlinechar|mutoglue|mutable|muskipdef|muskip|multiply|mugluespecdef|muexpr|mskip|moveright|moveleft|month|mkern|middle|message|medmuskip|meaningless|meaningfull|meaningasis|meaning|maxdepth|maxdeadcycles|mathsurroundskip|mathsurroundmode|mathsurround|mathstyle|mathscriptsmode|mathscriptcharmode|mathscriptboxmode|mathscale|mathrulethicknessmode|mathrulesmode|mathrulesfam|mathrel|mathrad|mathpunct|mathpenaltiesmode|mathord|mathopen|mathop|mathnolimitsmode|mathlimitsmode|mathinner|mathfrac|mathfontcontrol|mathflattenmode|matheqnogapstep|mathdisplayskipmode|mathdirection|mathdelimitersmode|mathcontrolmode|mathcode|mathclose|mathchoice|mathchardef|mathchar|mathbin|mathaccent|marks|mark|luatexversion|luatexrevision|luatexbanner|luafunctioncall|luafunction|luaescapestring|luadef|luacopyinputnodes|luabytecodecall|luabytecode|lpcode|lowercase|lower|looseness|long|localrightboxbox|localrightbox|localmiddleboxbox|localmiddlebox|localleftboxbox|localleftbox|localinterlinepenalty|localcontrolledloop|localcontrolled|localcontrol|localbrokenpenalty|lineskiplimit|lineskip|linepenalty|linedirection|limits|lettonothing|letprotected|letfrozen|letcsname|letcharcode|let|leqno|leftskip|leftmarginkern|lefthyphenmin|left|leaders|lccode|lastskip|lastpenalty|lastparcontext|lastnodetype|lastnodesubtype|lastnamedcs|lastlinefit|lastkern|lastchknum|lastchkdim|lastbox|lastarguments|language|kern|jobname|interlinepenalty|interlinepenalties|interactionmode|integerdef|instance|insertwidth|insertuncopy|insertunbox|insertstoring|insertstorage|insertprogress|insertpenalty|insertpenalties|insertmultiplier|insertmode|insertmaxdepth|insertlimit|insertheights|insertheight|insertdistance|insertdepth|insertcopy|insertbox|insert|inputlineno|input|initcatcodetable|inherited|indent|immutable|immediate|ignorespaces|ignorepars|ignorearguments|ifx|ifvoid|ifvmode|ifvbox|iftrue|iftok|ifrelax|ifpdfprimitive|ifpdfabsnum|ifpdfabsdim|ifparameters|ifparameter|ifodd|ifnumval|ifnumexpression|ifnum|ifmmode|ifmathstyle|ifmathparameter|ifinsert|ifinner|ifincsname|ifhmode|ifhbox|ifhasxtoks|ifhastoks|ifhastok|ifhaschar|iffontchar|ifflags|iffalse|ifempty|ifdimval|ifdimexpression|ifdim|ifdefined|ifcstok|ifcsname|ifcondition|ifcmpnum|ifcmpdim|ifchknum|ifchkdim|ifcat|ifcase|ifboolean|ifarguments|ifabsnum|ifabsdim|if|hyphenpenalty|hyphenchar|hyphenationmode|hyphenationmin|hyphenation|ht|hss|hskip|hsize|hrule|hpack|holdinginserts|hjcode|hfuzz|hfilneg|hfill|hfil|hccode|hbox|hbadness|hangindent|hangafter|halign|gtokspre|gtoksapp|glyphyscale|glyphyoffset|glyphxscale|glyphxoffset|glyphtextscale|glyphstatefield|glyphscriptscriptscale|glyphscriptscale|glyphscriptfield|glyphscale|glyphoptions|glyphdatafield|glyph|gluetomu|gluestretchorder|gluestretch|gluespecdef|glueshrinkorder|glueshrink|glueexpr|globaldefs|global|glettonothing|gletcsname|glet|gleaders|gdefcsname|gdef|futurelet|futureexpandisap|futureexpandis|futureexpand|futuredef|futurecsname|frozen|formatname|fonttextcontrol|fontspecyscale|fontspecxscale|fontspecscale|fontspecifiedsize|fontspecifiedname|fontspecid|fontspecdef|fontname|fontmathcontrol|fontid|fontdimen|fontcharwd|fontcharic|fontcharht|fontchardp|font|flushmarks|floatingpenalty|firstvalidlanguage|firstmarks|firstmark|finalhyphendemerits|fi|fam|explicithyphenpenalty|explicitdiscretionary|expandtoken|expandedloop|expandedafter|expandcstoken|expandafterspaces|expandafterpars|expandafter|expand|exhyphenpenalty|exhyphenchar|exceptionpenalty|everyvbox|everytab|everypar|everymath|everyjob|everyhbox|everyeof|everydisplay|everycr|everybeforepar|etokspre|etoksapp|etoks|escapechar|errorstopmode|errorcontextlines|errmessage|errhelp|eqno|enforced|endsimplegroup|endmathgroup|endlocalcontrol|endlinechar|endinput|endgroup|endcsname|end|emergencystretch|else|efcode|edefcsname|edef|dump|dp|doublehyphendemerits|divide|displaywidth|displaywidowpenalty|displaywidowpenalties|displaystyle|displaylimits|displayindent|discretionary|directlua|dimexpression|dimexpr|dimensiondef|dimendef|dimen|detokenize|delimitershortfall|delimiterfactor|delimiter|delcode|defcsname|defaultskewchar|defaulthyphenchar|def|deadcycles|day|currentmarks|currentloopnesting|currentloopiterator|currentiftype|currentiflevel|currentifbranch|currentgrouptype|currentgrouplevel|csstring|csname|crcr|crampedtextstyle|crampedscriptstyle|crampedscriptscriptstyle|crampeddisplaystyle|cr|countdef|count|copy|clubpenalty|clubpenalties|clearmarks|cleaders|chardef|char|catcodetable|catcode|brokenpenalty|boxyoffset|boxymove|boxxoffset|boxxmove|boxtotal|boxtarget|boxsource|boxshift|boxorientation|boxmaxdepth|boxgeometry|boxdirection|boxattribute|boxanchors|boxanchor|box|boundary|botmarks|botmark|binoppenalty|belowdisplayskip|belowdisplayshortskip|beginsimplegroup|beginmathgroup|beginlocalcontrol|begingroup|begincsname|batchmode|baselineskip|badness|autoparagraphmode|automigrationmode|automatichyphenpenalty|automaticdiscretionary|attributedef|attribute|atopwithdelims|atop|atendofgrouped|atendofgroup|alltextstyles|allsplitstyles|allscriptstyles|allmathstyles|aligntab|alignmark|aligncontent|aliased|aftergrouped|aftergroup|afterassignment|afterassigned|advance|adjustspacingstretch|adjustspacingstep|adjustspacingshrink|adjustspacing|adjdemerits|accent|abovewithdelims|abovedisplayskip|abovedisplayshortskip|above|XeTeXversion|Uvextensible|Uunderdelimiter|Usuperscript|Usuperprescript|Usubscript|Usubprescript|Ustyle|Ustopmath|Ustopdisplaymath|Ustartmath|Ustartdisplaymath|Ustack|Uskewedwithdelims|Uskewed|Uroot|Uright|Uradical|Uoverwithdelims|Uoverdelimiter|Uover|Unosuperscript|Unosuperprescript|Unosubscript|Unosubprescript|Umiddle|Umathyscale|Umathxscale|Umathvoid|Umathvextensiblevariant|Umathunderlinevariant|Umathunderdelimitervgap|Umathunderdelimitervariant|Umathunderdelimiterbgap|Umathunderbarvgap|Umathunderbarrule|Umathunderbarkern|Umathtopaccentvariant|Umathsupsubbottommax|Umathsupshiftup|Umathsupshiftdrop|Umathsuperscriptvariant|Umathsupbottommin|Umathsubtopmax|Umathsubsupvgap|Umathsubsupshiftdown|Umathsubshiftdrop|Umathsubshiftdown|Umathsubscriptvariant|Umathstackvgap|Umathstackvariant|Umathstacknumup|Umathstackdenomdown|Umathspacingmode|Umathspacebeforescript|Umathspaceafterscript|Umathskewedfractionvgap|Umathskewedfractionhgap|Umathrelrelspacing|Umathrelradspacing|Umathrelpunctspacing|Umathrelordspacing|Umathrelopspacing|Umathrelopenspacing|Umathrelinnerspacing|Umathrelfracspacing|Umathrelclosespacing|Umathrelbinspacing|Umathradrelspacing|Umathradradspacing|Umathradpunctspacing|Umathradordspacing|Umathradopspacing|Umathradopenspacing|Umathradinnerspacing|Umathradicalvgap|Umathradicalvariant|Umathradicalrule|Umathradicalkern|Umathradicaldegreeraise|Umathradicaldegreebefore|Umathradicaldegreeafter|Umathradfracspacing|Umathradclosespacing|Umathradbinspacing|Umathquad|Umathpunctrelspacing|Umathpunctradspacing|Umathpunctpunctspacing|Umathpunctordspacing|Umathpunctopspacing|Umathpunctopenspacing|Umathpunctinnerspacing|Umathpunctfracspacing|Umathpunctclosespacing|Umathpunctbinspacing|Umathphantom|Umathoverlinevariant|Umathoverlayaccentvariant|Umathoverdelimitervgap|Umathoverdelimitervariant|Umathoverdelimiterbgap|Umathoverbarvgap|Umathoverbarrule|Umathoverbarkern|Umathordrelspacing|Umathordradspacing|Umathordpunctspacing|Umathordordspacing|Umathordopspacing|Umathordopenspacing|Umathordinnerspacing|Umathordfracspacing|Umathordclosespacing|Umathordbinspacing|Umathoprelspacing|Umathopradspacing|Umathoppunctspacing|Umathopordspacing|Umathopopspacing|Umathopopenspacing|Umathopinnerspacing|Umathopfracspacing|Umathoperatorsize|Umathopenupheight|Umathopenupdepth|Umathopenrelspacing|Umathopenradspacing|Umathopenpunctspacing|Umathopenordspacing|Umathopenopspacing|Umathopenopenspacing|Umathopeninnerspacing|Umathopenfracspacing|Umathopenclosespacing|Umathopenbinspacing|Umathopclosespacing|Umathopbinspacing|Umathnumeratorvariant|Umathnolimitsupfactor|Umathnolimitsubfactor|Umathnolimits|Umathnoaxis|Umathlimits|Umathlimitbelowvgap|Umathlimitbelowkern|Umathlimitbelowbgap|Umathlimitabovevgap|Umathlimitabovekern|Umathlimitabovebgap|Umathinnerrelspacing|Umathinnerradspacing|Umathinnerpunctspacing|Umathinnerordspacing|Umathinneropspacing|Umathinneropenspacing|Umathinnerinnerspacing|Umathinnerfracspacing|Umathinnerclosespacing|Umathinnerbinspacing|Umathhextensiblevariant|Umathfractionvariant|Umathfractionrule|Umathfractionnumvgap|Umathfractionnumup|Umathfractiondenomvgap|Umathfractiondenomdown|Umathfractiondelsize|Umathfracrelspacing|Umathfracradspacing|Umathfracpunctspacing|Umathfracordspacing|Umathfracopspacing|Umathfracopenspacing|Umathfracinnerspacing|Umathfracfracspacing|Umathfracclosespacing|Umathfracbinspacing|Umathextrasupspace|Umathextrasupshift|Umathextrasupprespace|Umathextrasuppreshift|Umathextrasubspace|Umathextrasubshift|Umathextrasubprespace|Umathextrasubpreshift|Umathdenominatorvariant|Umathdelimiterundervariant|Umathdelimiterovervariant|Umathdegreevariant|Umathconnectoroverlapmin|Umathcodenum|Umathcode|Umathcloserelspacing|Umathcloseradspacing|Umathclosepunctspacing|Umathcloseordspacing|Umathcloseopspacing|Umathcloseopenspacing|Umathcloseinnerspacing|Umathclosefracspacing|Umathcloseclosespacing|Umathclosebinspacing|Umathclass|Umathcharslot|Umathcharnumdef|Umathcharnum|Umathcharfam|Umathchardef|Umathcharclass|Umathchar|Umathbotaccentvariant|Umathbinrelspacing|Umathbinradspacing|Umathbinpunctspacing|Umathbinordspacing|Umathbinopspacing|Umathbinopenspacing|Umathbininnerspacing|Umathbinfracspacing|Umathbinclosespacing|Umathbinbinspacing|Umathaxis|Umathadapttoright|Umathadapttoleft|Umathaccentvariant|Umathaccentbaseheight|Umathaccent|Uleft|Uhextensible|Udelimiterunder|Udelimiterover|Udelimiter|Udelcodenum|Udelcode|Uchar|Uatopwithdelims|Uatop|Uabovewithdelims|Uabove|UUskewedwithdelims|UUskewed|Omegaversion|Omegarevision|Omegaminorversion|Alephversion|Alephrevision|Alephminorversion";
+						foreach (string command in primitives.Split('|').Select(x => @"\" + x))
+						{
+							lang.Commands.Add(new IntelliSense(command) { IntelliSenseType = IntelliSenseType.Command, Token = Token.Primitive });
+						}
+					}
+					if (VM.Default.SuggestFontSwitches)
+					{
+						string[] mainstyles = new string[] { "rm", "ss", "tt" };
+						string[] fontalternatives = new string[] { "tf", "bf", "it", "sl", "bi", "bs", "sc" };
+						string[] fontsizemodifiers = new string[] { "xx", "x", "", "a", "b", "c", "d" };
+						string[] allfontswitches = mainstyles.Concat(fontalternatives.SelectMany(a => fontsizemodifiers.Select(m => a + m).ToArray()).ToArray()).ToArray();
 
-				foreach (string command in allfontswitches.Select(x => @"\" + x))
-				{
-					lang.Commands.Add(new IntelliSense(command) { IntelliSenseType = IntelliSenseType.Command, Token = Token.Style });
-				}
+						foreach (string command in allfontswitches.Select(x => @"\" + x))
+						{
+							lang.Commands.Add(new IntelliSense(command) { IntelliSenseType = IntelliSenseType.Command, Token = Token.Style });
+						}
+					}
+					DispatcherQueue.TryEnqueue(() =>
+					{
+						if (Codewriter.Language?.Name == name)
+							VM.Codewriter.Language.Commands = lang.Commands;
+						Codewriter.UpdateSuggestions();
+					});
+				});
+				
+					
+				
 			}
-			if (VM.Codewriter?.Language?.Name == name)
-				VM.Codewriter.Language.Commands = lang.Commands;
-			VM.Codewriter?.UpdateSuggestions();
+			catch (Exception ex)
+			{
+				VM.Log(ex.Message);
+			}
 		}
 
 		private void GroupList_ItemClick(object sender, ItemClickEventArgs e)
@@ -2693,39 +2846,46 @@ namespace ConTeXt_IDE
 
 		private void TabStripFooter_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			if (App.MainWindow.IsCustomizationSupported && App.MainWindow.AW != null)
+			try
 			{
-				if (scale == 0d)
+				if (App.MainWindow.IsCustomizationSupported && App.MainWindow.AW != null)
 				{
-					scale = XamlRoot.RasterizationScale;
-				}
+					if (scale == 0d)
+					{
+						scale = XamlRoot.RasterizationScale;
+					}
 
-				int width = (int)(XamlRoot.RasterizationScale * TabStripFooter.ActualWidth);
-				int height = (int)(XamlRoot.RasterizationScale * TabStripFooter.ActualHeight);
+					int width = (int)(XamlRoot.RasterizationScale * TabStripFooter.ActualWidth);
+					int height = (int)(XamlRoot.RasterizationScale * TabStripFooter.ActualHeight);
 
-				int x = (int)(XamlRoot.RasterizationScale * RootGrid.ActualWidth) - width;
-				int y = 0;
+					int x = (int)(XamlRoot.RasterizationScale * RootGrid.ActualWidth) - width;
+					int y = 0;
 
-				if (scale == XamlRoot.RasterizationScale)
-				{
+					if (scale == XamlRoot.RasterizationScale)
+					{
 
-					App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+						App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+					}
+					else
+					{
+						scale = XamlRoot.RasterizationScale;
+						App.MainWindow.AW.TitleBar.ResetToDefault();
+						App.MainWindow.ResetTitleBar();
+						SetColor();
+						App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+					}
 				}
 				else
 				{
-					scale = XamlRoot.RasterizationScale;
-					App.MainWindow.AW.TitleBar.ResetToDefault();
-					App.MainWindow.ResetTitleBar();
-					SetColor();
-					App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
+					//int width = (int)e.NewSize.Width;
+					//int height = (int)e.NewSize.Height;
+					//CustomDragRegion.Width = width;
+					//CustomDragRegion.Height = height;
 				}
 			}
-			else
+			catch (Exception ex)
 			{
-				//int width = (int)e.NewSize.Width;
-				//int height = (int)e.NewSize.Height;
-				//CustomDragRegion.Width = width;
-				//CustomDragRegion.Height = height;
+				VM.Log("Error at DPI change: "+ex.Message);
 			}
 		}
 
@@ -2835,6 +2995,11 @@ namespace ConTeXt_IDE
 			dataPackage.RequestedOperation = DataPackageOperation.Copy;
 			dataPackage.SetText(texttocopy);
 			Clipboard.SetContent(dataPackage);
+		}
+
+		private void Tbn_ShowOutline_Checked(object sender, RoutedEventArgs e)
+		{
+			VM.UpdateOutline(Codewriter.Lines.ToList(),true);
 		}
 	}
 }

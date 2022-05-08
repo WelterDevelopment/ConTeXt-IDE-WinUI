@@ -1,0 +1,112 @@
+\startproduct[prd_cv]
+\environment[env_cv]
+
+\setupdocument[title={CV}, author={John Doe}, authorinfo={M. Eng.}, date={\currentdate}, subtitle={Application for position XY}]
+\setupinteraction[state=start, title=\documentvariable{title}, subtitle=\documentvariable{subtitle}, author=\documentvariable{authorinfo} \documentvariable{author}, date=\documentvariable{date}]
+
+\personalinfo{
+	\birth{01/01/1970 in Johntown}
+	\email{j.doe@company.com}
+	\phone{012 345 - 678}
+	\mailaddress{John-Doe-Street 42, 12345 Johntown}
+}
+
+\defineparagraphs[twothirds][n=2, distance=2em, before=]
+\setupparagraphs[twothirds][1][width=.6\textwidth]
+
+\color[body]
+\starttext
+\cvheader
+
+\starttwothirds
+\startsection[title={Experience}]
+\startsubsection[title={Doctoral student}][company={John Doe University}, date={11/2021 -- ongoing}, place={Johntown, US}]
+\startitemize[before={\blank[medium]},after={\blank[medium]}]
+	\item Stuff I did here
+\stopitemize
+\stopsubsection
+
+\divider
+
+\startsubsection[title={Scientific assistant}][company={John Doe University}, date={11/2021 -- ongoing}, place={Doetown, UK}]
+\startitemize[before={\blank[medium]},after={\blank[medium]}]
+	\item Stuff I did there
+\stopitemize
+\stopsubsection
+
+\divider
+
+\startsubsection[title={Laboratory intern}][company={Doe John Inc.}, date={03/2016 -- 09/2016}, place={Monterrey, MX}]
+\startitemize
+	\item foo
+	\item bar
+\stopitemize
+\stopsubsection
+\stopsection
+
+\startsection[title={Interests}]
+\wheelchart{1.5cm}{0.5cm}{
+	27/5em/accent!75/Friends \& Family,
+	15/5em/accent!85/Sports,
+	10/5em/accent!50/Cooking,
+	28/5em/accent!70/Programming,
+	20/5em/accent!30/Sleep :D
+}
+\stopsection
+
+\nexttwothirds
+
+\startsection[title={Academic education}]
+\startsubsection[title={M. Eng. Computer science}][company={Some University}, date={03/2016 -- 09/2016}, place={Frankfurt a.M., DE}]
+\startitemize
+	\item Stuff I learned here
+	\item Thesis: \emph{Some interesting thesis title}
+\stopitemize
+\stopsubsection
+
+\divider
+
+\startsubsection[title={B. Eng. Computer science}][company={Some University}, date={03/2016 -- 09/2016}, place={Darmstadt, DE}]
+\startitemize
+	\item Stuff I learned here
+	\item Thesis: \emph{Some interesting thesis title}
+\stopitemize
+\stopsubsection
+
+\divider
+
+\startsubsection[title={University entrance qualification}][company={Some College}, date={1980-1988}]
+\stopsubsection
+\stopsection
+
+\startsection[title={Qualifications}]
+\startalignment[flushleft]
+	\cvtag{Aspen Plus/CM}
+	\cvtag{Matlab}
+	\cvtag{PlantENGINEER}
+	\cvtag{AutoCAD P\&ID}
+	\cvtag{Creo Parametric}
+	\cvtag{LabVIEW}
+	\cvtag{Excel/Word/Project}
+	\cvtag{C\#/.NET}
+	\cvtag{\TeX/\LaTeX/\ConTeXt}
+\stopalignment
+\stopsection
+
+\startsection[title={Languages}]
+\cvskill{German}{5}
+\cvskill{English}{3}
+\cvskill{Spanish}{1}
+\stopsection
+\stoptwothirds
+\vfill 
+\startalign[middle]
+	\setupTABLE[row][2][topframe=on,]
+	\setupTABLE[column][2][topframe=off, width=3em]
+	\bTABLE[split=no,align=middle,frame=off, width=.2\textwidth]
+		\bTR \bTD Johntown, \\ \vskip-1ex\documentvariable{date} \eTD \bTD  \eTD \bTD  \eTD \eTR
+		\bTR \bTD (Place, Date) \eTD \bTD  \eTD \bTD (Signature) \eTD \eTR
+	\eTABLE
+\stopalign
+\stoptext
+\stopproduct

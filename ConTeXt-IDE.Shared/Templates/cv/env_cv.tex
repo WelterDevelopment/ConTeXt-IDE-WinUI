@@ -1,0 +1,157 @@
+\startenvironment[env_cv]
+
+\usemodule[tikz]
+\usetikzlibrary[arrows]
+
+\definecolor[accent][x=007BBC] 
+\definecolor[emphasis][x=2E2E2E] 
+\definecolor[body][x=555555] 
+\definecolor[light][x=CCCCCC] 
+\definehspace[large][2em]
+
+\define[2]\printinfo{~\framed[location=height, align=middle, frame=off, before=, after=]{\color[accent]{#1}}\hspace[medium]#2\hspace[large]}
+
+\definefontsynonym[fasolid][file:fa-solid-900.ttf]
+\definefontsynonym[faregular][file:fa-regular-400.ttf]
+
+\def\defsymbol[#1:#2:#3]{
+	\definesymbol[#1][\getglyph{name:#2}{\char"#3}]
+	\expandafter\def\csname #1\endcsname##1{\printinfo{\symbol{#1}}{##1}}
+}
+
+\startsymbolset[fa-solid]
+	\defsymbol[birth:fasolid:F1FD]
+	\defsymbol[email:fasolid:40]
+	\defsymbol[phone:fasolid:F095]
+	\defsymbol[mailaddress:fasolid:F0E0]
+	\defsymbol[date:faregular:F073]
+	\defsymbol[place:fasolid:F3C5]
+	\definesymbol[bullet][\getglyph{name:sans}{\char"2022}]
+	\definesymbol[circle][\getglyph{name:fasolid}{\char"F111}]
+\stopsymbolset
+
+\setuptab[width=.5\hsize]
+
+\define\date{\doiftext{\structureuservariable{date}}{\tab{\symbol{date}\hspace[medium]\structureuservariable{date}}}}
+\define\place{\doiftext{\structureuservariable{place}}{\symbol{place}\hspace[medium]\structureuservariable{place}}}
+
+\setupsymbolset[fa-solid]
+
+\define[1]\personalinfo{\def\info{#1}}
+\define\cvheader{
+	\color[emphasis]{\bfd \documentvariable{author}}
+	\blank[medium]
+	\color[accent]{\tfa \documentvariable{authorinfo}}
+	\blank[medium]
+	{\tfx \info}
+}
+
+\define\divider{
+\startMPcode
+	draw (0,0)--(\the\hsize,0) dashed evenly withpen pencircle scaled 1pt withcolor \MPcolor{light};
+\stopMPcode
+\blank[medium]
+}
+
+\define\bar{
+\startMPcode
+	draw (0,0)--(\the\hsize,0) withpen pencircle scaled 1pt withcolor \MPcolor{accent};
+\stopMPcode
+\blank[medium]
+}
+
+\define[1]\cvtag{
+	\tikz[baseline]\node[anchor=base,text=body,draw=light,rounded corners,inner xsep=1ex,inner ysep =0.75ex,text height=1.5ex,text depth=.25ex]{#1};
+}
+
+\define[2]\cvskill{
+	{\bf#1}
+	\hfill
+	\foreach \indx in {1,2,3,4,5} {
+		\ifnum \indx > #2 {\color[light]{\symbol[circle]}}
+		\else{\color[accent]{\symbol[circle]}}
+		\fi
+	}
+	\par
+}
+
+\define[3]\wheelchart{
+\startalignment[middle]
+\def\innerradius{#2}
+\def\outerradius{#1}
+\pgfmathsetmacro{\totalnum}{0}
+\starttikzpicture
+\foreach \value/\colour/\name in {#3} {
+	\pgfmathparse{\value+\totalnum}
+	\global\let\totalnum=\pgfmathresult
+}
+\pgfmathsetmacro{\wheelwidth}{\outerradius-\innerradius}
+\pgfmathsetmacro{\midradius}{(\outerradius+\innerradius)/2}
+\pgfmathsetmacro{\totalrot}{-90 + 20}
+\startscope[rotate=\totalrot]
+	\pgfmathsetmacro{\cumnum}{0}
+	\foreach \value/\width/\colour/\name in {#3} {
+		\pgfmathsetmacro{\newcumnum}{\cumnum + \value/\totalnum*360}
+		\pgfmathsetmacro{\percentage}{\value/\totalnum*100}
+		\pgfmathsetmacro{\midangle}{-(\cumnum+\newcumnum)/2}
+		\pgfmathparse{
+			(-\midangle>180?"west":"east")
+		} \edef\textanchor{\pgfmathresult}
+		\pgfmathparse{
+			(-\midangle>180?"flush left":"flush right")
+		} \edef\textalign{\pgfmathresult}
+		\pgfmathsetmacro\labelshiftdir{1-2*(-\midangle<180)}
+		\filldraw[draw=white,fill=\colour,anchor=center] (-\cumnum:\outerradius) arc (-\cumnum:-(\newcumnum):\outerradius) --
+		 (-\newcumnum:\innerradius) arc (-\newcumnum:-(\cumnum):\innerradius) -- cycle;
+		\draw  [*-,thin,emphasis] node [append after command={(\midangle:\midradius pt) -- (\midangle:\outerradius + 1ex) -- (\tikzlastnode)}] at (\midangle:\outerradius + 1ex) [xshift=\labelshiftdir*0.5cm,inner sep=1ex, outer sep=0pt, anchor=\textanchor,align=\textalign,font=\small,text=body]{\name};
+		\global\let\cumnum=\newcumnum
+	}
+\stopscope
+\stoptikzpicture
+\stopalignment
+}
+
+% General Layout
+\setupcolors[state=start]
+\setuppapersize[A4][A4]
+\mainlanguage[en] % Header names
+\language[en] % Hyphenation
+\enableregime[utf]
+\setuplayout[topspace=1.5cm, backspace=1.5cm, rightmargin=1.5cm, header=0pt, bottom=0pt, bottomdistance=0pt, bottomspace=0.5cm, footer=0pt, footerdistance=0pt, height=fit, width=fit]
+\setuppagenumbering[alternative=onesided, page=no]
+
+%\startuseMPgraphic[]
+	%
+%\stopuseMPgraphic
+%\setupbackgrounds[page][background=...]
+
+% Typography
+\setupwhitespace[medium]
+\setupindenting[no]
+\definefontfamily[mainface][ss][carlito]
+\setupbodyfont[mainface,10pt]
+\definefontfeature[default][mode=node, kern=yes, bliga=yes, tlig=yes, ccmp=yes, language=dflt, protrusion=quality, expansion=quality]
+\setupfooter[style=\tf]
+\setupheader[style=\tf]
+
+\setupitemgroup[symbol=bullet, width=1em, distance=0pt, textdistance=0pt, align=verytolerant, inbetween=\smallskip, after=, before=]
+
+% Section blocks layout
+\definemakeup[title][doublesided=no, page=right, headerstate=empty, footerstate=empty,  pagestate=start, style=bigbodyfont, align=middle]
+
+\setuphead[section][page=no]
+\setupfootertexts[]
+\setupfootertexts[][][][]
+\setupheadertexts[]
+\setupheadertexts[][][][]
+
+% PDF Output Adjustments
+\setupinteraction[state=start, focus=standard, style=, click=yes, color=, contrastcolor=]
+
+% Heading setup
+\setuphead[chapter,title][style={\bfd}]
+\setuphead[section][style={\bfb}, textcolor=accent, before={\bigskip}, after={\vskip-1ex\bar\vskip-1ex}, page=no, header=empty, number=no]
+\setuphead[subsection][style={\tfa}, textcolor=emphasis, before={\smallskip}, after={\color[accent]{\bf\structureuservariable{company}}\smallskip\date\place\par}]
+\setuphead[subsubsection][style={\bfa}, before={\bigskip}, after={}]
+
+\stopenvironment

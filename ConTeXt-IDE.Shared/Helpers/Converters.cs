@@ -158,6 +158,16 @@ namespace ConTeXt_IDE.Helpers
 		{
 
 			if (value is null)
+			{
+				return Visibility.Collapsed;
+			}
+
+			if (value is FileItem)
+			{
+				return Visibility.Visible;
+			}
+
+			if (string.IsNullOrWhiteSpace(value as string))
 				return Visibility.Collapsed;
 			else
 				return Visibility.Visible;
@@ -424,9 +434,9 @@ namespace ConTeXt_IDE.Helpers
 		public object Convert(object value, Type targetType, object parameter, string language)
 		{
 			Visibility IsVisible = Visibility.Collapsed;
-			if (!string.IsNullOrEmpty(value.ToString()))
+			if (value is bool val)
 			{
-				IsVisible = (bool)value ? Visibility.Collapsed : Visibility.Visible;
+				IsVisible = val ? Visibility.Collapsed : Visibility.Visible;
 			}
 			return IsVisible;
 		}

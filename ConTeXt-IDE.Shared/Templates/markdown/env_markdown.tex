@@ -1,3 +1,6 @@
+\startenvironment[env_markdown]
+\usepath[{components,pictures}]
+
 % General Layout
 \setupcolors[state=start]
 \setuppapersize[A4][A4]
@@ -31,7 +34,7 @@
 \startsectionblockenvironment[bodypart]
 \setupfootertexts[]
 \setupfootertexts[][\userpagenumber][\userpagenumber][]
-\setupheadertexts[{\getmarking[sectionnumber] \getmarking[section]}]
+\setupheadertexts[{\getmarking[sectionnumber]~~\getmarking[section]}]
 \setupheadertexts[][][][]
 \savenumber[userpage]
 \resetnumber[userpage]
@@ -58,6 +61,7 @@
 \setupcaptions[table][location=top]
 \setupcaptions[figure][location=bottom]
 \setupcaptions[headstyle=\bf]
+\setupfloat[place=force]
 
 % PDF Output Adjustments
 \setupinteraction[state=start, focus=standard, style=, click=yes, color=, contrastcolor=]
@@ -69,96 +73,30 @@
 \setuplist[section,subject][width=0mm, distance=2mm, margin=0mm, style=bold, alternative=b]
 \setuplist[subsection,subsubject][width=0mm, distance=2mm, margin=5mm, alternative=c]
 \setuplist[subsubsection,subsubsubject][width=0mm, distance=2mm, margin=10mm, alternative=c]
+\setuplist[subsubsubsection,subsubsubsubject][width=0mm, distance=2mm, margin=15mm, alternative=c]
+\setuplist[subsubsubsubsection,subsubsubsubsubject][width=0mm, distance=2mm, margin=20mm, alternative=c]
+\setupcombinedlist[content][list={chapter,section,subsection,subsubsection}]
 
 % Referencing automation: \ref[Type:ReferenceName], somewhat equivalent to \autoref in LaTeX
+\definereferenceformat[refdef][style=\tf, text=definition ]
+\definereferenceformat[refthm][style=\tf, text=theorem ]
+\definereferenceformat[refrmk][style=\tf, text=remark ]
 \definereferenceformat[refsec][style=\tf, text=section ]
 \definereferenceformat[refeq][style=\tf, text=equation ]
 \definereferenceformat[reffig][style=\tf, text=figure ]
-\definereferenceformat[reftab][style=\tf, text=table ]
+\definereferenceformat[reftab][style=\tf, text=table]
 \def\ref[#1:#2]{\csname ref#1\endcsname[#1:#2]}
 
 % Heading setup
 \setuphead[chapter,title][style={\bfd}]
-\setuphead[section][style={\bfc}, before={\bigskip}, after={}, page=yes, header=empty]
-\setuphead[subject][style={\bfc}, before={\bigskip}, after={}, page=no, header=empty]
-\setuphead[subsection,subsubject][style={\bfb}, before={\bigskip}, after={}]
+\setuphead[section][style={\bfc}, before={\bigskip}, after={\medskip}, page=yes, header=empty]
+\setuphead[subject][style={\bfc}, before={\bigskip}, after={\medskip}, page=no, header=empty]
+\setuphead[subsection,subsubject][style={\bfb}, before={\medskip}, after={\medskip}]
 \setuphead[subsubsection,subsubsubject][style={\bfa}, before={\bigskip}, after={}]
 
-% Meta information
-\setvariables[meta][title={Title}, subtitle={Subtitle}, author={Author}, date={\currentdate}]
-\setupinteraction[title=\getvariable{meta}{title}, subtitle=\getvariable{meta}{subtitle}, author=\getvariable{meta}{author}, date=\getvariable{meta}{date}]
+% Bibliography
+\usebtxdataset[default][literature.lua]
+\setupbtx[dataset=default]
+\usebtxdefinitions[aps]
 
-\starttext
-
-\startfrontmatter
-\starttitlemakeup
-	{\bfd \getvariable{meta}{title}}
-	\blank[3*medium]
-	{\tfb \getvariable{meta}{subtitle}}
-	\blank[3*medium]
-	{\tfa \getvariable{meta}{author}}
-	\blank[2*medium]
-	{\tfa \getvariable{meta}{date}}
-\stoptitlemakeup
-
-\completecontent
-\stopfrontmatter
-
-\startbodymatter
-\startsection[title=Basic functions]
-\startsubsection[title=Itemize]
-\startitemize
-	\item Item one
-	\item Item two
-\stopitemize
-
-\stopsubsection
-
-\startsubsection[title=Tables]
-\startplacetable[location=here, reference=tab:exampletable, title={Example table}]
-	\setupTABLE[r][each][style=\tfx\it, align=center]
-	\bTABLE[split=repeat,option=stretch]
-		\bTABLEhead
-			\bTR
-				\bTH  head1 \eTH
-				\bTH  head2 \eTH
-			\eTR
-		\eTABLEhead
-		\bTABLEbody
-			\bTR \bTD One \eTD \bTD two \eTD \eTR
-			\bTR \bTD One \eTD \bTD two \eTD \eTR
-		\eTABLEbody
-	\eTABLE
-\stopplacetable
-
-This is a reference to \ref[tab:exampletable].
-\stopsubsection
-\stopsection
-
-\startsection[title=Formulas]
-\placeformula
-\startsubformulas
-	\startformula
-		\startalign
-			\NC \frac{dX}{dt} \NC = k \cdot A \cdot (X_{GG} - X) \NR[eq:dXdt]
-			\NC \frac{dc}{dt} \NC = - \frac{v_0}{\varepsilon} \cdot \frac{dc}{dx} + \frac{1}{\varepsilon} \cdot \frac{dX}{dt} \NR[eq:dcdt]
-		\stopalign
-	\stopformula
-\stopsubformulas
-This is a reference to \ref[eq:dcdt].
-\stopsection
-\stopbodymatter
-
-\startappendices
-\startsection[title={Bibliography}]
-\placelistofpublications
-\stopsection
-\stopappendices
-
-\startbackmatter
-\startsection[title={The Backmatter}]
-  ...
-\stopsection
-\stopbackmatter
-
-\stoptext
+\stopenvironment

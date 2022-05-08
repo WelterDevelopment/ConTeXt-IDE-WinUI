@@ -1,0 +1,130 @@
+\section[title={Install Pandoc},reference={install-pandoc}]
+
+\startitemize[packed]
+\item
+  Go to https://github.com/jgm/pandoc/releases/latest to install Pandoc.
+\item
+  Restart the IDE
+\item
+  In the IDE, Navigate to ConTeXt --> Manage Modules
+\item
+  Install the filter module
+\stopitemize
+
+\section[title={Compile Markdown -> TeX ->
+PDF},reference={compile-markdown---tex---pdf}]
+
+You can now write your texts in Markdown using the internal Markdown
+previewer!
+
+The content of the .md file gets parsed by Pandoc to a .tex file, which
+gets included to your document and compiled by \ConTeXt.
+
+You can use many \ConTeXt~commands \cite{hagen}, Pandoc will just pass
+them through:
+
+\startformula  y(x) = m \cdot x + c  \stopformula
+
+\subsection[title={Text},reference={text}]
+
+\startblockquote
+Markdown font {\em attributes} will {\em show} in the {\bf preview} and
+in the {\bf {\em compiled}} \overstrikes{pdf}.
+\stopblockquote
+
+Superscripts and subscript don't seem to work with Pandoc:
+
+H3O^+
+
+\subsection[title={Itemize},reference={itemize}]
+
+The markdown live previewer seems to have some issues displaying nested
+items:
+
+\startitemize[packed]
+\item
+  Item 1
+\item
+  Item 2
+  \startitemize[packed]
+  \item
+    Bullet 1 in list item 2
+  \item
+    Bullet 2 in list item 2
+  \stopitemize
+\item
+  Item 3
+\stopitemize
+
+\subsection[title={Images},reference={images}]
+
+In order to see Images in the preview and in the compiled output, please
+use a path relative to the current .md file like so:
+
+\placefigure{This is the figure
+caption}{\externalfigure[pictures/NyquistPlot1.png][width=0.5\textwidth]}
+
+Some stuff like link attributes are Pandoc-specific, that is why
+\quotation{\{width=50\letterpercent{}\}} has no effect in the live
+preview.
+
+\subsection[title={Code},reference={code}]
+
+\starttyping
+public static void Main(string[] args)
+{
+  Console.WriteLine("Hello world!");
+}
+\stoptyping
+
+The compile time (as always) scales with the document size, so you might
+want to split your .md files (= individual sections) when they exceed
+\lettertilde{}1000 lines.
+
+\subsection[title={Subsections},reference={subsections}]
+
+\subsubsection[title={Subsubsection},reference={subsubsection}]
+
+\subsubsubsection[title={Subsubsubsection},reference={subsubsubsection}]
+
+If you want to include every section depth, just remove the
+\type{\setupcombinedlist[content][]} command.
+
+\subsubsubsubsection[title={Subsubsubsubsection},reference={subsubsubsubsection}]
+
+\subsection[title={Tables},reference={tables}]
+
+\startplacetable[title={This is the table caption}]
+\startxtable
+\startxtablehead[head]
+\startxrow
+\startxcell[align=left] Right \stopxcell
+\startxcell[align=right] Left \stopxcell
+\startxcell Default \stopxcell
+\startxcell[align=middle] Center \stopxcell
+\stopxrow
+\stopxtablehead
+\startxtablebody[body]
+\startxrow
+\startxcell[align=left] 12 \stopxcell
+\startxcell[align=right] 12 \stopxcell
+\startxcell 12 \stopxcell
+\startxcell[align=middle] 12 \stopxcell
+\stopxrow
+\startxrow
+\startxcell[align=left] 123 \stopxcell
+\startxcell[align=right] 123 \stopxcell
+\startxcell 123 \stopxcell
+\startxcell[align=middle] 123 \stopxcell
+\stopxrow
+\stopxtablebody
+\startxtablefoot[foot]
+\startxrow
+\startxcell[align=left] 1 \stopxcell
+\startxcell[align=right] 1 \stopxcell
+\startxcell 1 \stopxcell
+\startxcell[align=middle] 1 \stopxcell
+\stopxrow
+\stopxtablefoot
+\stopxtable
+\stopplacetable

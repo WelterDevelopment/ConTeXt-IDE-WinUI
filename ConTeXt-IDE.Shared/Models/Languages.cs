@@ -13,15 +13,16 @@ namespace ConTeXt_IDE.Shared.Models
 			{
 				EnableIntelliSense = true,
 				LineComment = "%",
+				EscapeSymbols = new [] { '\\' },
 				AutoClosingPairs = new() { { '[', ']' }, { '{', '}' }, },
 				WordSelectionDefinitions = new() { /*language=regex*/ @"\b\w+?\b", /*language=regex*/ @"\\.+?\b" },
 				RegexTokens = new()
 				{
-					{ Token.Math, /*language=regex*/ @"\$.*?\$" },
 					{ Token.Key, /*language=regex*/ @"(\w+?\s*?)(=)" },
+						{ Token.Math, /*language=regex*/ @"\${1,2}.*?\${1,2}" },
 					{ Token.Symbol, /*language=regex*/ @"[:=,.!?&+\-*\/\^~#;<>]" },
 					{ Token.Command, /*language=regex*/ @"\\.+?\b" },
-					{ Token.Function, /*language=regex*/ @"\\(define|place|enable|setup).+?\b" },
+					{ Token.Function, /*language=regex*/ @"\\(define|place|enable|setup).*?\b" },
 					{ Token.Style, /*language=regex*/ @"\\(tf|bf|it|sl|bi|bs|sc)(x|xx|[a-e])?\b|(\\tt|\\ss|\\rm)\b" },
 					{ Token.Array, /*language=regex*/ @"\\\\|\\(b|e)(T)(C|Ds?|H|N|Rs?|X|Y)\b|(\\AR|\\DR|\\DC|\\DL|\\NI|\\NR|\\NC|\\HL|\\VL|\\FR|\\MR|\\LR|\\SR|\\TB|\\NB|\\NN|\\FL|\\ML|\\LL|\\TL|\\BL)\b" },
 					{ Token.Environment, /*language=regex*/ @"\\(start|stop).+?\b" },
@@ -36,7 +37,7 @@ namespace ConTeXt_IDE.Shared.Models
 				},
 				FoldingPairs = new()
 				{
-					new SyntaxFolding() { RegexStart = /*language=regex*/ @"\\(start).+?\b", RegexEnd = /*language=regex*/ @"\\(stop).+?\b" },
+					new SyntaxFolding() { RegexStart = /*language=regex*/ @"(\\start)(.+?)(\b)", RegexEnd = /*language=regex*/ @"(\\stop)(.+?)(\b)", FoldingIgnoreWords = new(){ "product", "environment", "component", "project", "text" }, MatchingGroup = 2 },
 				},
 				CommandTriggerCharacters = new[] { '\\' },
 				OptionsTriggerCharacters = new[] { '[' },
@@ -50,10 +51,7 @@ namespace ConTeXt_IDE.Shared.Models
 			{
 				FoldingPairs = new()
 				{
-					new() { RegexStart = /*language=regex*/ @"\bfunction\b", RegexEnd = /*language=regex*/ @"\bend\b" },
-					new() { RegexStart = /*language=regex*/ @"\bfor\b", RegexEnd = /*language=regex*/ @"\bend\b" },
-					new() { RegexStart = /*language=regex*/ @"\bwhile\b", RegexEnd = /*language=regex*/ @"\bend\b" },
-					new() { RegexStart = /*language=regex*/ @"\bif\b", RegexEnd = /*language=regex*/ @"\bend\b" },
+					new() { RegexStart = /*language=regex*/ @"\b(function|for|while|if)\b", RegexEnd = /*language=regex*/ @"\bend\b" },
 				},
 				RegexTokens = new()
 				{

@@ -23,85 +23,6 @@ namespace ConTeXt_IDE.Models
 		}
 	}
 
-	public class ObservableSortedSet<T> : ObservableCollection<T> where T : IComparable<T>
-	{
-		//readonly SortedSet<T> _innerCollection;
-
-		//public ObservableSortedSet()
-		//{
-		//	//_innerCollection = new SortedSet<T>();
-		//}
-		//public ObservableSortedSet(FileItemComparer fileItemComparer)
-		//{
-		//	//_innerCollection = new SortedSet<FileItem>(fileItemComparer) as SortedSet<T>;
-		//}
-
-		//public void InsertAlphabetically(T item)
-		//{
-		//	int index = 0;
-		//	foreach (T i in base.Items)
-		//	{
-		//		if (i.CompareTo())
-		//	}
-		//	base.Add(item);
-		//	//PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
-		//	//PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
-		//	////OnCollectionChanged( NotifyCollectionChangedAction.Add);
-		//	//CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs( NotifyCollectionChangedAction.Add, new List<T>() { item }));
-		//}
-
-		//public void Clear()
-		//{
-		//	_innerCollection.Clear();
-		//	CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Reset));
-		//}
-
-		//public bool Contains(T item)
-		//{
-		//	return _innerCollection.Contains(item);
-		//}
-
-		//public void CopyTo(T[] array, int arrayIndex)
-		//{
-		//	_innerCollection.CopyTo(array, arrayIndex);
-		//}
-
-		//public bool Remove(T item)
-		//{
-		//	bool action = base.Remove(item);
-		//	if (action)
-		//		CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Remove));
-		//	return action;
-		//}
-
-
-		//public int Count
-		//{
-		//	get { return _innerCollection.Count; }
-		//}
-
-		//public bool IsReadOnly
-		//{
-		//	get { return ((ICollection<T>)_innerCollection).IsReadOnly; }
-		//}
-
-		//public FileItem this[int index]
-		//{
-		//	get
-		//	{
-		//		return _innerCollection.;
-		//	}
-		//	set
-		//	{
-		//		Chars[index] = value;
-		//	}
-		//}
-
-		// TODO: possibly add some specific methods, if needed
-
-		public event NotifyCollectionChangedEventHandler CollectionChanged;
-		public event PropertyChangedEventHandler PropertyChanged;
-	}
 
 	public class FileItem : Helpers.Bindable, IComparable<FileItem>
 	{
@@ -184,6 +105,8 @@ namespace ConTeXt_IDE.Models
 				Set(value);
 			}
 		}
+
+		public ObservableCollection<EditAction> EditActionHistory { get => Get(new ObservableCollection<EditAction>()); set => Set(value); }
 
 		public bool IsExpanded { get => Get(false); set => Set(value); }
 

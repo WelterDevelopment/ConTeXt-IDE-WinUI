@@ -145,7 +145,7 @@ namespace ConTeXt_IDE.ViewModels
 		public int Page { get => Get(1); set => Set(value); }
 		public bool InfoOpen { get => Get(false); set => Set(value); }
 		public bool CanUndo { get => Get(false); set => Set(value); }
-		public ObservableCollection<EditAction> EditActionHistory { get => Get(new ObservableCollection<EditAction>()); set => Set(value); }
+		
 		public string InfoTitle { get => Get(""); set => Set(value); }
 		public string InfoText { get => Get(""); set => Set(value); }
 		public InfoBarSeverity InfoSeverity { get => Get(InfoBarSeverity.Informational); set => Set(value); }
@@ -168,7 +168,18 @@ namespace ConTeXt_IDE.ViewModels
 			get => Get(new FileItem(null));
 			set
 			{
+				if (IsDragging | value == CurrentFileItem)
+					return;
+
 				Set(value);
+
+
+				//if (string.Compare(value.File.Path,CurrentFileItem.File.Path)==0)
+				//{
+				//	return;
+				//}
+
+				
 				OutlineItems.Clear();
 				if (value?.FileLanguage == "ConTeXt")
 				{
@@ -180,6 +191,9 @@ namespace ConTeXt_IDE.ViewModels
 				{
 					IsInternalViewerActive = false;
 					IsMarkdownViewerActive = true;
+
+					MarkdownViewerUriPrefix = value.FileFolder + "/";
+
 					CurrentMarkdownText = value.FileContent;
 
 					MarkdownTimer.Start();
@@ -194,7 +208,7 @@ namespace ConTeXt_IDE.ViewModels
 			}
 		}
 
-		public async void UpdateOutline(List<Line> text = null, bool update = false)
+		public void UpdateOutline(List<Line> text = null, bool update = false)
 		{
 			if (text == null)
 				text = Codewriter.Lines.ToList();
@@ -202,7 +216,7 @@ namespace ConTeXt_IDE.ViewModels
 			UpdateOutline(text.Select(x => x.LineText).ToArray(), update);
 		}
 
-		public async void UpdateOutline(string text = null, bool update = false)
+		public  void UpdateOutline(string text = null, bool update = false)
 		{
 			if (text == null)
 				text = String.Join("\r\n", Codewriter.Lines.Select(x=>x.LineText));
@@ -214,6 +228,7 @@ namespace ConTeXt_IDE.ViewModels
 		{
 			//await Task.Run(() =>
 			//{
+			if (CurrentFileItem != null)
 			try
 			{
 				if (text == null)
@@ -458,17 +473,23 @@ namespace ConTeXt_IDE.ViewModels
 		public Color SystemAccentColor { get => Get((new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent)); set => Set(value); }
 
 		public bool IsError { get => Get(false); set => Set(value); }
+
+		
+		public Thickness RibbonMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set => Set(value); }
+		public CornerRadius RibbonCornerRadius { get => Get(new CornerRadius(Default.RibbonMarginValue)); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
 
 		public bool IsIndeterminate { get => Get(true); set { Set(value); } }
 
-		public int ProgressValue { get => Get(0); set => Set(value); }
+		public double ProgressValue { get => Get(0d); set => Set(value); }
 
 		public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
 
 		public bool IsInternalViewerActive { get => Get(false); set => Set(value); }
 
 		public bool IsMarkdownViewerActive { get => Get(false); set => Set(value); }
+
+		public string MarkdownViewerUriPrefix { get => Get("ms-appx://"); set => Set(value); }
 
 		public bool IsPaused { get => Get(false); set { Set(value); } }
 
@@ -491,6 +512,8 @@ namespace ConTeXt_IDE.ViewModels
 		public bool IsInstalling { get => Get(false); set { Set(value); if (value) { IsLoadingBarVisible = true; IsPaused = false; } if (!value && !IsSaving) { IsLoadingBarVisible = false; } } }
 
 		public bool IsLoadingBarVisible { get => Get(false); set => Set(value); }
+		public bool IsDragging { get => Get(false); set => Set(value); }
+		public bool CloseRequested { get => Get(false); set => Set(value); }
 
 		public string NVHead { get => Get(""); set => Set(value); }
 
@@ -527,6 +550,21 @@ namespace ConTeXt_IDE.ViewModels
 						value.IsSelected = true;
 					});
 				});
+				}
+			}
+		}
+
+		public bool ShowCommandReference
+		{
+			get => Get(false); set
+			{
+				try
+				{
+					Set(value);
+				}
+				catch (Exception ex)
+				{
+					Log(ex.Message);
 				}
 			}
 		}
@@ -591,7 +629,7 @@ namespace ConTeXt_IDE.ViewModels
 				};
 				watcher.Renamed += (a, b) =>
 				{
-					if (!b.FullPath.EndsWith("~tmp") && !b.OldFullPath.EndsWith("~tmp"))
+					if (!b.FullPath.ToLower().EndsWith("tmp") && !b.OldFullPath.ToLower().EndsWith("tmp"))
 					{
 						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
 						{
@@ -748,8 +786,8 @@ namespace ConTeXt_IDE.ViewModels
 			}
 		}
 
-		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua", ".synctex", ".syncctx" };
-		private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf", ".synctex" };
+		private readonly List<string> cancelWords = new List<string> { ".gitignore", ".tuc", ".log", ".pgf", ".tua", ".synctex", ".syncctx", ".TMP" };
+		private readonly List<string> auxillaryWords = new List<string> { ".tuc", ".log", ".pgf", ".synctex", ".syncctx", ".TMP" };
 		private async Task DirWalk(StorageFolder sDir, FileItem currFolder = null, int level = 0)
 		{
 			try
@@ -822,6 +860,12 @@ namespace ConTeXt_IDE.ViewModels
 
 		public CodeWriter Codewriter { get => Get<CodeWriter>(); set => Set(value); }
 
+		public void OpenFile(string fileName)
+		{
+			var fi = CurrentProject.Directory.FirstOrDefault(x => x.FileName == fileName);
+			if (fi != null)
+				OpenFile(fi);
+		}
 		public async void OpenFile(FileItem file, bool ProjectLoad = false)
 		{
 			try
@@ -993,21 +1037,28 @@ namespace ConTeXt_IDE.ViewModels
 
 		public async void PopulateJumpList()
 		{
-			JumpList jl = await JumpList.LoadCurrentAsync();
-			jl.Items.Clear();
-			await jl.SaveAsync();
-
-			jl.SystemGroupKind = JumpListSystemGroupKind.None;
-			foreach (var item in Default.ProjectList)
+			try
 			{
-				JumpListItem jli = JumpListItem.CreateWithArguments(item.Name, item.Name);
-				jli.GroupName = "ConTeXt Projects";
-				jli.Description = item.Path;
-				jli.Logo = new("ms-appx:///Assets/SquareLogo.png");
-				jl.Items.Add(jli);
-			}
+				JumpList jl = await JumpList.LoadCurrentAsync();
+				jl.Items.Clear();
+				await jl.SaveAsync();
 
-			await jl.SaveAsync();
+				jl.SystemGroupKind = JumpListSystemGroupKind.None;
+				foreach (var item in Default.ProjectList)
+				{
+					JumpListItem jli = JumpListItem.CreateWithArguments(item.Name, item.Name);
+					jli.GroupName = "ConTeXt Projects";
+					jli.Description = item.Path;
+					jli.Logo = new("ms-appx:///Assets/SquareLogo.png");
+					jl.Items.Add(jli);
+				}
+
+				await jl.SaveAsync();
+			}
+			catch (Exception ex)
+			{
+				Log(ex.Message);
+			}
 		}
 
 		public async void Startup()
@@ -1172,12 +1223,21 @@ namespace ConTeXt_IDE.ViewModels
 
 		private async void FileItems_CollectionChanged1(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			//if (e.Action == NotifyCollectionChangedAction.Add)
-			//{
-			//    await Task.Delay(500);
+			// Dirty hack to overcome the issue, that the TabView reordering mechanism calls a Remove and an Add event instead of one Move event
 
-			//    CurrentFileItem = e.NewItems[0] as FileItem;
-			//}
+			if (e.Action == NotifyCollectionChangedAction.Remove && (e.OldItems?[0] as FileItem) == CurrentFileItem )
+			{
+				if (!CloseRequested)
+				{
+					IsDragging = true;
+				}
+				CloseRequested = false;
+			}
+			else if (e.Action == NotifyCollectionChangedAction.Add && (e.NewItems?[0] as FileItem) == CurrentFileItem)
+			{
+				IsDragging = false;
+			}
+
 			if (FileItems?.Count == 0)
 			{
 				IsFileItemLoaded = false;
