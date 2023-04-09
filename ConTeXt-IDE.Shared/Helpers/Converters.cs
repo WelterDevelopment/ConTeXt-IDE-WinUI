@@ -323,7 +323,7 @@ namespace ConTeXt_IDE.Helpers
 		public object Convert(object value, Type targetType, object parameter, string language)
 		{
 			var item = (FileItem)value;
-			return item.Level == 0 && item.FileLanguage == "ConTeXt" ? Visibility.Visible : Visibility.Collapsed;
+			return item.FileLanguage == "ConTeXt" ? Visibility.Visible : Visibility.Collapsed; // item.Level == 0 && 
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -458,6 +458,8 @@ namespace ConTeXt_IDE.Helpers
 			{
 				if (width == "*")
 					open = new GridLength(1, GridUnitType.Star);
+				else if (width == "Auto")
+					open = new GridLength(1, GridUnitType.Auto);
 				else if (int.TryParse(width, out int w))
 					open = new GridLength(w, GridUnitType.Pixel);
 			}

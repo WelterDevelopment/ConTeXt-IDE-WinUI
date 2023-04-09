@@ -8,9 +8,17 @@
 \enableregime[utf]
 \setupalign[flushleft]
 
-\startmode[screen]
+\startnotmode[handout]
 	\setuppapersize[W1][W1]
 	\setuplayout[topspace=0.2cm]
+\stopnotmode
+
+\startmode[handout] % Printer-friently layout
+\definepapersize[handout][width=210mm,height=297mm][topspace=3cm]
+	\setuplayout[handout][topspace=2cm, backspace=2cm, header=24pt]
+	\setuppapersize[W1][A4] % This will create space for lecture notes below the actual page content
+	\setuplayout[location={middle,top}]
+	\setupbackgrounds[page][background=color, framecolor=gray, frame=on]
 \stopmode
 
 \setuplayout[
@@ -34,17 +42,6 @@
 	height=fit,
 	]
 
-\startmode[handout] % Printer-friently layout
-	\setuppapersize[W1][A4] % This will create space for lecture notes below the actual page content 
-	%\setuplayout[top=0cm,bottom=0cm, topdistance=1cm, topspace=1cm, bottomdistance=1cm, edge=0cm, margin=0cm, edgedistance=1.5cm, backspace=1.5cm, margindistance=0cm, width=fit, height=fit, header=1.2cm, footer=1cm, headerdistance=0.5cm]
-	\setuplayout[location={middle,top}]
-	\setupbackgrounds[page][background=color, framecolor=gray, frame=on]
-\stopmode
-
-\startmode[print]
-	\setuppapersize[A4][A4]
-\stopmode
-
 \setuppagenumbering[alternative=onesided, page=yes]
 
 %\showgrid
@@ -64,14 +61,14 @@
 \definecolor[f][r=0.8,g=0.8,b=0.8]
 
 % This will create a screen-friendly version of the presentation when the mode screen is on and a printer-friendly version if it is off.
-\startmode[screen] 
+\startnotmode[print,handout] 
 	%\setupinteractionmenu[state=start, maxheight=\measure{medium}]
 	\setupinteractionscreen[option=max, width=fit, height=fit]
 	\setupbackgrounds[page][background=color, backgroundcolor=b]
 	\setupbackgrounds[footer][background=color, backgroundcolor=f]
 	\defineoverlay[go-on][\overlaybutton{nextpage}]
 	\setupbackgrounds[page][background=go-on]
-\stopmode
+\stopnotmode
 
 % Typography
 \setupindenting[no]
@@ -103,7 +100,7 @@
 \stopsetups
 \startsetups[footerbar]
 	\startframed[frame=off, align=low, location=bottom]
-		\startmode[screen]
+		\startnotmode[print,handout]
 			%\interactionbar[alternative=a,width=.3\makeupwidth,step=small,symbol=yes]
 		\doifelse{\lastpage}{0}{\definemeasure[percent][0pt]}{\definemeasure[percent][0.3\textwidth*\currentpage/\lastpage]}%
 		\def\length{\the\textwidth*0.3}%
@@ -118,7 +115,7 @@
 		fill E--F--G--H--cycle withcolor .5 white;
 		endfig;
 		\stopMPcode \blank[-2mm]
-		\stopmode
+		\stopnotmode
 	\stopframed
 \stopsetups
 \startsetups[footertext]
@@ -126,6 +123,7 @@
 		\getvariable{meta}{title} \| \getvariable{meta}{author}
 	\stopframed
 \stopsetups
+
 \setupsubpagenumber[way=bysubsection, state=start, numberconversion=characters] % subpage counting is just for fun in this example, but might be usable for some komplex interactionbar visualization
 
 % Section blocks layouting
@@ -149,7 +147,7 @@
 	\setupheadertexts[]
 	\setupheadertexts[\directsetup{prshead}][]
 	\setupfootertexts[\directsetup{footertext}]
-	\setupfootertexts[\directsetup{footerbar}][\userpagenumber\doifmode{screen}{\subpagenumber}]
+	\setupfootertexts[\directsetup{footerbar}][\userpagenumber\doifmode{screen}{\doifnotmode{print}{\subpagenumber}}]
 	\savenumber[userpage]
 	\resetnumber[userpage]
 \stopsectionblockenvironment

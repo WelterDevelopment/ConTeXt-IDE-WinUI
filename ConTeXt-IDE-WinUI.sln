@@ -18,10 +18,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFjs.WinUI", "..\PDFjs.WinUI\PDFjs.WinUI\PDFjs.WinUI.csproj", "{758DB093-593F-458A-8294-A70C5023B11C}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems*{23d5fce0-b5af-45e2-802c-dd21297a49bf}*SharedItemsImports = 5
-		ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems*{e108325a-4f73-44c9-a981-173854d23cd7}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|arm64 = Debug|arm64
@@ -77,8 +73,8 @@ Global
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Debug|x64.Build.0 = Debug|x64
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Debug|x86.ActiveCfg = Debug|x86
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Debug|x86.Build.0 = Debug|x86
-		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|Any CPU.ActiveCfg = Release|x86
+		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|Any CPU.Build.0 = Release|x86
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|arm64.ActiveCfg = Release|ARM64
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|arm64.Build.0 = Release|ARM64
 		{0CBDE699-053C-486F-BF8E-8AC8861E7E4B}.Release|x64.ActiveCfg = Release|x64
@@ -107,5 +103,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {26D07F6D-16E3-4384-BE21-2D88BDD03051}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems*{23d5fce0-b5af-45e2-802c-dd21297a49bf}*SharedItemsImports = 5
+		ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems*{e108325a-4f73-44c9-a981-173854d23cd7}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

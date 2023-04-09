@@ -7,13 +7,71 @@
     xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
 	xmlns:ui="using:CommunityToolkit.WinUI.UI"
-    xmlns:vm="using:ConTeXt_IDE.ViewModels" 
-    >
+    xmlns:vm="using:ConTeXt_IDE.ViewModels" xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives">
 	<Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+				<!--<ResourceDictionary Source="Ribbon.xaml"></ResourceDictionary>-->
 			</ResourceDictionary.MergedDictionaries>
+
+			<Style x:Key="Ribbon" TargetType="TabView">
+				<Setter Property="VerticalAlignment" Value="Top" />
+				<Setter Property="Padding" Value="{ThemeResource TabViewHeaderPadding}" />
+				<Setter Property="IsTabStop" Value="False" />
+				<Setter Property="Background" Value="{ThemeResource TabViewBackground}" />
+				<Setter Property="KeyboardAcceleratorPlacementMode" Value="Hidden" />
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="TabView">
+							<Grid>
+
+								<Grid.RowDefinitions>
+									<RowDefinition Height="Auto" />
+									<RowDefinition Height="*" />
+								</Grid.RowDefinitions>
+
+								<VisualStateManager.VisualStateGroups>
+									<VisualStateGroup>
+										<VisualState x:Name="NormalBottomBorderLine" />
+										<VisualState x:Name="SingleBottomBorderLine">
+											<VisualState.Setters>
+												<Setter Target="LeftBottomBorderLine.(Grid.ColumnSpan)" Value="4" />
+												<Setter Target="RightBottomBorderLine.Visibility" Value="Collapsed" />
+
+											</VisualState.Setters>
+										</VisualState>
+
+									</VisualStateGroup>
+
+								</VisualStateManager.VisualStateGroups>
+								<Grid x:Name="TabContainerGrid" Background="{TemplateBinding Background}" XYFocusKeyboardNavigation="Enabled">
+
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="Auto" MinWidth="2" x:Name="LeftContentColumn" />
+										<ColumnDefinition Width="Auto" x:Name="TabColumn" />
+										<ColumnDefinition Width="Auto" x:Name="AddButtonColumn" />
+										<ColumnDefinition Width="*" x:Name="RightContentColumn" />
+									</Grid.ColumnDefinitions>
+									<Border x:Name="LeftBottomBorderLine" BorderBrush="{ThemeResource TabViewBorderBrush}" BorderThickness="1" Height="1" VerticalAlignment="Bottom" />
+									<Border x:Name="RightBottomBorderLine" BorderBrush="{ThemeResource TabViewBorderBrush}" BorderThickness="1" Height="1" Grid.Column="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" />
+									<ContentPresenter Grid.Column="0" x:Name="LeftContentPresenter" Content="{TemplateBinding TabStripHeader}" ContentTemplate="{TemplateBinding TabStripHeaderTemplate}" />
+									<primitives:TabViewListView Grid.Column="1" x:Name="TabListView" Padding="{TemplateBinding Padding}" CanReorderItems="{TemplateBinding CanReorderTabs}" CanDragItems="{TemplateBinding CanDragTabs}" AllowDrop="{TemplateBinding AllowDropTabs}" ItemsSource="{TemplateBinding TabItemsSource}" ItemTemplate="{TemplateBinding TabItemTemplate}" ItemTemplateSelector="{TemplateBinding TabItemTemplateSelector}" />
+									<Border Visibility="{Binding IsAddTabButtonVisible, RelativeSource={RelativeSource TemplatedParent}}" Grid.Column="2" Padding="{ThemeResource TabViewItemAddButtonContainerPadding}" VerticalAlignment="Bottom">
+										<Button x:Name="AddButton" HorizontalAlignment="Center" VerticalAlignment="Center" Content="&#xE710;" IsTextScaleFactorEnabled="False" Command="{TemplateBinding AddTabButtonCommand}" CommandParameter="{TemplateBinding AddTabButtonCommandParameter}"  HighContrastAdjustment="None" />
+									</Border>
+									<ContentPresenter Grid.Column="3" x:Name="RightContentPresenter" HorizontalAlignment="Stretch" Content="{TemplateBinding TabStripFooter}" ContentTemplate="{TemplateBinding TabStripFooterTemplate}" />
+
+								</Grid>
+								<ContentPresenter x:Name="TabContentPresenter" Grid.Row="1" Background="Transparent" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" />
+
+							</Grid>
+
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
 
 			<vm:ViewModel x:Key="VM"></vm:ViewModel>
 
@@ -43,33 +101,146 @@
 			<AcrylicBrush x:Key="CustomAcrylicBackground" TintOpacity="0.7" TintLuminosityOpacity="{ThemeResource TintLuminosityOpacity}" TintColor="{ThemeResource BackgroundColor}" FallbackColor="{ThemeResource BackgroundColor}"></AcrylicBrush>
 
 			<Style TargetType="Grid" x:Key="GridCell">
-				<Setter Property="Padding" Value="12,12,12,12"></Setter>
+				<Setter Property="Padding" Value="12,6,12,12"></Setter>
 				<Setter Property="ColumnSpacing" Value="6"></Setter>
 				<Setter Property="RowSpacing" Value="6"></Setter>
 				<Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
-				<Setter Property="Background" Value="{ThemeResource CustomAcrylicBackground}" ></Setter>
+				<Setter Property="Background" Value="Transparent" ></Setter>
 			</Style>
 
-			<Style TargetType="toolkit:GridSplitter" x:Key="RowSplitter">
-				<Setter Property="Height" Value="6"></Setter>
+			<Style TargetType="toolkit:GridSplitter" x:Key="RowSplitter" >
+				<Setter Property="MinHeight" Value="0"></Setter>
+				<Setter Property="Height" Value="4"></Setter>
+				<Setter Property="Margin" Value="12,4,12,4"></Setter>
+				<Setter Property="CornerRadius" Value="2"></Setter>
 				<Setter Property="ResizeBehavior" Value="PreviousAndNext"></Setter>
 				<Setter Property="CursorBehavior" Value="ChangeOnSplitterHover"></Setter>
-				<Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary}"></Setter>
+				<Setter Property="Background" Value="#22888888"></Setter>
 				<Setter Property="GripperForeground" Value="{ThemeResource ForegroundLightColor}"></Setter>
 				<Setter Property="FocusVisualPrimaryBrush" Value="DarkGray"></Setter>
 				<Setter Property="FocusVisualSecondaryBrush" Value="DarkGray"></Setter>
-				<!--<Setter Property="GripperCursor" Value="SizeNorthSouth"></Setter>-->
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="toolkit:GridSplitter">
+							<Grid x:Name="RootGrid" Height="2" VerticalAlignment="Center" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" RenderTransformOrigin="0.5,0.5">
+								<Grid.RenderTransform>
+									<ScaleTransform CenterX="0.5" CenterY="0.5" ></ScaleTransform>
+								</Grid.RenderTransform>
+								<VisualStateManager.VisualStateGroups>
+									<VisualStateGroup x:Name="GridSplitterStates">
+										<VisualState x:Name="Normal" >
+											<Storyboard Duration="0:0:0.1">
+												<DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="1" Duration="0:0:0.1" >
+													<DoubleAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</DoubleAnimation.EasingFunction>
+												</DoubleAnimation>
+												<ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" Duration="0:0:0.1" To="#22888888">
+													<ColorAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</ColorAnimation.EasingFunction>
+												</ColorAnimation>
+											</Storyboard>
+										</VisualState>
+										<VisualState x:Name="PointerOver">
+											<Storyboard Duration="0:0:0.1">
+												<ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" Duration="0:0:0.1" To="#55888888">
+													<ColorAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</ColorAnimation.EasingFunction>
+												</ColorAnimation>
+												<DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="2" Duration="0:0:0.1">
+													<DoubleAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</DoubleAnimation.EasingFunction>
+												</DoubleAnimation>
+											</Storyboard>
+										</VisualState>
+										<VisualState x:Name="Pressed">
+											<Storyboard Duration="0:0:0">
+												<DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="2" Duration="0:0:0"/>
+											</Storyboard>
+											<VisualState.Setters>
+												<Setter Target="RootGrid.Background" Value="#77888888" />
+											</VisualState.Setters>
+										</VisualState>
+									</VisualStateGroup>
+								</VisualStateManager.VisualStateGroups>
+							</Grid>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
 			</Style>
 
 			<Style TargetType="toolkit:GridSplitter" x:Key="ColumnSplitter">
-				<Setter Property="Width" Value="6"></Setter>
+				<Setter Property="MinWidth" Value="0"></Setter>
+				<Setter Property="Width" Value="4"></Setter>
+				<Setter Property="Margin" Value="4,12,4,12"></Setter>
+				<Setter Property="CornerRadius" Value="2"></Setter>
 				<Setter Property="ResizeBehavior" Value="PreviousAndNext"></Setter>
 				<Setter Property="CursorBehavior" Value="ChangeOnSplitterHover"></Setter>
-				<Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary}"></Setter>
+				<Setter Property="Background" Value="#22888888"></Setter>
 				<Setter Property="GripperForeground" Value="{ThemeResource ForegroundLightColor}"></Setter>
 				<Setter Property="FocusVisualPrimaryBrush" Value="DarkGray"></Setter>
 				<Setter Property="FocusVisualSecondaryBrush" Value="DarkGray"></Setter>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="toolkit:GridSplitter">
+							<Grid x:Name="RootGrid" Width="2" HorizontalAlignment="Center" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" RenderTransformOrigin="0.5,0.5">
+								<Grid.RenderTransform>
+									<ScaleTransform CenterX="0.5" CenterY="0.5" ></ScaleTransform>
+								</Grid.RenderTransform>
+								<VisualStateManager.VisualStateGroups>
+									<VisualStateGroup x:Name="GridSplitterStates">
+										<VisualState x:Name="Normal" >
+											<Storyboard Duration="0:0:0.1">
+												<DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="1" Duration="0:0:0.1" >
+													<DoubleAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</DoubleAnimation.EasingFunction>
+												</DoubleAnimation>
+												<ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" Duration="0:0:0.1" To="#22888888">
+													<ColorAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</ColorAnimation.EasingFunction>
+												</ColorAnimation>
+											</Storyboard>
+										</VisualState>
+										<VisualState x:Name="PointerOver">
+											<Storyboard Duration="0:0:0.1">
+												<ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.Background).(SolidColorBrush.Color)" Duration="0:0:0.1" To="#55888888">
+													<ColorAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</ColorAnimation.EasingFunction>
+												</ColorAnimation>
+												<DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="2" Duration="0:0:0.1">
+													<DoubleAnimation.EasingFunction>
+														<CubicEase EasingMode="EaseInOut"></CubicEase>
+													</DoubleAnimation.EasingFunction>
+												</DoubleAnimation>
+											</Storyboard>
+										</VisualState>
+										<VisualState x:Name="Pressed">
+											<Storyboard Duration="0:0:0">
+												<DoubleAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Grid.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="2" Duration="0:0:0"/>
+											</Storyboard>
+											<VisualState.Setters>
+												<Setter Target="RootGrid.Background" Value="#77888888" />
+											</VisualState.Setters>
+										</VisualState>
+									</VisualStateGroup>
+								</VisualStateManager.VisualStateGroups>
+							</Grid>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
 				<!--<Setter Property="GripperCursor" Value="SizeWestEast"></Setter>-->
 			</Style>
 
@@ -79,7 +250,7 @@
 				<Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
 			</Style>
 
-			<CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
+			<CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
 			<CornerRadius x:Key="CornerRadius">4</CornerRadius>
 			<CornerRadius x:Key="LargeCornerRadius">8</CornerRadius>
 			<CornerRadius x:Key="CornerRadiusRight">0,4,4,0</CornerRadius>
@@ -163,11 +334,11 @@
 
 			<SolidColorBrush x:Key="CustomAcrylicBrush" Color="{Binding AccentColorLowLow, Source={StaticResource AccentColorSetting}, Mode=OneWay}" />
 			<StaticResource x:Key="InfoBarInformationalSeverityBackgroundBrush" ResourceKey="CustomAcrylicBrush" />
-			<SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="{ThemeResource BackgroundColorSemiTransparent}" />
+		
 			
-			<Style TargetType="Grid" x:Key="RibbonGrid">
+			<!--<Style TargetType="Grid" x:Key="RibbonGrid">
 				<Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary }"></Setter>
-			</Style>
+			</Style>-->
 			<Style TargetType="ScrollViewer" x:Key="RibbonView">
 				<Setter Property="Background" Value="{StaticResource CustomAcrylicBrush}"></Setter>
 				<Setter Property="Height" Value="48"></Setter>
@@ -200,6 +371,7 @@
 					</Setter.Value>
 				</Setter>
 			</Style>
+
 
 			<helpers:AccentColorSetting x:Key="AccentColorSetting"/>
 
@@ -235,8 +407,9 @@
 			<SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColor.Color, Source={StaticResource VM}}"></SolidColorBrush>
 
 			
-			<!--<SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="Green"></SolidColorBrush>-->
+			<SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Transparent"></SolidColorBrush>
 			<SolidColorBrush x:Key="TabViewItemSeparator" Color="Transparent"></SolidColorBrush>
+			<SolidColorBrush x:Key="TabViewBackground" Color="Transparent"></SolidColorBrush>
 			
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Default">
@@ -249,6 +422,7 @@
 					<SolidColorBrush x:Key="WindowCaptionForeground">#FFF</SolidColorBrush>
 					<SolidColorBrush x:Key="WindowCaptionForegroundDisabled">#DDD</SolidColorBrush>
 
+					<SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="Transparent" />
 					<SolidColorBrush x:Key="TabViewBorderBrush" Color="Transparent"></SolidColorBrush>
 					<Color x:Key="CardStrokeColorDefault">Transparent</Color>
 

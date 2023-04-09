@@ -42,7 +42,7 @@ namespace ConTeXt_IDE.Models
 
 		public string Path { get => Get(""); set => Set(value); }
 
-		public string RootFile
+		public string RootFilePath
 		{
 			get => Get<string>(null);
 			set
@@ -57,13 +57,13 @@ namespace ConTeXt_IDE.Models
 						df.FirstOrDefault().IsRoot = true;
 					}
 
-					App.VM.Log("Root file changed to " + RootFile);
+					App.VM.Log("Root file changed to " + System.IO.Path.GetFileName(value));
 
 				}
 			}
 		}
 
-		public List<string> LastOpenedFiles { get => Get(new List<string>() { RootFile }); set => Set(value); }
+		public List<string> LastOpenedFiles { get => Get(new List<string>() { RootFilePath }); set => Set(value); }
 
 		public ObservableCollection<Mode> Modes
 		{

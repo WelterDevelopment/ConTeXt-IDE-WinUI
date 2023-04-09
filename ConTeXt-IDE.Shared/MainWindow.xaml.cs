@@ -1,4 +1,5 @@
-﻿using ConTeXt_IDE.ViewModels;
+﻿using ConTeXt_IDE.Shared;
+using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -22,11 +23,13 @@ namespace ConTeXt_IDE
 	/// <summary>
 	/// An empty window that can be used on its own or navigated to within a Frame.
 	/// </summary>
-	public sealed partial class MainWindow : Window
+	public sealed partial class MainWindow : SystemBackdropWindow
 	{
 
 		private ViewModel VM { get; } = App.VM;
 		public AppWindow AW { get; set; }
+
+		public IntPtr hWnd;
 		public bool IsCustomizationSupported { get; set; } = false;
 		public MainWindow()
 		{
@@ -77,7 +80,7 @@ namespace ConTeXt_IDE
 
 		private AppWindow GetAppWindowForCurrentWindow()
 		{
-			IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+			hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
 			WindowId myWndId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
 			return AppWindow.GetFromWindowId(myWndId);
 		}

@@ -1,13 +1,17 @@
 ﻿using CodeEditorControl_WinUI;
+using CommunityToolkit.WinUI.UI.Controls;
 using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
+using ConTeXt_IDE.Shared.Helpers;
 using ConTeXt_IDE.Shared.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -37,11 +41,18 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
+using Windows.UI.UIAutomation;
+using Windows.UI.WindowManagement;
+using static ConTeXt_IDE.Shared.SystemBackdropWindow;
+using AppWindow = Windows.UI.WindowManagement.AppWindow;
 
 namespace ConTeXt_IDE
 {
 	public sealed partial class MainPage : Page
 	{
+
+		private Color CW_BackgroundColor = Color.FromArgb(25, 135, 135, 135);
+		private SolidColorBrush CW_Background = new(Color.FromArgb(25, 135, 135, 135));
 		private ViewModel VM { get; } = App.VM;
 		public MainPage()
 		{
@@ -169,7 +180,7 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
-				var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", "web", @"About.html");
+				var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", @"About.md");
 				StorageFile storageFile;
 
 				if (File.Exists(p))
@@ -178,10 +189,10 @@ namespace ConTeXt_IDE
 				}
 				else
 				{
-					storageFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///web/About.html"));
+					storageFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///About.md"));
 				}
 
-							(sender as WebView2).Source = new System.Uri(storageFile.Path);
+			(sender as MarkdownTextBlock).Text = await File.ReadAllTextAsync(storageFile.Path);
 			}
 			catch (Exception ex)
 			{
@@ -704,11 +715,11 @@ namespace ConTeXt_IDE
 		private void SetRoot_Click(object sender, RoutedEventArgs e)
 		{
 			var ei = (FileItem)(sender as FrameworkElement).DataContext;
-			if (ei.Level == 0)
+			if (true) //ei.Level == 0
 			{
 				ei.IsRoot = true;
 				VM.CurrentRootItem = ei;
-				VM.CurrentProject.RootFile = ei.FileName;
+				VM.CurrentProject.RootFilePath = ei.File.Path;
 			}
 			else
 			{
@@ -720,13 +731,17 @@ namespace ConTeXt_IDE
 
 		#region Compiler Operations
 
+		AppWindow PDFWindow;
 		public async void CompileTex(bool compileRoot = false, FileItem fileToCompile = null)
 		{
 			if (!VM.IsSaving)
 				try
 				{
 					if (!VM.IsInstalling)
+					{
 						VM.IsIndeterminate = true;
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Indeterminate);
+					}
 					VM.IsTeXError = false;
 					VM.IsPaused = false;
 					VM.IsSaving = true;
@@ -751,19 +766,12 @@ namespace ConTeXt_IDE
 					FileItem filetocompile = null;
 					if (compileRoot)
 					{
-						FileItem[] root = new FileItem[] { };
-						if (VM.CurrentProject != null)
-							root = VM.CurrentProject.Directory.FirstOrDefault()?.Children?.Where(x => x.IsRoot)?.ToArray();
-						if (root != null && root.Length > 0)
-							filetocompile = root.FirstOrDefault();
-						else
-							filetocompile = fileToCompile ?? VM.CurrentFileItem;
+							filetocompile = VM.CurrentRootItem ?? VM.CurrentFileItem;
 					}
 					else
 					{
 						filetocompile = fileToCompile ?? VM.CurrentFileItem;
 					}
-
 
 					bool compileSuccessful = false;
 
@@ -813,13 +821,31 @@ namespace ConTeXt_IDE
 						StorageFolder currFolder = await StorageFolder.GetFolderFromPathAsync(filetocompile.FileFolder);
 
 						var error = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(filetocompile.FileName) + "-error.log");
+
+						if (error == null)
+						{
+							if (!VM.IsInstalling)
+							{
+								TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
+								if (App.MainWindow.AW.ClientSize.Height == 0) // Dirty hack to check if window is minimized
+									FlashWindow.Flash(App.MainWindow.hWnd, FlashWindow.FLASHW_TRAY, 0);
+							}
+
+						}
+
 						if (error != null)
 						{
 							StorageFile errorfile = error as StorageFile;
 							string text = await FileIO.ReadTextAsync(errorfile);
 
 							VM.IsTeXError = true;
-							// BAD code, quick hack to convert the lua table to a json format. Depending on special characters in the error message, the JsonConvert.DeserializeObject function can through errors.
+							if (!VM.IsInstalling)
+							{
+								TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Paused);
+								TaskbarUtility.SetProgressValue(100, 100);
+							}
+
+							// BAD code, quick hack to convert the lua table to a json format. Depending on special characters in the error message, the JsonConvert.DeserializeObject function can throw errors.
 							string newtext = text.Replace("  ", "").Replace("return", "").Replace("[\"", "\"").Replace("\"]", "\"").Replace("=", ":");
 							string pattern = @"([^\\])(\\n)"; // Matches every \n except \\n
 							string replacement = "$1"; // Match gets replaced with first capturing group, e.g. ]\n --> ]
@@ -856,6 +882,14 @@ namespace ConTeXt_IDE
 							if (pdfout != null)
 							{
 								VM.Log("Opening " + Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".pdf");
+								//PDFWindow = AppWindow.Create();
+								////PDFWindow.OwnerWindowId = App.MainWindow.AW.Id;
+								//Frame appWindowContentFrame = new Frame();
+								//appWindowContentFrame.Content = new PDFWindowViewer() { DataContext = VM};
+
+								//ElementCompositionPreview.SetAppWindowContent(appWindow, appWindowContentFrame);
+
+								//PDFWindow.Show();
 								if (VM.Default.InternalViewer)
 								{
 									await OpenPDF(pdfout);
@@ -1107,6 +1141,7 @@ namespace ConTeXt_IDE
 				{
 					VM.CloseRequested = true;
 					VM.FileItems.Remove(fi);
+					fi.IsOpened = false;
 				}
 
 				//VM.CurrentProject.LastOpenedFiles = VM.FileItems.Select(x => x.FileName).ToList();
@@ -1182,7 +1217,7 @@ namespace ConTeXt_IDE
 					if (VM.Default.ShowLog)
 					{
 						IDEGridRow.Height = new GridLength(2, GridUnitType.Star);
-						LogGridSplitter.Height = new GridLength(6, GridUnitType.Pixel);
+						LogGridSplitter.Height = new GridLength(1, GridUnitType.Auto);
 						LogGridRow.Height = new GridLength(200, GridUnitType.Pixel);
 					}
 					else
@@ -1196,7 +1231,7 @@ namespace ConTeXt_IDE
 				case "ShowOutline":
 					if (VM.Default.ShowOutline)
 					{
-						ProjectsGridSplitter.Height = new GridLength(6, GridUnitType.Pixel);
+						ProjectsGridSplitter.Height = new GridLength(1, GridUnitType.Auto);
 						ProjectsGridLibraryRow.Height = new GridLength(300, GridUnitType.Pixel);
 					}
 					else
@@ -1209,7 +1244,7 @@ namespace ConTeXt_IDE
 				case "ShowProjectPane":
 					if (VM.Default.ShowProjectPane)
 					{
-						ContentGridSplitter.Width = new GridLength(6, GridUnitType.Pixel);
+						ContentGridSplitter.Width = new GridLength(1, GridUnitType.Auto);
 						ContentGridProjectPaneColumn.Width = new GridLength(300, GridUnitType.Pixel);
 					}
 					else
@@ -1222,7 +1257,7 @@ namespace ConTeXt_IDE
 				case "InternalViewer":
 					if (VM.Default.InternalViewer)
 					{
-						PDFGridSplitter.Width = new GridLength(6, GridUnitType.Pixel);
+						PDFGridSplitter.Width = new GridLength(1, GridUnitType.Auto);
 						PDFGridColumn.Width = new GridLength(400, GridUnitType.Pixel);
 					}
 					else
@@ -1232,17 +1267,6 @@ namespace ConTeXt_IDE
 					}
 					break;
 				default: break;
-			}
-		}
-
-		private async void Edit_PositionChanged(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-			}
-			catch
-			{
-
 			}
 		}
 
@@ -1281,7 +1305,7 @@ namespace ConTeXt_IDE
 									{
 										if (file.Name.StartsWith("prd_") && file.FileType == ".tex")
 										{
-											proj.RootFile = file.Name;
+											proj.RootFilePath = file.Path;
 											break;
 										}
 									}
@@ -1333,13 +1357,16 @@ namespace ConTeXt_IDE
 											case "mwe": rootfile = "c_main.tex"; break;
 											case "markdown": rootfile = "prd_markdown.tex"; break;
 											case "cv": rootfile = "prd_cv.tex"; break;
-											case "projpres": rootfile = "prd_presentation.tex"; proj.Modes.FirstOrDefault(x => x.Name == "screen").IsSelected = true; break;
+											case "projpres": rootfile = "prd_presentation.tex"; 
+												proj.Modes.FirstOrDefault(x => x.Name == "screen").IsSelected = true;
+												proj.Modes.Add(new() { Name = "handout"});
+												break;
 											case "projthes": rootfile = "prd_thesis.tex"; break;
 											case "single": rootfile = "prd_main.tex"; break;
 											default: break;
 										}
 
-										proj.RootFile = rootfile;
+										proj.RootFilePath = Path.Combine(folder.Path, rootfile);
 
 
 										if (VM.Default.ProjectList.Any(x => x.Name == proj.Name))
@@ -1369,7 +1396,10 @@ namespace ConTeXt_IDE
 		}
 		private async void CbB_Theme_SelectionChanged(object sender, object args)
 		{
+
 			await Task.Delay(50);
+
+			App.MainWindow.RequestedTheme = (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme);
 			SetColor(VM.AccentColor, (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme), true);
 			//VM.InfoMessage("You changed the theme", "Not every UI element updates its theme at runtime. You may want to restart the app.");
 			await Task.Delay(50);
@@ -1458,6 +1488,7 @@ namespace ConTeXt_IDE
 				VM.IsTeXError = false;
 				VM.IsInstalling = true;
 				VM.IsIndeterminate = true;
+				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Indeterminate);
 				VM.InfoMessage("Updating", "Your ConTeXt distribution is getting updated. This can take up to 15 minutes. Do not abort this process!", InfoBarSeverity.Informational);
 
 				bool UpdateSuccessful = false;
@@ -1477,14 +1508,19 @@ namespace ConTeXt_IDE
 				if (UpdateSuccessful)
 				{
 					VM.InfoMessage("Update complete!", "Your ConTeXt distribution is up n' running!", InfoBarSeverity.Success);
+					TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
 				}
 				else
 				{
 					VM.InfoMessage("Error", "Something went wrong. Please try again later.", InfoBarSeverity.Error);
+					TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Error);
 				}
 			}
 			else
+			{
 				VM.InfoMessage("No internet connection", "You need to be connected to the internet in order to update your ConTeXt distribution!", InfoBarSeverity.Warning);
+				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Paused);
+			}
 
 			VM.IsInstalling = false;
 			VM.IsIndeterminate = false;
@@ -1523,8 +1559,10 @@ namespace ConTeXt_IDE
 							if (mu.Success)
 							{
 								VM.InfoMessage(mu.Value, "Do not abort this operation!");
-								VM.ProgressValue = 0;
 								VM.IsIndeterminate = false;
+								VM.ProgressValue = 0;
+								//TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Normal);
+								//TaskbarUtility.SetProgressValue(3,100);
 							}
 							else if (mp.Success)
 							{
@@ -1534,7 +1572,9 @@ namespace ConTeXt_IDE
 									if (percentage <= 100 && percentage >= 0)
 									{
 										VM.IsIndeterminate = false;
-										VM.ProgressValue = (double)Math.Max(0.5d, (double)percentage) ;
+										double val = (double)Math.Max(0.5d, (double)percentage);
+										VM.ProgressValue =  val;
+										TaskbarUtility.SetProgressValue(Math.Max(3,(int)val), 100);
 									}
 								}
 							}
@@ -1915,7 +1955,13 @@ namespace ConTeXt_IDE
 			if (accentColor != null)
 			{
 				setting.Theme = theme;
+				setting.Backdrop = VM.Default.Backdrop ;
 				setting.AccentColor = accentColor.Color;
+
+				//setting.AccentColorLowLow = Colors.Transparent;
+
+				App.MainWindow.SetBackdrop((BackdropType)Enum.Parse(typeof(BackdropType), VM.Default.Backdrop));
+
 				Application.Current.Resources["SystemAccentColor"] = accentColor.Color;
 				Application.Current.Resources["SystemAccentColorLight2"] = setting.AccentColorLow;
 				Application.Current.Resources["SystemAccentColorDark1"] = setting.AccentColorLow.ChangeColorBrightness(0.1f);
@@ -1928,7 +1974,8 @@ namespace ConTeXt_IDE
 			{
 				App.MainWindow.AW.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
 				App.MainWindow.AW.TitleBar.ButtonBackgroundColor = Colors.Transparent;
-				App.MainWindow.AW.TitleBar.ButtonHoverBackgroundColor = setting.AccentColor;
+				App.MainWindow.AW.TitleBar.ButtonHoverBackgroundColor = VM.Default.Backdrop == "Mica" ? Color.FromArgb(50, 125, 125, 125) : setting.AccentColor;
+				App.MainWindow.AW.TitleBar.ButtonHoverForegroundColor = setting.ActualTheme == ApplicationTheme.Light ? Colors.Black : Colors.White;
 				App.MainWindow.AW.TitleBar.ButtonForegroundColor = theme == ElementTheme.Light ? Colors.Black : Colors.White;
 				App.MainWindow.AW.TitleBar.ButtonInactiveForegroundColor = theme == ElementTheme.Light ? Color.FromArgb(255, 50, 50, 50) : Color.FromArgb(255, 200, 200, 200);
 			}
@@ -2063,6 +2110,7 @@ namespace ConTeXt_IDE
 			{
 				VM.IsIndeterminate = false;
 				VM.IsInstalling = true;
+				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Indeterminate);
 
 				VM.InfoMessage($"Downloading Module {module.Name}", "Please wait...");
 				using (WebClient wc = new WebClient())
@@ -2075,11 +2123,16 @@ namespace ConTeXt_IDE
 					}
 
 					bool success = false;
-					wc.DownloadProgressChanged += (a, b) => { VM.ProgressValue = b.ProgressPercentage; };
+					wc.DownloadProgressChanged += (a, b) => { 
+						VM.ProgressValue = b.ProgressPercentage;
+						TaskbarUtility.SetProgressValue(b.ProgressPercentage,100);
+					};
 
 					wc.DownloadFileCompleted += async (a, b) =>
 					{
 						VM.IsIndeterminate = true;
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Indeterminate);
 						VM.InfoMessage($"Installing Module {module.Name}", "Please wait...");
 						success = await InstallModule(module, filepath);
 
@@ -2095,6 +2148,7 @@ namespace ConTeXt_IDE
 						{
 							VM.InfoMessage("Error", $"Module {module.Name} could not be installed.", InfoBarSeverity.Error);
 						}
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
 					};
 					wc.DownloadFileAsync(new System.Uri(module.URL), filepath);
 				}
@@ -2704,14 +2758,28 @@ namespace ConTeXt_IDE
 		private async void Btn_Clear_Click(object sender, RoutedEventArgs e)
 		{
 			VM.IsSaving = true;
+			if (!VM.IsInstalling)
+			{
+				VM.IsIndeterminate = true;
+				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Indeterminate);
+			}
+
 			await VM.ClearProject(VM.CurrentProject);
+
 			VM.IsSaving = false;
+			if (!VM.IsInstalling)
+			{
+				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
+			}
 		}
 
 		private void Btn_CloseError_Click(object sender, RoutedEventArgs e)
 		{
 			VM.IsTeXError = false;
-			VM.IsLoadingBarVisible = false;
+			if (!VM.IsInstalling) {
+				VM.IsLoadingBarVisible = false;
+				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
+			}
 		}
 
 		private void Codewriter_ErrorOccured(object sender, ErrorEventArgs e)
@@ -2871,7 +2939,21 @@ namespace ConTeXt_IDE
 						scale = XamlRoot.RasterizationScale;
 						App.MainWindow.AW.TitleBar.ResetToDefault();
 						App.MainWindow.ResetTitleBar();
-						SetColor();
+						var setting = ((AccentColorSetting)Application.Current.Resources["AccentColorSetting"]);
+						if (App.MainWindow.IsCustomizationSupported)
+						{
+							App.MainWindow.AW.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+							App.MainWindow.AW.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+							App.MainWindow.AW.TitleBar.ButtonHoverBackgroundColor = VM.Default.Backdrop == "Mica" ? Color.FromArgb(50, 125, 125, 125) : setting.AccentColor;
+							App.MainWindow.AW.TitleBar.ButtonHoverForegroundColor = setting.ActualTheme == ApplicationTheme.Light ? Colors.Black : Colors.White;
+							App.MainWindow.AW.TitleBar.ButtonForegroundColor = setting.ActualTheme == ApplicationTheme.Light ? Colors.Black : Colors.White;
+							App.MainWindow.AW.TitleBar.ButtonInactiveForegroundColor = setting.ActualTheme == ApplicationTheme.Light ? Color.FromArgb(255, 50, 50, 50) : Color.FromArgb(255, 200, 200, 200);
+						}
+						else
+						{
+							Application.Current.Resources["WindowCaptionBackground"] = setting.AccentColorLow;
+							Application.Current.Resources["WindowCaptionBackgroundDisabled"] = setting.AccentColorLow;
+						}
 						App.MainWindow.AW.TitleBar.SetDragRectangles(new RectInt32[] { new RectInt32(x, y, width, height) });
 					}
 				}

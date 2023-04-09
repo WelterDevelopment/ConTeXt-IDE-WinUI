@@ -1,4 +1,5 @@
 ﻿using ConTeXt_IDE.Helpers;
+using ConTeXt_IDE.Models;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
@@ -28,6 +29,16 @@ namespace ConTeXt_IDE.Helpers
 			Theme = ElementTheme.Default;
 		}
 
+		public string Backdrop
+		{
+			get => Get("Mica");
+			set
+			{
+				Set(value);
+				AccentColor = AccentColor;
+			}
+		}
+
 		public ElementTheme Theme
 		{
 			get => Get<ElementTheme>();
@@ -38,6 +49,15 @@ namespace ConTeXt_IDE.Helpers
 			}
 		}
 
+		public ApplicationTheme ActualTheme
+		{
+			get => Get<ApplicationTheme>();
+			set
+			{
+				Set(value);
+			}
+		}
+
 		public Color AccentColor
 		{
 			get => Get<Color>();
@@ -45,7 +65,7 @@ namespace ConTeXt_IDE.Helpers
 			{
 				Set(value);
 
-				
+
 
 				float HighFactor = 1;
 				float LowFactor = -1;
@@ -54,10 +74,12 @@ namespace ConTeXt_IDE.Helpers
 					case ElementTheme.Dark:
 						HighFactor = 1;
 						LowFactor = -1;
+						ActualTheme = ApplicationTheme.Dark;
 						break;
 					case ElementTheme.Light:
 						HighFactor = -1;
 						LowFactor = 1;
+						ActualTheme = ApplicationTheme.Light;
 						break;
 					case ElementTheme.Default:
 						var uiSettings = new Windows.UI.ViewManagement.UISettings();
@@ -66,23 +88,43 @@ namespace ConTeXt_IDE.Helpers
 						{
 							HighFactor = 1;
 							LowFactor = -1;
+							ActualTheme = ApplicationTheme.Dark;
 						}
 						else
 						{
 							HighFactor = -1;
 							LowFactor = 1;
+							ActualTheme = ApplicationTheme.Light;
 						}
 						break;
 				}
 
-
-
 				AccentColorHigh = ChangeColorBrightness(value, HighFactor * 0.2f);
-				AccentColorLow = ChangeColorBrightness(value, LowFactor * 0.4f);
-				//AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.4f), 0.9f);
-				AccentColorLowLow = ChangeColorBrightness(value, LowFactor * (LowFactor < 0 ? 0.75f : 0.8f));
+				AccentColorLow = ChangeColorBrightness(value, LowFactor * (LowFactor < 0 ? 0.5f : 0.3f));
+				AccentColorLowLow = ChangeColorBrightness(value, LowFactor * (LowFactor < 0 ? 0.75f : 0.5f));
 				AccentColorLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.6f), 0.9f);
 				AccentColorLowLowLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * 0.8f), 0.9f);
+
+				switch (Backdrop)
+				{
+					case "Mica":
+						AccentColorLowLow = ReduceColorSaturation(ChangeColorBrightness(value, LowFactor * (LowFactor < 0 ? 0.75f : 0.7f)),0.85f);
+						AccentBrushLow = new SolidColorBrush(Colors.Transparent);
+						ApplicationBackgroundBrush = new SolidColorBrush(Colors.Transparent);
+						break;
+					case "Acrylic":
+						AccentBrushLow = new SolidColorBrush(Colors.Transparent);
+						ApplicationBackgroundBrush = ActualTheme == ApplicationTheme.Dark ? new SolidColorBrush(Color.FromArgb(225, 33, 33, 33)) : new SolidColorBrush(Color.FromArgb(220, 245, 245, 245));
+						break;
+					case "Color":
+						AccentBrushLow = new SolidColorBrush(AccentColorLow);
+						ApplicationBackgroundBrush = ActualTheme == ApplicationTheme.Dark ? new SolidColorBrush(Color.FromArgb(247, 33, 33, 33)) : new SolidColorBrush(Color.FromArgb(243, 245, 245, 245));
+						
+						break;
+				}
+				
+
+			
 
 				// Application.Current.Resources["SystemAccentColor"] = value;
 			}
@@ -90,7 +132,9 @@ namespace ConTeXt_IDE.Helpers
 
 		public Color AccentColorHigh { get => Get<Color>(); set => Set(value); }
 		public SolidColorBrush AccentBrushLow { get => Get<SolidColorBrush>(); set => Set(value); }
-		public Color AccentColorLow { get => Get<Color>(); set { Set(value); AccentBrushLow = new(value); } }
+		public SolidColorBrush ApplicationPanelBrush { get => Get<SolidColorBrush>(); set => Set(value); }
+		public SolidColorBrush ApplicationBackgroundBrush { get => Get<SolidColorBrush>(); set => Set(value); }
+		public Color AccentColorLow { get => Get<Color>(); set { Set(value); } }
 		public Color AccentColorLowLow { get => Get<Color>(); set => Set(value); }
 		public Color AccentColorLowLowLow { get => Get<Color>(); set => Set(value); }
 		public Color AccentColorLowLowLowLow { get => Get<Color>(); set => Set(value); }

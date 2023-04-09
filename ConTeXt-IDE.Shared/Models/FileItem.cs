@@ -118,6 +118,8 @@ namespace ConTeXt_IDE.Models
 
 		public bool IsSelected { get => Get(false); set => Set(value); }
 
+		public bool IsOpened { get => Get(false); set => Set(value); }
+
 		public string LastSaveFileContent { get => Get(""); set => Set(value); }
 
 		public ExplorerItemType Type { get => Get(ExplorerItemType.File); set => Set(value); }

@@ -1,0 +1,14 @@
+﻿<Page
+    x:Class="ConTeXt_IDE.PDFWindowViewer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:pdfjs="using:PDFjs.WinUI"
+	mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+	>
+
+	<Grid>
+		<pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="Transparent" RequestedTheme="Dark" Page="{Binding Page, Mode=TwoWay}"  FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader"  ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0" />
+	</Grid>
+</Page>

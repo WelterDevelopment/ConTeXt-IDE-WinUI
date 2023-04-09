@@ -1,4 +1,5 @@
-﻿<Window
+﻿<shared:SystemBackdropWindow
+	xmlns:shared="using:ConTeXt_IDE.Shared"
     x:Class="ConTeXt_IDE.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -24,4 +25,4 @@
 		<Frame Grid.Row="1" Loaded="RootFrame_Loaded" x:FieldModifier="public" x:Name="RootFrame" ></Frame>
 
 	</Grid>
-</Window>
+</shared:SystemBackdropWindow>

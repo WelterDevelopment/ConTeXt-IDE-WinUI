@@ -1,13 +1,18 @@
 \startproduct[prd_presentation]
 \usemodule[present-steps] % modified stepping module
 
-\startnotmode[print]
+\startmode[screen]
 	\environment[env_presentation]
-\stopnotmode
+\stopmode
 
+\startnotmode[screen]
 \startmode[print]
 	\environment[env_script]
 \stopmode
+\startnotmode[print]
+	\environment[env_presentation]
+\stopnotmode
+\stopnotmode
 
 \setvariables[meta][title={Title}, subtitle={Subtitle}, author={Author}, date={\currentdate}]
 
@@ -48,8 +53,10 @@ Replace it with \type{\setupcombinedlist[content][list={section,subsection,subje
 	\startstep
 		{\bfa ! To enable/disable stepping, please enable/disable the mode \quote{screen} !}
 
-		{\bfa ! To print the handout, use the mode \quote{print} !}
+		{\bfa ! To print the handout, use the mode \quote{handout} !}
 
+		{\bfa ! To print the script, use the mode \quote{print} !}
+		
 		STEP ONE. 
 
 		Step.Substep :  \currentstep.\currentsubstep 

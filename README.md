@@ -18,6 +18,19 @@ Bugs and Limitations:
 
 ### Changelog
 
+#### 2.1.1 (2022-06-26)
+- Update to Windows App SDK 1.1.1
+- 2 additional styles ("Materials"): Mica and Acrylic
+- Compiler and installation processes now show a progress bar in the taskbar icon
+- The deviders now look more appealing
+
+#### 2.0.0 (2022-05-08)
+- Added a markdown previewer
+- Added Markdown and CV (inspired from AltaCV) templates
+- You can now use an external pdf viewer (like SumatraPDF)
+- Adaptation of the new Microsoft Office design (margin and rounded corners for the ribbon)
+- The ribbon is now collapsible
+
 #### 1.11.6 (2022-01-29)
 - The app now listens to file system changes, meaning that you can add, remove, rename and edit files outside of the app while the project is open
 - Multi-instancing is now working, so you can open different ConTeXt projects in seperate windows at once

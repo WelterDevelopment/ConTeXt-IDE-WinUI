@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Converters.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RichTextBlockHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\SyncTeXparser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\TaskbarUtility.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThemeHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandList.cs" />
@@ -45,6 +46,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\TemplateSelection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\CommandHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\PDFWindowViewer.xaml.cs">
+      <DependentUpon>PDFWindowViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\SelectFolder.xaml.cs">
       <DependentUpon>SelectFolder.xaml</DependentUpon>
     </Compile>
@@ -54,8 +58,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Views\SelectTemplate.xaml.cs">
       <DependentUpon>SelectTemplate.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)SystemBackdropWindow.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Ribbon.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -66,6 +75,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)Models\MDL2Assets.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Views\PDFWindowViewer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -178,6 +191,9 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Templates\cv\prd_cv.tex">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)About.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="$(MSBuildThisFileDirectory)Templates\projthes\components\c_0_frontpart.tex" />
     <None Include="$(MSBuildThisFileDirectory)Templates\projthes\components\c_1_section1.tex" />

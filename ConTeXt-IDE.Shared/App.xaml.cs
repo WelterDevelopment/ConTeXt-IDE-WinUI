@@ -84,7 +84,7 @@ namespace ConTeXt_IDE
 
 		protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
 		{
-			StartUp();
+			
 
 			AppInstance DefaultAI = AppInstance.FindOrRegisterForKey("MainAppInstance");
 			AppInstance CurrentAI = AppInstance.GetCurrent();
@@ -117,6 +117,8 @@ namespace ConTeXt_IDE
 			{
 				CurrentAI.Activated += AI_Activated;
 			}
+
+			StartUp();
 
 			switch (activation.Data)
 			{

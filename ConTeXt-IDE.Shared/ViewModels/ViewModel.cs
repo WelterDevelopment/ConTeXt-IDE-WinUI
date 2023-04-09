@@ -43,7 +43,7 @@ namespace ConTeXt_IDE.ViewModels
 			}
 		}
 
-		private string rootFile;
+		private string rootFilePath;
 
 		public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
 		public ViewModel()
@@ -181,6 +181,13 @@ namespace ConTeXt_IDE.ViewModels
 
 				
 				OutlineItems.Clear();
+
+				if (value == null)
+				{
+					IsInternalViewerActive = false;
+					IsMarkdownViewerActive = false;
+					return;
+				}
 				if (value?.FileLanguage == "ConTeXt")
 				{
 					//UpdateOutline(value.FileContent);
@@ -369,7 +376,7 @@ namespace ConTeXt_IDE.ViewModels
 						FileItemsTree?.Clear();
 						FileItems?.Clear();
 						watcher?.Dispose();
-						GenerateTreeView(value.Folder, value.RootFile);
+						GenerateTreeView(value.Folder, value.RootFilePath);
 						value.Directory = FileItemsTree;
 						Default.LastActiveProject = value.Name;
 						IsProjectLoaded = true;
@@ -474,9 +481,9 @@ namespace ConTeXt_IDE.ViewModels
 
 		public bool IsError { get => Get(false); set => Set(value); }
 
-		
-		public Thickness RibbonMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set => Set(value); }
-		public CornerRadius RibbonCornerRadius { get => Get(new CornerRadius(Default.RibbonMarginValue)); set => Set(value); }
+		public Thickness InfobarMargin { get => Get(RibbonMargin); set => Set(value); }
+		public Thickness RibbonMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set { Set(value); InfobarMargin = value; } }
+		public CornerRadius RibbonCornerRadius { get => Get(new CornerRadius(Default.RibbonMarginValue*2)); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
 
 		public bool IsIndeterminate { get => Get(true); set { Set(value); } }
@@ -586,7 +593,7 @@ namespace ConTeXt_IDE.ViewModels
 		FileSystemWatcher watcher;
 		public async Task GenerateTreeView(StorageFolder folder, string rootfile = null)
 		{
-			rootFile = rootfile;
+			rootFilePath = rootfile;
 
 			if (folder != null)
 			{
@@ -813,15 +820,21 @@ namespace ConTeXt_IDE.ViewModels
 					if (!filename.StartsWith(".") && !cancelWords.Contains(f.FileType) && !iscompiledpdf)
 					{
 						var fi = new FileItem(f) { File = f, Type = FileItem.ExplorerItemType.File, FileName = filename, IsRoot = false, Level = level };
+
+						fi.IsRoot = fi.File.Path == rootFilePath;
+						if (fi.IsRoot)
+							CurrentRootItem = fi;
+
 						if (level > 0)
-							currFolder.Children.Add(fi);
-						else
 						{
-							fi.IsRoot = fi.FileName == rootFile;
+							currFolder.Children.Add(fi);
 							if (fi.IsRoot)
-								CurrentRootItem = fi;
-							FileItemsTree[0].Children.Add(fi);
+							{
+								currFolder.IsExpanded = true;
+							}
 						}
+						else
+							FileItemsTree[0].Children.Add(fi);
 					}
 				}
 			}
@@ -897,6 +910,7 @@ namespace ConTeXt_IDE.ViewModels
 					{
 						FileItems.Add(file);
 						//await Task.Delay(500); // ObservableCollection.Add() is slow, so setting CurrentFileItem = File will result in an exception because FileItems is still empty. A cleaner approach is needed. 
+						file.IsOpened = true;
 						Log("File " + file.FileName + " opened");
 					}
 
@@ -1007,7 +1021,7 @@ namespace ConTeXt_IDE.ViewModels
 
 				Default.LastActiveProject = proj.Name;
 
-				if (!string.IsNullOrEmpty(CurrentProject?.RootFile))
+				if (!string.IsNullOrEmpty(CurrentProject?.RootFilePath))
 				{
 					//await Task.Delay(1000);
 					if (!Default.StartWithLastOpenFiles && CurrentRootItem != null)

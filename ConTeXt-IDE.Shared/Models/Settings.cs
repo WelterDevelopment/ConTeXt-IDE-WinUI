@@ -13,6 +13,7 @@ using Windows.Graphics;
 using Windows.Storage;
 using Windows.System.Diagnostics;
 using Windows.UI;
+using static ConTeXt_IDE.Shared.SystemBackdropWindow;
 
 namespace ConTeXt_IDE.Models
 {
@@ -195,7 +196,7 @@ namespace ConTeXt_IDE.Models
 		public bool FirstStart { get => Get(true); set => Set(value); }
 		public bool HelpPDFInInternalViewer { get => Get(false); set => Set(value); }
 		public bool InternalViewer { get => Get(true); set => Set(value); }
-		public bool MultiInstance { get => Get(true); set => Set(value); }
+		public bool MultiInstance { get => Get(false); set => Set(value); }
 		public bool ShowLog { get => Get(false); set => Set(value); }
 		public bool ShowCompilerOutput { get => Get(false); set => Set(value); }
 		public bool ShowOutline { get => Get(true); set => Set(value); }
@@ -223,6 +224,7 @@ namespace ConTeXt_IDE.Models
 		public bool FilterFavorites { get => Get(false); set => Set(value); }
 
 		public string AccentColor { get => Get("Default"); set { Set(value); } }
+
 		public string ContextVersion { get => Get(""); set { Set(value); } }
 		public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
 		public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
@@ -243,7 +245,7 @@ namespace ConTeXt_IDE.Models
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }
-		public int RibbonMarginValue { get => Get(5); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value); App.VM.RibbonMargin = new(value, 0, value, value); } } }
+		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value*2); App.VM.RibbonMargin = new(value, 0, value, value); } } }
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{
@@ -256,7 +258,7 @@ namespace ConTeXt_IDE.Models
 			}
 		}
 
-
+		public string Backdrop { get => Get("Mica"); set { Set(value); } }
 
 		public List<CommandGroup> CommandGroups { get => Get(new List<CommandGroup>()); set => Set(value); }
 
@@ -280,6 +282,9 @@ namespace ConTeXt_IDE.Models
 
 		[Newtonsoft.Json.JsonIgnore]
 		public string[] ThemeOption => Enum.GetNames<ElementTheme>();
+
+		[Newtonsoft.Json.JsonIgnore]
+		public string[] BackdropOption => Enum.GetNames<BackdropType>();
 	}
 
 	public static class Serialize
