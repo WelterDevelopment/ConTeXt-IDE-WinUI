@@ -39,7 +39,7 @@
 		</DataTemplate>
 
 		<DataTemplate  x:Key="FileTemplate" x:DataType="models:FileItem">
-			<models:MyTreeViewItem Tapped="FileItemTapped" Margin="0,0,0,0" ToolTipService.ToolTip="{Binding FileName}" >
+			<models:MyTreeViewItem HorizontalAlignment="Left" HorizontalContentAlignment="Left" Tapped="FileItemTapped" Margin="0,0,0,0" ToolTipService.ToolTip="{Binding FileName}" >
 				<models:MyTreeViewItem.ContextFlyout>
 					<MenuFlyout Placement="Bottom">
 						<MenuFlyoutItem Visibility="{Binding  Converter={StaticResource FileTypeToVisibility}, ConverterParameter=context, Mode=OneWay}" IsEnabled="{Binding Source={StaticResource VM}, Path=Default.DistributionInstalled}" x:Name="CompileFlyoutButton" Icon="Play" Click="Compile_Click" Text="Compile"></MenuFlyoutItem>

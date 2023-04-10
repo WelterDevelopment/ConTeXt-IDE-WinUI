@@ -668,7 +668,7 @@ namespace ConTeXt_IDE
 					//var tip = new TeachingTip() { XamlRoot = XamlRoot, Title = fileitem.FileName, PreferredPlacement = TeachingTipPlacementMode.Center, IsLightDismissEnabled = true };
 					Ttp.Title = fileitem.FileName;
 					Ttp.PreferredPlacement = TeachingTipPlacementMode.RightTop;
-					Ttp.Target = (FrameworkElement)e.OriginalSource;
+					Ttp.Target = treeviewitem; // (FrameworkElement)e.OriginalSource;
 					Ttp.IsLightDismissEnabled = true;
 					Ttp.Content = null;
 					var content = new Grid() { Background = new SolidColorBrush(Colors.LightGray) };
