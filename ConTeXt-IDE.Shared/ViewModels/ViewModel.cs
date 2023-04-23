@@ -479,17 +479,20 @@ namespace ConTeXt_IDE.ViewModels
 		public Color SystemAccentColor { get => Get((new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent)); set => Set(value); }
 
 		public bool IsError { get => Get(false); set => Set(value); }
-
-		public Thickness InfobarMargin { get => Get(RibbonMargin); set => Set(value); }
-		public Thickness RibbonMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set { Set(value); InfobarMargin = value; } }
-		public CornerRadius RibbonCornerRadius { get => Get(new CornerRadius(Default.RibbonMarginValue * 2)); set => Set(value); }
+        public Thickness Margin_SettingsButton { get => Get(new Thickness(0)); set => Set(value); }
+        public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue,0,0,0)); set => Set(value); }
+		public Thickness Margin_Ribbon { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set { Set(value); InfobarMargin = value; } }
+		public CornerRadius CornerRadius_Ribbon { get => Get(new CornerRadius(Default.RibbonMarginValue*2)); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
 
 		public bool IsIndeterminate { get => Get(true); set { Set(value); } }
 
 		public double ProgressValue { get => Get(0d); set => Set(value); }
 
-		public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
+        public bool IsUsingTouch { get => Get(false); set { Set(value); SplitterWidth = value ? 5 : 3; PlacementMode = value ? NumberBoxSpinButtonPlacementMode.Inline : NumberBoxSpinButtonPlacementMode.Compact; } }
+        public NumberBoxSpinButtonPlacementMode PlacementMode { get => Get(NumberBoxSpinButtonPlacementMode.Compact); set { Set(value); } }
+        public int SplitterWidth { get => Get(3); set { Set(value); } }
+        public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
 
 		public bool IsInternalViewerActive { get => Get(false); set => Set(value); }
 

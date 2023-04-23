@@ -112,11 +112,11 @@ namespace ConTeXt_IDE.Models
 				{
 					settings.HelpItemList =
 					new ObservableCollection<HelpItem>()
-									{
-										new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
-										new HelpItem() { ID = "Environments", Title = "ConTeXt Environments", Text = "Select any number of environments (usually one). Use this compiler parameter *instead* of the corresponding \n'\\environment[<EnvironmentName>]'\n commands.", Shown = false },
-										new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
-									};
+						{
+							new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
+							new HelpItem() { ID = "Environments", Title = "ConTeXt Environments", Text = "Select any number of environments (usually one). Use this compiler parameter *instead* of the corresponding \n'\\environment[<EnvironmentName>]'\n commands.", Shown = false },
+							new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
+						};
 				}
 				if (settings.PDFViewerList.Count == 0)
 				{
@@ -241,7 +241,7 @@ namespace ConTeXt_IDE.Models
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }
-		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value * 2); App.VM.RibbonMargin = new(value, 0, value, value); } } }
+		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value*2); App.VM.RibbonMargin = new(value, 0, value, value); } } }
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{

@@ -38,7 +38,8 @@ namespace ConTeXt_IDE
 			AW = GetAppWindowForCurrentWindow();
 			AW.Title = "ConTeXt IDE";
 			AW.Closing += AW_Closing;
-			AW.SetIcon(Path.Combine(Package.Current.Installed­Location.Path, @"Assets\", @"SquareLogo.ico"));
+			string IconPath = Path.Combine(Package.Current.Installed­Location.Path, @"Assets", @"SquareLogo.ico");
+			AW.SetIcon(IconPath);
 			//AW.SetPresenter(VM.Default.LastPresenter);
 
 			if (AW.Presenter is OverlappedPresenter OP)

@@ -9,7 +9,39 @@
 		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
 		<!--<PublishProfile>win10-$(Platform).pubxml</PublishProfile> -->
 		<UseWinUI>true</UseWinUI>
+		<PlatformTarget>ARM64</PlatformTarget>
+		<ApplicationIcon>Square44x44Logo.altform-unplated_targetsize-256.ico</ApplicationIcon>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+	  <Optimize>False</Optimize>
+	  <WarningLevel>2</WarningLevel>
+	  <NoWarn>CS1998;CS4014</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+	  <Optimize>False</Optimize>
+	  <WarningLevel>2</WarningLevel>
+	  <NoWarn>CS1998;CS4014</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm64'">
+	  <Optimize>False</Optimize>
+	  <WarningLevel>2</WarningLevel>
+	  <NoWarn>CS1998;CS4014</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+	  <WarningLevel>2</WarningLevel>
+	  <NoWarn>CS1998;CS4014</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+	  <WarningLevel>2</WarningLevel>
+	  <NoWarn>CS1998;CS4014</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+	  <WarningLevel>2</WarningLevel>
+	  <NoWarn>CS1998;CS4014</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Content Include="Square44x44Logo.altform-unplated_targetsize-256.ico" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />

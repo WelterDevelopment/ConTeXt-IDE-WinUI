@@ -10,7 +10,7 @@
     xmlns:models="using:ConTeXt_IDE.Models"
     xmlns:pdfjs="using:PDFjs.WinUI"
     mc:Ignorable="d" 
-	DataContext="{x:Bind VM}"
+	DataContext="{x:Bind VM}" PointerPressed="PagePointerPressed"
 	Loaded="Page_Loaded" 
 	RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}, Mode=OneWay}" x:DefaultBindMode="OneWay"  Background="Transparent">
 	<Page.Resources>
@@ -214,7 +214,7 @@
 			<TabView.TabStripHeader>
 				<StackPanel Style="{StaticResource HorizontalStack}" Background="Transparent" VerticalAlignment="Stretch" Height="28" Margin="4,0,4,-4" Spacing="0" x:Name="TabStripHeader" >
 
-					<Button VerticalAlignment="Stretch" Padding="2"  MinWidth="28"  Background="Transparent">
+					<Button VerticalAlignment="Stretch" Padding="2"  Margin="{Binding Margin_SettingsButton}" MinWidth="28"  Background="Transparent">
 						<Button.Content>
 							<!--<BitmapIcon Foreground="{ThemeResource ForegroundColor}" UriSource="ms-appx:///Assets/SquareLogo.png" ></BitmapIcon>-->
 							<!--<Image  Source="ms-appx:///Assets/SquareLogo.png"/>-->
@@ -352,7 +352,7 @@
 						</StackPanel>
 					</TabViewItem.Header>
 					<Grid>
-						<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding RibbonCornerRadius}" Margin="{Binding RibbonMargin}"   >
+						<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding CornerRadius_Ribbon}" Margin="{Binding Margin_Ribbon}"   >
 						<StackPanel Style="{StaticResource RibbonContent}">
 							<SplitButton Visibility="{Binding IsFileItemLoaded}" x:Name="Undo" Click="Undo_Click" ToolTipService.ToolTip="Undo" IsEnabled="{Binding Codewriter.CanUndo}" >
 								<SplitButton.Content>
@@ -569,14 +569,14 @@
 							<TextBlock  Text="Editor"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
-					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding RibbonCornerRadius}" Margin="{Binding RibbonMargin}"  >
+					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding CornerRadius_Ribbon}" Margin="{Binding Margin_Ribbon}"  >
 						<StackPanel Style="{StaticResource RibbonContent}">
 
 							<FontIcon Glyph="&#xE8E9;" ></FontIcon>
-							<NumberBox PointerWheelChanged="Tbx_FontSize_Wheel" Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" SpinButtonPlacementMode="Compact" ></NumberBox>
+							<NumberBox PointerWheelChanged="Tbx_FontSize_Wheel" Value="{Binding Default.FontSize, Mode=TwoWay}" Minimum="6" Maximum="100" SmallChange="1" LargeChange="4" SpinButtonPlacementMode="{Binding PlacementMode}" ></NumberBox>
 
 							<FontIcon Margin="6,0,0,0" Glyph="&#xE7FD;" ></FontIcon>
-							<NumberBox PointerWheelChanged="Tbx_TabLength_Wheel" Value="{Binding Default.TabLength, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Compact" ></NumberBox>
+							<NumberBox PointerWheelChanged="Tbx_TabLength_Wheel" Value="{Binding Default.TabLength, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="{Binding PlacementMode}" ></NumberBox>
 
 							<ToggleButton IsChecked="{Binding Default.LineNumbers, Mode=TwoWay}">
 								<ToggleButton.Content>
@@ -756,7 +756,7 @@
 							<TextBlock  Text="Output"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
-					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding RibbonCornerRadius}" Margin="{Binding RibbonMargin}" >
+					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding CornerRadius_Ribbon}" Margin="{Binding Margin_Ribbon}" >
 						<StackPanel Style="{StaticResource RibbonContent}">
 							<ToggleButton IsChecked="{Binding Default.AutoOpenPDF, Mode=TwoWay}" >
 								<ToggleButton.Content>
@@ -861,7 +861,7 @@
 							<TextBlock  Text="View"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
-					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding RibbonCornerRadius}" Margin="{Binding RibbonMargin}"  >
+					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding CornerRadius_Ribbon}" Margin="{Binding Margin_Ribbon}"  >
 						<StackPanel Style="{StaticResource RibbonContent}">
 							<FontIcon  Glyph="&#xE793;"></FontIcon>
 							<ComboBox x:Name="CbB_Theme" CornerRadius="{StaticResource CornerRadiusRight}" ItemsSource="{Binding Default.ThemeOption}" SelectionChangedTrigger="Always" DropDownClosed="CbB_Theme_SelectionChanged" SelectedItem="{Binding Default.Theme, Mode=TwoWay}"  FontFamily="Segoe UI"  >
@@ -924,7 +924,7 @@
 							</ComboBox>
 
 							<FontIcon Margin="6,0,0,0" Glyph="&#xF577;" ></FontIcon>
-							<NumberBox PointerWheelChanged="Nbx_RibbonMarginValue_Wheel" Value="{Binding Default.RibbonMarginValue, Mode=TwoWay}" Minimum="0" Maximum="6" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="Inline" ></NumberBox>
+							<NumberBox PointerWheelChanged="Nbx_RibbonMarginValue_Wheel" Value="{Binding Default.RibbonMarginValue, Mode=TwoWay}" Minimum="0" Maximum="6" SmallChange="1" LargeChange="1" SpinButtonPlacementMode="{Binding PlacementMode}" ></NumberBox>
 
 							<Border Style="{StaticResource Separator}" ></Border>
 
@@ -999,7 +999,7 @@
 							<TextBlock  Text="ConTeXt"></TextBlock>
 						</StackPanel>
 					</TabViewItem.Header>
-					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding RibbonCornerRadius}" Margin="{Binding RibbonMargin}" >
+					<ScrollViewer Style="{StaticResource RibbonView}" CornerRadius="{Binding CornerRadius_Ribbon}" Margin="{Binding Margin_Ribbon}" >
 						<StackPanel Style="{StaticResource RibbonContent}">
 							<StackPanel Style="{StaticResource HorizontalStack}" Spacing="0">
 								<DropDownButton  ToolTipService.ToolTip="Open a Manual" CornerRadius="{StaticResource CornerRadiusLeft}">
@@ -1117,7 +1117,7 @@
 			</TabView.TabItems>
 		</TabView>
 
-		<InfoBar BorderThickness="0"  CornerRadius="{Binding RibbonCornerRadius}" Margin="{Binding InfobarMargin}" Grid.Row="1" Visibility="{Binding InfoOpen}" IsOpen="{Binding InfoOpen, Mode=TwoWay}" Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
+		<InfoBar BorderThickness="0"  CornerRadius="{Binding CornerRadius_Ribbon}" Margin="{Binding InfobarMargin}" Grid.Row="1" Visibility="{Binding InfoOpen}" IsOpen="{Binding InfoOpen, Mode=TwoWay}" Severity="{Binding InfoSeverity, Mode=OneWay}"    Title="{Binding InfoTitle, Mode=OneWay}"    Message="{Binding InfoText, Mode=OneWay}" />
 
 		<Grid x:Name="ApplicationGrid" Grid.Row="2" Background="{Binding ApplicationBackgroundBrush, Source={StaticResource AccentColorSetting}}" >
 			<Grid.BackgroundTransition>
@@ -1167,7 +1167,7 @@
 						</TreeView>
 					</Grid>
 
-					<toolkit:GridSplitter  Style="{StaticResource RowSplitter}" Margin="12,4,8,4" Grid.Row="1"  Visibility="{Binding Default.ShowOutline}"/>
+                    <toolkit:GridSplitter Style="{StaticResource RowSplitter}" MinHeight="{Binding SplitterWidth}" Margin="12,4,8,4" Grid.Row="1"  Visibility="{Binding Default.ShowOutline}"/>
 
 					<Grid x:Name="ProjectsGridOutline" Grid.Row="2" Style="{StaticResource GridCell}" Visibility="{Binding Default.ShowOutline}">
 						<Grid.RowDefinitions>
@@ -1215,7 +1215,7 @@
 						</ListView>
 					</Grid>
 				</Grid>
-				<toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" Grid.Column="1"/>
+                <toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" MinWidth="{Binding SplitterWidth}" Grid.Column="1"/>
 				<Grid x:Name="MainGrid"  Grid.Column="2" >
 					<Grid.RowDefinitions>
 						<RowDefinition x:Name="IDEGridRow" Height="2*"></RowDefinition>
@@ -1314,7 +1314,7 @@
 									</ResourceDictionary>
 								</TabView.Resources>
 								<TabView.TabStripHeader>
-									<Grid Width="{Binding RibbonMargin}"></Grid>
+									<Grid Width="{Binding Margin_Ribbon}"></Grid>
 								</TabView.TabStripHeader>
 
 								<TabView.TabStripFooter>
@@ -1369,7 +1369,7 @@
 									<RowDefinition Height="Auto" />
 								</Grid.RowDefinitions>
 								<Grid  >
-									<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" CornerRadius="{Binding RibbonCornerRadius}" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" DoubleClicked="Codewriter_DoubleClicked" Initialized="Codewriter_Initialized" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay}" TabLength="{Binding Default.TabLength}" Background="{x:Bind CW_Background}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Language="{Binding CurrentFileItem.Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers}" ShowScrollbars="{Binding Default.ShowScrollBars}" ShowLineMarkers="{Binding Default.LineMarkers}" ShowControlCharacters="{Binding Default.ControlCharacters}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers}" IsWrappingEnabled="{Binding Default.TextWrapping}" IsFoldingEnabled="{Binding Default.CodeFolding}" Text="{Binding CurrentFileItem.FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentFileItem.CurrentLine, Mode=TwoWay}" EditActionHistory="{Binding CurrentFileItem.EditActionHistory}" ></codeeditor:CodeWriter>
+									<codeeditor:CodeWriter Grid.Row="0" x:Name="Codewriter" CornerRadius="{Binding CornerRadius_Ribbon}" Loaded="Codewriter_Loaded" InfoMessage="Codewriter_InfoMessage" ErrorOccured="Codewriter_ErrorOccured" TextChanged="Codewriter_TextChanged" Initialized="Codewriter_Initialized" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" FontSize="{Binding Default.FontSize, Mode=TwoWay}" TabLength="{Binding Default.TabLength}" Background="{x:Bind CW_Background}" FontFamily="Consolas" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Language="{Binding CurrentFileItem.Language, Mode=TwoWay}" ShowLineNumbers="{Binding Default.LineNumbers}" ShowScrollbars="{Binding Default.ShowScrollBars}" ShowLineMarkers="{Binding Default.LineMarkers}" ShowControlCharacters="{Binding Default.ControlCharacters}" ShowScrollbarMarkers="{Binding Default.ScrollbarMarkers}" IsWrappingEnabled="{Binding Default.TextWrapping}" IsFoldingEnabled="{Binding Default.CodeFolding}" Text="{Binding CurrentFileItem.FileContent, Mode=TwoWay}" CurrentLine="{Binding CurrentFileItem.CurrentLine, Mode=TwoWay}" EditActionHistory="{Binding CurrentFileItem.EditActionHistory}" ></codeeditor:CodeWriter>
 								</Grid>
 								<Grid  Grid.Row="1" MaxHeight="24" Padding="2">
 									<Grid.ColumnDefinitions>
@@ -1437,15 +1437,12 @@
 							</Grid>
 
 						</Grid>
-						<toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" Grid.Column="1"  Visibility="{Binding Default.InternalViewer}"/>
+                        <toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" MinWidth="{Binding SplitterWidth}" Grid.Column="1"  Visibility="{Binding Default.InternalViewer}"/>
 						<Grid x:Name="ViewerGrid" Grid.Column="2" Visibility="{Binding Default.InternalViewer}" Style="{StaticResource GridCell}" Padding="0" >
-							<Grid.BackgroundTransition>
-								<BrushTransition />
-							</Grid.BackgroundTransition>
-							
-
-
-							<pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="Transparent" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Page="{Binding Page, Mode=TwoWay}" SyncTeXRequested="PDFjsViewer_SyncTeXRequested" FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0" >
+                            <Grid.BackgroundTransition>
+                                <BrushTransition />
+                            </Grid.BackgroundTransition>
+                            <pdfjs:PDFjsViewer Visibility="{Binding IsInternalViewerActive}" Background="Transparent" RequestedTheme="{Binding Default.Theme, Converter={StaticResource StringToTheme}}" Page="{Binding Page, Mode=TwoWay}" SyncTeXRequested="PDFjsViewer_SyncTeXRequested" FocusVisualMargin="0" FocusVisualPrimaryBrush="Transparent" FocusVisualPrimaryThickness="0" FocusVisualSecondaryBrush="Transparent"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch"  x:FieldModifier="public"  x:Name="PDFReader" Loaded="PDFReader_Loaded" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.IsZoomChainingEnabled="False" ScrollViewer.IsScrollInertiaEnabled="False" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  Margin="0" >
 								<!--It seems that a WebView cannot be animated-->
 								<!--<animations:Implicit.ShowAnimations>
 								<animations:TranslationAnimation Duration="0:0:0.25" Delay="0:0:0.25" EasingMode="EaseInOut" EasingType="Quadratic" From="50, 0, 0" To="0" />
@@ -1468,7 +1465,7 @@
 							</ScrollViewer>
 						</Grid>
 					</Grid>
-					<toolkit:GridSplitter Style="{StaticResource RowSplitter}" Margin="8,4,12,4" Grid.Row="1" Visibility="{Binding Default.ShowLog}"/>
+                    <toolkit:GridSplitter Style="{StaticResource RowSplitter}" MinHeight="{Binding SplitterWidth}" Margin="8,4,12,4" Grid.Row="1" Visibility="{Binding Default.ShowLog}"/>
 
 					<Grid Tag="LogGrid" Grid.Row="2" Visibility="{Binding Default.ShowLog}" Style="{StaticResource GridCell}">
 						<Grid.BackgroundTransition>
