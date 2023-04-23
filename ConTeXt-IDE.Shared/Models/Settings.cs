@@ -45,9 +45,7 @@ namespace ConTeXt_IDE.Models
 			//			App.VM?.Log(ex.Message);
 			//	}
 			//};
-			}
-
-		
+		}
 
 		public static Settings FromJson(string json) => JsonConvert.DeserializeObject<Settings>(json);
 
@@ -94,13 +92,11 @@ namespace ConTeXt_IDE.Models
 					settings = FromJson(json);
 				}
 
-			
-
 				if (settings.CommandFavorites.Count == 0)
 				{
 					settings.CommandFavorites =
 					new ObservableCollection<CommandFavorite>()
-					{ 
+					{
 					new(@"\startsection"), new(@"\startalignment"), new(@"\setuplayout"), new(@"\setuppapersize"), new(@"\starttext"), new(@"\startfrontmatter"), new(@"\startbodymatter"), new(@"\startappendices"), new(@"\startbackmatter"),
 					new(@"\startframed"), new(@"\setupbodyfont"), new(@"\setupfooter"), new(@"\setupheader"),  new(@"\setuphead"),  new(@"\setupcaptions"), new(@"\setupcombinations"), new(@"\setupinteraction"), new(@"\placebookmarks"), new(@"\setuplist"), new(@"\environment"),  new(@"\startenvironment"), new(@"\product"),  new(@"\startproduct"), new(@"\component"),  new(@"\startcomponent"), new(@"\cite"), new(@"\setupTABLE"),
 					};
@@ -117,9 +113,9 @@ namespace ConTeXt_IDE.Models
 					settings.HelpItemList =
 					new ObservableCollection<HelpItem>()
 									{
-																												new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
-																												new HelpItem() { ID = "Environments", Title = "ConTeXt Environments", Text = "Select any number of environments (usually one). Use this compiler parameter *instead* of the corresponding \n'\\environment[<EnvironmentName>]'\n commands.", Shown = false },
-																												new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
+										new HelpItem() { ID = "Modes", Title = "ConTeXt Modes", Text = "Select any number of modes. They will activate the corresponding \n'\\startmode[<ModeName>] ... \\stopmode'\n environments.", Shown = false },
+										new HelpItem() { ID = "Environments", Title = "ConTeXt Environments", Text = "Select any number of environments (usually one). Use this compiler parameter *instead* of the corresponding \n'\\environment[<EnvironmentName>]'\n commands.", Shown = false },
+										new HelpItem() { ID = "AddProject", Title = "Add a Project", Text = "Click this button to open an existing project folder or to create a new project folder from a template.", Shown = false },
 									};
 				}
 				if (settings.PDFViewerList.Count == 0)
@@ -127,7 +123,7 @@ namespace ConTeXt_IDE.Models
 					settings.CurrentPDFViewer = new("Default");
 					settings.PDFViewerList.Add(settings.CurrentPDFViewer);
 				}
-				settings.CurrentPDFViewer = settings.PDFViewerList.FirstOrDefault(x=>x.Name == settings.CurrentPDFViewer.Name); // Ensure that the selected object is not a new object and is actually from within the collection
+				settings.CurrentPDFViewer = settings.PDFViewerList.FirstOrDefault(x => x.Name == settings.CurrentPDFViewer.Name); // Ensure that the selected object is not a new object and is actually from within the collection
 
 				if (settings.InstalledContextModules.Count == 0)
 				{
@@ -150,7 +146,7 @@ namespace ConTeXt_IDE.Models
 
 						new() { Token = Token.Key, Color = Color.FromArgb(255, 140, 210, 150) },
 
-						
+
 						new() { Token = Token.Reference, Color = Color.FromArgb(255, 180, 140, 40) },
 						new() { Token = Token.Math, Color = Color.FromArgb(255, 220, 160, 60) },
 
@@ -160,11 +156,9 @@ namespace ConTeXt_IDE.Models
 
 						new() { Token = Token.Keyword, Color = Color.FromArgb(255, 40, 120, 240) },
 						new() { Token = Token.String, Color = Color.FromArgb(255, 235, 120, 70) },
-						
+
 					};
 				}
-
-				
 
 				settings.PropertyChanged += (o, a) =>
 				{
@@ -217,7 +211,7 @@ namespace ConTeXt_IDE.Models
 		public bool TextWrapping { get => Get(false); set => Set(value); }
 		public bool LineNumbers { get => Get(true); set => Set(value); }
 		public bool LineMarkers { get => Get(true); set => Set(value); }
-		public bool ShowScrollBars { get => Get(false); set => Set(value); }
+		public bool ShowScrollBars { get => Get(true); set => Set(value); }
 		public bool ScrollbarMarkers { get => Get(true); set => Set(value); }
 		public bool CodeFolding { get => Get(true); set => Set(value); }
 		public bool ControlCharacters { get => Get(false); set => Set(value); }
@@ -229,15 +223,17 @@ namespace ConTeXt_IDE.Models
 		public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
 		public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
 		public string LastActiveProject { get => Get(""); set => Set(value); }
-		public RectInt32 LastSize {
-			get => Get(new RectInt32(24,24,1600,800)); 
-			set {
+		public RectInt32 LastSize
+		{
+			get => Get(new RectInt32(24, 24, 1600, 800));
+			set
+			{
 				value.X = Math.Max(0, value.X); // Ensure that the Window is actually visible
 				value.Y = Math.Max(0, value.Y);
 				value.Width = Math.Max(854, value.Width);// Ensure that the Window starts with a reasonable minimum size
 				value.Height = Math.Max(480, value.Height);
-				Set(value); 
-			} 
+				Set(value);
+			}
 		}
 
 		public AppWindowPresenterKind LastPresenter { get => Get(AppWindowPresenterKind.Default); set => Set(value); }
@@ -245,7 +241,7 @@ namespace ConTeXt_IDE.Models
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }
-		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value*2); App.VM.RibbonMargin = new(value, 0, value, value); } } }
+		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value * 2); App.VM.RibbonMargin = new(value, 0, value, value); } } }
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{
@@ -265,20 +261,23 @@ namespace ConTeXt_IDE.Models
 		public ObservableCollection<CommandFavorite> CommandFavorites { get => Get(new ObservableCollection<CommandFavorite>()); set => Set(value); }
 
 		public List<string> InstalledContextModules { get => Get(new List<string>()); set => Set(value); }
-		
+
 
 		public ObservableCollection<Project> ProjectList { get => Get(new ObservableCollection<Project>()); set => Set(value); }
 
 		public PDFViewer CurrentPDFViewer { get => Get(new PDFViewer()); set => Set(value); }
 
 		public ObservableCollection<PDFViewer> PDFViewerList { get => Get(new ObservableCollection<PDFViewer>()); set => Set(value); }
-		
-		public ObservableCollection<HelpItem> HelpItemList { get => Get(new ObservableCollection<HelpItem>()); set => Set(value); }
-		public ObservableCollection<TokenDefinition> TokenColorDefinitions { get => Get(new ObservableCollection<TokenDefinition>()
-		{
-			
 
-		}); set => Set(value); }
+		public ObservableCollection<HelpItem> HelpItemList { get => Get(new ObservableCollection<HelpItem>()); set => Set(value); }
+		public ObservableCollection<TokenDefinition> TokenColorDefinitions
+		{
+			get => Get(new ObservableCollection<TokenDefinition>()
+			{
+
+
+			}); set => Set(value);
+		}
 
 		[Newtonsoft.Json.JsonIgnore]
 		public string[] ThemeOption => Enum.GetNames<ElementTheme>();

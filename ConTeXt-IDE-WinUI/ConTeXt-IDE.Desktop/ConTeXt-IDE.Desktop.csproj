@@ -27,6 +27,6 @@
 		<ProjectReference Include="..\..\..\PDFjs.WinUI\PDFjs.WinUI\PDFjs.WinUI.csproj" />
 	</ItemGroup>
 
-	<Import Project="..\..\..\..\..\..\..\ConTeXt-IDE-WinUI\ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems" Label="Shared" />
+	<Import Project="..\..\..\ConTeXt-IDE-WinUI\ConTeXt-IDE.Shared\ConTeXt-IDE.Shared.projitems" Label="Shared" />
 
 </Project>

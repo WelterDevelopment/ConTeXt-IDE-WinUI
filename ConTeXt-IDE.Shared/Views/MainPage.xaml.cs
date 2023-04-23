@@ -6,12 +6,10 @@ using ConTeXt_IDE.Shared.Helpers;
 using ConTeXt_IDE.Shared.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -41,8 +39,6 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
-using Windows.UI.UIAutomation;
-using Windows.UI.WindowManagement;
 using static ConTeXt_IDE.Shared.SystemBackdropWindow;
 using AppWindow = Windows.UI.WindowManagement.AppWindow;
 
@@ -206,7 +202,7 @@ namespace ConTeXt_IDE
 
 		private async void Codewriter_Loaded(object sender, RoutedEventArgs e)
 		{
-			CodeWriter cw = sender as CodeWriter;
+			CodeWriter cw = sender as CodeWriter; 
 
 			VM.Codewriter = cw;
 
@@ -2590,8 +2586,6 @@ namespace ConTeXt_IDE
 					});
 				});
 				
-					
-				
 			}
 			catch (Exception ex)
 			{
@@ -3082,6 +3076,15 @@ namespace ConTeXt_IDE
 		private void Tbn_ShowOutline_Checked(object sender, RoutedEventArgs e)
 		{
 			VM.UpdateOutline(Codewriter.Lines.ToList(),true);
+		}
+
+		private void Codewriter_DoubleClicked(object sender, EventArgs e)
+		{
+			string text = Codewriter.SelectedText;
+			if (text.StartsWith(@"\"))
+			{
+
+			}
 		}
 	}
 }
