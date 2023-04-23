@@ -6,6 +6,7 @@ using ConTeXt_IDE.Shared.Helpers;
 using ConTeXt_IDE.Shared.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -637,6 +638,11 @@ namespace ConTeXt_IDE
 			}
 		}
 
+		private void PagePointerPressed(object sender, PointerRoutedEventArgs e)
+		{
+			VM.IsUsingTouch = e.Pointer.PointerDeviceType == PointerDeviceType.Touch | e.Pointer.PointerDeviceType == PointerDeviceType.Pen;
+		}
+
 		private async void FileDrop(DragEventArgs e)
 		{
 			if (e.DataView.Contains(StandardDataFormats.StorageItems))
@@ -1048,6 +1054,10 @@ namespace ConTeXt_IDE
 			else if (Directory.Exists(VM.Default.ContextDistributionPath + @"\tex\texmf-mswin"))
 			{
 				return @"\texmf-mswin";
+			}
+			else if (Directory.Exists(VM.Default.ContextDistributionPath + @"\tex\texmf-windows-arm64"))
+			{
+				return @"\texmf-windows-arm64";
 			}
 			else
 				return @"\texmf-mswin";
