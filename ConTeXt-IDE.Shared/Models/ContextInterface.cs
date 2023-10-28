@@ -372,7 +372,7 @@ namespace ConTeXt_IDE.Models
 	{
 		public string Name { get => Get(""); set => Set(value); }
 
-		public bool IsSelected { get => Get(true); set { Set(value); App.VM?.Default?.SaveSettings(); } }
+		public bool IsSelected { get => Get(true); set { Set(value); } }
 
 	}
 }

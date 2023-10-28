@@ -428,7 +428,7 @@
 		</Setter>
 	</Style>-->
 
-	<Style TargetType="local:TabViewItem">
+	<!--<Style TargetType="local:TabViewItem">
 		<Setter Property="Background" Value="{ThemeResource TabViewItemHeaderBackground}" />
 		<Setter Property="HorizontalContentAlignment" Value="Left"/>
 		<Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
@@ -790,10 +790,10 @@
                                         HighContrastAdjustment="None" />
 							</Viewbox>
 
-							<!-- If we template bind the ContentPresenter's Content property to the TabViewItem.Header property
+							--><!-- If we template bind the ContentPresenter's Content property to the TabViewItem.Header property
                                  we unfortunately run into the following issue if the header is [null] or empty:
                                  The TabViewItem.Content property will be implictly bound to the Content property of the ContentPresenter.
-                                 To prevent this, we explicitly set a default empty content here and update the content in code behind. -->
+                                 To prevent this, we explicitly set a default empty content here and update the content in code behind. --><!--
 							<ContentPresenter x:Name="ContentPresenter"
                                 Grid.Column="1"
                                 HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -820,5 +820,5 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
-	</Style>
+	</Style>-->
 </ResourceDictionary>

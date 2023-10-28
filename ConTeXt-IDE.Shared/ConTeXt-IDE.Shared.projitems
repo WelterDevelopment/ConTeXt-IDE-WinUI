@@ -26,7 +26,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextCommandOption.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\ContextModule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Languages.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\PDFViewer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Parameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Project.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -41,7 +42,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Mode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\MyTreeViewItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\OutlineItem.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Project.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\PDFViewer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\TemplateSelection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\CommandHandler.cs" />

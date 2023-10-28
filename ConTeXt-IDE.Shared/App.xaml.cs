@@ -25,7 +25,7 @@ namespace ConTeXt_IDE
 	//private Mutex _mutex;
 	//bool createdNew;
 
-	public static MainPage MainPage;
+	
 
 	public App()
 	{
@@ -34,6 +34,7 @@ namespace ConTeXt_IDE
 		this.InitializeComponent();
 		UnhandledException += App_UnhandledException;
 		var uiSettings = new UISettings();
+			
 		var defaultthemecolor = uiSettings.GetColorValue(UIColorType.Background);
 
 		if (Settings.Default.Theme == "Light")
@@ -85,6 +86,8 @@ namespace ConTeXt_IDE
 	 AppInstance CurrentAI = AppInstance.GetCurrent();
 	 var activation = CurrentAI.GetActivatedEventArgs();
 
+  StartUp();
+
 	 if (DefaultAI != CurrentAI)
 	 {
 		if (!VM.Default.MultiInstance)
@@ -112,7 +115,7 @@ namespace ConTeXt_IDE
 		CurrentAI.Activated += AI_Activated;
 	 }
 
-	 StartUp();
+	 
 
 	 switch (activation.Data)
 	 {

@@ -1,5 +1,5 @@
 ﻿using CodeEditorControl_WinUI;
-using CommunityToolkit.WinUI.UI.Controls;
+using CommunityToolkit.WinUI.Controls;
 using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
 using ConTeXt_IDE.Shared.Helpers;
@@ -7,7 +7,6 @@ using ConTeXt_IDE.Shared.Models;
 using ConTeXt_IDE.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Input;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -36,6 +35,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
+using Windows.Media.Protection.PlayReady;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
@@ -57,7 +57,7 @@ namespace ConTeXt_IDE
 			try
 			{
 				InitializeComponent();
-				App.MainPage = this;
+				VM.MainPage = this;
 				// Listen to the Settings --> Update the fiddly docking manager
 				//App.m_window.SetTitleBar(TabStripFooter);
 				VM.Default.PropertyChanged += Default_PropertyChanged;
@@ -190,7 +190,7 @@ namespace ConTeXt_IDE
 					storageFile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///About.md"));
 				}
 
-			(sender as MarkdownTextBlock).Text = await File.ReadAllTextAsync(storageFile.Path);
+			(sender as TextBlock).Text = await File.ReadAllTextAsync(storageFile.Path);
 			}
 			catch (Exception ex)
 			{
@@ -214,6 +214,7 @@ namespace ConTeXt_IDE
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }) && cw.Language.Name == "ConTeXt")
 				cw.Action_Add(MenuCompile);
 
+			if (VM.CurrentProject != null)
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX && cw.Language.Name == "ConTeXt")
 				cw.Action_Add(MenuSyncTeX);
 
@@ -675,7 +676,7 @@ namespace ConTeXt_IDE
 					Ttp.IsLightDismissEnabled = true;
 					Ttp.Content = null;
 					var content = new Grid() { Background = new SolidColorBrush(Colors.LightGray) };
-					content.Children.Add(new Image() { Source = await LoadImage((StorageFile)fileitem.File), });
+					content.Children.Add(new Image() { Source = await LoadImage((StorageFile)fileitem.File, type), });
 					Ttp.HeroContent = content;
 					Ttp.HeroContentPlacement = TeachingTipHeroContentPlacementMode.Bottom;
 					//RootGrid.Children.Add(tip);
@@ -696,10 +697,11 @@ namespace ConTeXt_IDE
 		}
 
 
-		private void Tbv_PointerReleased(object sender, PointerRoutedEventArgs e)
+		private void Tbv_PointerPressed(object sender, PointerRoutedEventArgs e)
 		{
 			// ToDo: This workaround to collapse the currently selected ribbon item is the hackiest of hacks, needs better logic
 			FrameworkElement item = sender as FrameworkElement;
+		
 			if (string.Compare((MainRibbon.SelectedItem as TabViewItem)?.Tag as string, item?.Tag as string) == 0)
 			{
 				MainRibbon.SelectedIndex = -1;
@@ -707,12 +709,18 @@ namespace ConTeXt_IDE
 			}
 			
 		}
-			private static async Task<BitmapImage> LoadImage(StorageFile file)
+			private static async Task<ImageSource> LoadImage(StorageFile file, string type)
 		{
-			BitmapImage bitmapImage = new BitmapImage();
+			ImageSource image = null;
 			FileRandomAccessStream stream = (FileRandomAccessStream)await file.OpenAsync(FileAccessMode.Read);
-			bitmapImage.SetSource(stream);
-			return bitmapImage;
+			switch (type)
+			{
+				case ".svg": SvgImageSource svgsource = new(); svgsource.RasterizePixelWidth = 400; svgsource.SetSourceAsync(stream); image = svgsource;  break;
+				default: BitmapImage bmpsource = new(); bmpsource.SetSourceAsync(stream); image = bmpsource; break;
+			}
+			
+			
+			return image;
 		}
 
 		private void SetRoot_Click(object sender, RoutedEventArgs e)
@@ -1075,7 +1083,7 @@ namespace ConTeXt_IDE
 
 			p.StartInfo = info;
 			info.FileName = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe";// @"C:\Windows\System32\cmd.exe";
-			info.Arguments = " " + param + texFileName;
+			info.Arguments = " " + param + "\"" +texFileName + "\"";
 
 			if (VM.Default.ShowCompilerOutput)
 				p.OutputDataReceived += (a, b) =>
@@ -2132,6 +2140,7 @@ namespace ConTeXt_IDE
 					bool success = false;
 					wc.DownloadProgressChanged += (a, b) => { 
 						VM.ProgressValue = b.ProgressPercentage;
+						VM.InfoText = VM.ProgressValue.ToString() + "%" ;
 						TaskbarUtility.SetProgressValue(b.ProgressPercentage,100);
 					};
 
@@ -2280,9 +2289,10 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
+				XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
 				await Task.Run(() =>
 				{
-					XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
+					
 					string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
 					using (StringReader reader = new StringReader(xml))
 					{
@@ -3095,6 +3105,41 @@ namespace ConTeXt_IDE
 			if (text.StartsWith(@"\"))
 			{
 
+			}
+		}
+
+		private async void TbV_EditorTabView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (VM.Default.AutoOpenPDFOnFileOpen && e.AddedItems.Count > 0 && e.AddedItems[0] is FileItem fileitem && fileitem != null)
+			{
+				if (fileitem.IsTexFile)
+				{
+				StorageFolder folder = 	await StorageFolder.GetFolderFromPathAsync(Directory.GetParent(fileitem.File.Path).FullName);
+					StorageFile pdfout = await folder.TryGetItemAsync(Path.GetFileNameWithoutExtension(fileitem.FileName) + ".pdf") as StorageFile;
+					if (pdfout != null)
+					{
+						VM.Log("Opening " + Path.GetFileNameWithoutExtension(fileitem.FileName) + ".pdf");
+						if (VM.Default.InternalViewer)
+						{
+							await OpenPDF(pdfout);
+
+							if (VM.CurrentProject.UseSyncTeX)
+							{
+								string synctexpath = Path.GetFileNameWithoutExtension(fileitem.FileName) + ".synctex";
+								StorageFile synctexfile = await folder.TryGetItemAsync(synctexpath) as StorageFile;
+								if (synctexfile != null)
+								{
+									SyncTeX syncTeX = new SyncTeX();
+									if (await syncTeX.ParseFile(synctexfile))
+									{
+										VM.CurrentProject.SyncTeX = syncTeX;
+										VM.Log($"Successfully loaded {syncTeX.FileName}");
+									}
+								}
+							}
+						}
+						}
+					}
 			}
 		}
 	}

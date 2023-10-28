@@ -4,9 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:ConTeXt_IDE.Models"
     xmlns:helpers="using:ConTeXt_IDE.Helpers"
-    xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
-	xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:animations="using:CommunityToolkit.WinUI.Animations"
     xmlns:vm="using:ConTeXt_IDE.ViewModels" xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives">
 	<Application.Resources>
 		<ResourceDictionary>
@@ -56,7 +55,7 @@
 									<Border x:Name="LeftBottomBorderLine" BorderBrush="{ThemeResource TabViewBorderBrush}" BorderThickness="1" Height="1" VerticalAlignment="Bottom" />
 									<Border x:Name="RightBottomBorderLine" BorderBrush="{ThemeResource TabViewBorderBrush}" BorderThickness="1" Height="1" Grid.Column="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" />
 									<ContentPresenter Grid.Column="0" x:Name="LeftContentPresenter" Content="{TemplateBinding TabStripHeader}" ContentTemplate="{TemplateBinding TabStripHeaderTemplate}" />
-									<primitives:TabViewListView Grid.Column="1" x:Name="TabListView" Padding="{TemplateBinding Padding}" CanReorderItems="{TemplateBinding CanReorderTabs}" CanDragItems="{TemplateBinding CanDragTabs}" AllowDrop="{TemplateBinding AllowDropTabs}" ItemsSource="{TemplateBinding TabItemsSource}" ItemTemplate="{TemplateBinding TabItemTemplate}" ItemTemplateSelector="{TemplateBinding TabItemTemplateSelector}" />
+									<primitives:TabViewListView Grid.Column="1" x:Name="TabListView" Padding="{TemplateBinding Padding}" CanReorderItems="{TemplateBinding CanReorderTabs}" CanDragItems="False" AllowDrop="False" ItemsSource="{TemplateBinding TabItemsSource}" ItemTemplate="{TemplateBinding TabItemTemplate}" ItemTemplateSelector="{TemplateBinding TabItemTemplateSelector}" />
 									<Border Visibility="{Binding IsAddTabButtonVisible, RelativeSource={RelativeSource TemplatedParent}}" Grid.Column="2" Padding="{ThemeResource TabViewItemAddButtonContainerPadding}" VerticalAlignment="Bottom">
 										<Button x:Name="AddButton" HorizontalAlignment="Center" VerticalAlignment="Center" Content="&#xE710;" IsTextScaleFactorEnabled="False" Command="{TemplateBinding AddTabButtonCommand}" CommandParameter="{TemplateBinding AddTabButtonCommandParameter}"  HighContrastAdjustment="None" />
 									</Border>
@@ -74,6 +73,8 @@
 
 
 			<vm:ViewModel x:Key="VM"></vm:ViewModel>
+
+
 
 			<Style TargetType="StackPanel" x:Key="HorizontalStack">
 				<Setter Property="Orientation" Value="Horizontal"></Setter>
@@ -115,9 +116,9 @@
 				<Setter Property="Margin" Value="12,4,12,4"></Setter>
 				<Setter Property="CornerRadius" Value="2"></Setter>
 				<Setter Property="ResizeBehavior" Value="PreviousAndNext"></Setter>
-				<Setter Property="CursorBehavior" Value="ChangeOnSplitterHover"></Setter>
+				<Setter Property="Cursor" Value="SizeNorthSouth"></Setter>
 				<Setter Property="Background" Value="#22888888"></Setter>
-				<Setter Property="GripperForeground" Value="{ThemeResource ForegroundLightColor}"></Setter>
+				<Setter Property="Foreground" Value="{ThemeResource ForegroundLightColor}"></Setter>
 				<Setter Property="FocusVisualPrimaryBrush" Value="DarkGray"></Setter>
 				<Setter Property="FocusVisualSecondaryBrush" Value="DarkGray"></Setter>
 				<Setter Property="Template">
@@ -182,9 +183,9 @@
 				<Setter Property="Margin" Value="4,12,4,12"></Setter>
 				<Setter Property="CornerRadius" Value="3"></Setter>
 				<Setter Property="ResizeBehavior" Value="PreviousAndNext"></Setter>
-				<Setter Property="CursorBehavior" Value="ChangeOnSplitterHover"></Setter>
+				<Setter Property="Cursor" Value="SizeWestEast"></Setter>
 				<Setter Property="Background" Value="#22888888"></Setter>
-				<Setter Property="GripperForeground" Value="{ThemeResource ForegroundLightColor}"></Setter>
+				<Setter Property="Foreground" Value="{ThemeResource ForegroundLightColor}"></Setter>
 				<Setter Property="FocusVisualPrimaryBrush" Value="DarkGray"></Setter>
 				<Setter Property="FocusVisualSecondaryBrush" Value="DarkGray"></Setter>
 				<Setter Property="Template">
@@ -283,12 +284,13 @@
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
 				<Setter Property="BorderThickness" Value="1"></Setter>
+				<Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
 			</Style>
 			<Style  TargetType="Button" >
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
 				<Setter Property="BorderThickness" Value="1"></Setter>
-
+				<Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
 			</Style>
 
 
@@ -301,15 +303,21 @@
 				<Setter Property="BorderThickness" Value="1"></Setter>
 				<Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
 			</Style>
+
+			<Style  TargetType="ToggleSwitch">
+				<Setter Property="Foreground" Value="{ThemeResource ForegroundColor}"></Setter>
+			</Style>
 			<Style  TargetType="ToggleSplitButton">
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
 				<Setter Property="BorderThickness" Value="1"></Setter>
+				<Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
 			</Style>
 			<Style  TargetType="SplitButton">
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
 				<Setter Property="CornerRadius" Value="{StaticResource CornerRadius}"></Setter>
 				<Setter Property="BorderThickness" Value="1"></Setter>
+				<Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"></Setter>
 			</Style>
 			<Style TargetType="ComboBox" >
 				<Setter Property="VerticalAlignment" Value="Stretch"></Setter>
@@ -350,7 +358,7 @@
 				<Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorTertiary }"></Setter>
 			</Style>-->
 			<Style TargetType="ScrollViewer" x:Key="RibbonView">
-				<Setter Property="Background" Value="{StaticResource CustomAcrylicBrush}"></Setter>
+				<Setter Property="Background" Value="{ThemeResource TabBackground}"></Setter>
 				<Setter Property="Height" Value="48"></Setter>
 				<!--<Setter Property="CornerRadius" Value="{Binding RibbonCornerRadius, Source={StaticResource VM}, Mode=OneWay}"></Setter>
 				<Setter Property="Margin" Value="6,0,6,6"></Setter>-->
@@ -369,17 +377,17 @@
 					<Setter.Value>
 						<animations:ImplicitAnimationSet>
 							<animations:OpacityAnimation Duration="0:0:0.15" EasingMode="EaseInOut" EasingType="Quadratic" From="0.2" To="1"></animations:OpacityAnimation>
-							<animations:TranslationAnimation Duration="0:0:0.2" EasingMode="EaseInOut" EasingType="Quadratic" From="-12, 0, 0" To="0"></animations:TranslationAnimation>
+							<animations:TranslationAnimation Duration="0:0:0.15" EasingMode="EaseInOut" EasingType="Quadratic" From="-12, 0, 0" To="0"></animations:TranslationAnimation>
 						</animations:ImplicitAnimationSet>
 					</Setter.Value>
 				</Setter>
-				<Setter Property="animations:Implicit.HideAnimations">
+				<!--<Setter Property="animations:Implicit.HideAnimations">
 					<Setter.Value>
 						<animations:ImplicitAnimationSet>
 							<animations:OpacityAnimation Duration="0:0:0.05" EasingMode="EaseInOut" EasingType="Quadratic" From="1" To="0"></animations:OpacityAnimation>
 						</animations:ImplicitAnimationSet>
 					</Setter.Value>
-				</Setter>
+				</Setter>-->
 			</Style>
 
 
@@ -416,11 +424,26 @@
 			<SolidColorBrush x:Key="WindowCaptionBackground" Color="{Binding AccentColor.Color, Source={StaticResource VM}}"></SolidColorBrush>
 			<SolidColorBrush x:Key="WindowCaptionBackgroundDisabled" Color="{Binding AccentColor.Color, Source={StaticResource VM}}"></SolidColorBrush>
 
-			
+
+			<Thickness x:Key="TabViewItemBorderThickness">1,0,1,0</Thickness>
+			<Thickness x:Key="TabViewSelectedItemBorderThickness">2,0,2,0</Thickness>
+			<Thickness x:Key="TabViewItemHeaderPadding">8,4,8,4</Thickness>
+			<Thickness x:Key="TabViewSelectedItemHeaderPadding">8,4,8,4</Thickness>
+			<SolidColorBrush x:Key="TabViewBorderBrush" Color="Transparent" />
+			<SolidColorBrush x:Key="TabViewItemBorderBrush" Color="Transparent" />
+			<SolidColorBrush x:Key="TabViewSelectedItemBorderBrush" Color="Transparent" />
+			<SolidColorBrush x:Key="TabViewItemIconForeground" Color="{StaticResource SystemBaseHighColor}" />
+			<SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="{StaticResource SystemBaseHighColor}" />
+			<SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="{StaticResource SystemBaseHighColor}" />
+			<SolidColorBrush x:Key="TabViewItemHeaderForegroundSelected" Color="{StaticResource SystemBaseHighColor}" />
+			<SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="{ThemeResource TabBackground}" />
+			<SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="Transparent" />
 			<SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Transparent"></SolidColorBrush>
-			<SolidColorBrush x:Key="TabViewItemSeparator" Color="Transparent"></SolidColorBrush>
+			<SolidColorBrush x:Key="TabViewItemSeparator" Color="{StaticResource ControlStrokeColorDefault}"></SolidColorBrush>
 			<SolidColorBrush x:Key="TabViewBackground" Color="Transparent"></SolidColorBrush>
+
 			
+
 			<ResourceDictionary.ThemeDictionaries>
 				<ResourceDictionary x:Key="Default">
 					
@@ -445,7 +468,7 @@
 					<Color x:Key="ForegroundLightColor">#AAA</Color>
 
 					<x:Double x:Key="TintLuminosityOpacity">0.1</x:Double>
-					
+					<Color x:Key="TabBackground">#CC383838</Color>
 				</ResourceDictionary>
 
 				<ResourceDictionary x:Key="HighContrast">
@@ -462,7 +485,7 @@
 					<Color x:Key="ForegroundLightColor">#FFF</Color>
 
 					<x:Double x:Key="TintLuminosityOpacity">1.0</x:Double>
-					
+					<Color x:Key="TabBackground">#FFF</Color>
 				</ResourceDictionary>
 
 				<ResourceDictionary x:Key="Light">
@@ -482,6 +505,8 @@
 					<Color x:Key="ForegroundLightColor">#555</Color>
 
 					<x:Double x:Key="TintLuminosityOpacity">0.1</x:Double>
+
+					<Color x:Key="TabBackground">#BBFFFFFF</Color>
 
 				</ResourceDictionary>
 			</ResourceDictionary.ThemeDictionaries>

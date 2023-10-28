@@ -13,38 +13,17 @@ using Windows.Graphics;
 using Windows.Storage;
 using Windows.System.Diagnostics;
 using Windows.UI;
+using Windows.UI.ApplicationSettings;
 using static ConTeXt_IDE.Shared.SystemBackdropWindow;
 
 namespace ConTeXt_IDE.Models
 {
 	public class Settings : Helpers.Bindable
 	{
-		FileSystemWatcher watcher;
+		private static FileSystemWatcher watcher;
 		public Settings()
 		{
-			// ToDo: Settings Synchronization between multiple App Windows
-			//watcher?.Dispose();
-
-			//watcher = new FileSystemWatcher(ApplicationData.Current.LocalFolder.Path) { IncludeSubdirectories = false, EnableRaisingEvents = true, Filter = "settings.json" };
-
-			//watcher.NotifyFilter = NotifyFilters.LastWrite;
-
-			//watcher.Changed += (a, b) =>
-			//{
-			//	if (b.ChangeType == WatcherChangeTypes.Changed)
-			//		try
-			//	{ 
-			//		Settings updatedSettings = FromJson(File.ReadAllText(b.FullPath));
-			//		if (updatedSettings.CurrentWindowID != ProcessDiagnosticInfo.GetForCurrentProcess().ProcessId)
-			//		{
-			//			Default = updatedSettings;
-			//		}
-			//	}
-			//	catch (Exception ex)
-			//	{
-			//			App.VM?.Log(ex.Message);
-			//	}
-			//};
+	
 		}
 
 		public static Settings FromJson(string json) => JsonConvert.DeserializeObject<Settings>(json);
@@ -84,7 +63,7 @@ namespace ConTeXt_IDE.Models
 				{
 					settings = new Settings();
 					string json = settings.ToJson();
-					File.WriteAllText(settingsPath, json);
+					WriteSettings(settings.ToJson());
 				}
 				else
 				{
@@ -104,8 +83,7 @@ namespace ConTeXt_IDE.Models
 
 				settings.CommandFavorites.CollectionChanged += (o, a) =>
 				{
-					string json = settings.ToJson();
-					File.WriteAllText(settingsPath, json);
+					WriteSettings(settings.ToJson()); watch();
 				};
 
 				if (settings.HelpItemList.Count == 0)
@@ -162,27 +140,67 @@ namespace ConTeXt_IDE.Models
 
 				settings.PropertyChanged += (o, a) =>
 				{
-					string json = settings.ToJson();
-					File.WriteAllText(settingsPath, json);
+					WriteSettings(settings.ToJson()); watch();
 				};
 
 				settings.ProjectList.CollectionChanged += (o, a) =>
 				{
-					string json = settings.ToJson();
-					File.WriteAllText(settingsPath, json);
+					WriteSettings(settings.ToJson()); watch();
 				};
+
+				ProcessDiagnosticInfo diagnosticInfo = ProcessDiagnosticInfo.GetForCurrentProcess();
+				settings.CurrentWindowID = diagnosticInfo.ProcessId;
+				WriteSettings(settings.ToJson()); watch();
 
 				return settings;
 			}
 			catch (Exception ex)
 			{
 				//App.VM.Log("Exception on getting Settings: "+ex.Message);
-
 				return RestoreSettings();
 			}
+
+		
+		}
+
+		public static void WriteSettings(string json)
+		{
+			watcher?.Dispose();
+			watcher = null;
+			string file = "settings.json";
+			var storageFolder = ApplicationData.Current.LocalFolder;
+			string settingsPath = Path.Combine(storageFolder.Path, file);
+			File.WriteAllText(settingsPath, json);
+			
+		}
+
+		private static void watch()
+		{
+			watcher = new FileSystemWatcher(ApplicationData.Current.LocalFolder.Path) { IncludeSubdirectories = false, EnableRaisingEvents = true, Filter = "settings.json" };
+
+			watcher.NotifyFilter = NotifyFilters.LastWrite;
+
+			watcher.Changed += (a, b) =>
+			{
+				if (b.ChangeType == WatcherChangeTypes.Changed)
+					try
+					{
+						Settings updatedSettings = FromJson(File.ReadAllText(b.FullPath));
+						ProcessDiagnosticInfo diagnosticInfo = ProcessDiagnosticInfo.GetForCurrentProcess();
+						if (updatedSettings.CurrentWindowID != diagnosticInfo.ProcessId)
+						{
+							Default = updatedSettings;
+						}
+					}
+					catch (Exception ex)
+					{
+						App.VM?.Log(ex.Message);
+					}
+			};
 		}
 
 		public bool AutoOpenLOG { get => Get(false); set => Set(value); }
+		public bool AutoOpenPDFOnFileOpen { get => Get(false); set => Set(value); }
 		public bool AutoOpenLOGOnlyOnError { get => Get(true); set => Set(value); }
 		public bool AutoOpenPDF { get => Get(true); set => Set(value); }
 		public bool DistributionInstalled { get => Get(false); set => Set(value); }
@@ -199,7 +217,7 @@ namespace ConTeXt_IDE.Models
 		public bool UseModernStyle { get => Get(true); set => Set(value); }
 		public uint CurrentWindowID { get; set; } = (uint)0;
 
-		public bool ShowMarkdownViewer { get => Get(true); set => Set(value); }
+		public bool ShowMarkdownViewer { get => false; set => Set(value); }
 		public bool StartWithLastActiveProject { get => Get(true); set => Set(value); }
 		public bool StartWithLastOpenFiles { get => Get(false); set => Set(value); }
 		public bool SuggestArguments { get => Get(true); set => Set(value); }
@@ -241,7 +259,7 @@ namespace ConTeXt_IDE.Models
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }
-		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.RibbonCornerRadius = new(value*2); App.VM.RibbonMargin = new(value, 0, value, value); } } }
+		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.CornerRadius_Ribbon = new(value*2); App.VM.Margin_Ribbon = new(value, 0, value, value); } } }
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{
@@ -255,6 +273,12 @@ namespace ConTeXt_IDE.Models
 		}
 
 		public string Backdrop { get => Get("Mica"); set { Set(value); } }
+
+		public ObservableCollection<Mode> Parameters
+		{
+			get => Get(new ObservableCollection<Mode>() { new Mode() { Name = "print", IsSelected = false }, new Mode() { Name = "screen", IsSelected = false }, new Mode() { Name = "draft", IsSelected = false }, });
+			set => Set(value);
+		}
 
 		public List<CommandGroup> CommandGroups { get => Get(new List<CommandGroup>()); set => Set(value); }
 
@@ -297,10 +321,7 @@ namespace ConTeXt_IDE.Models
 		{
 			string file = "settings.json";
 			settings.CurrentWindowID = ProcessDiagnosticInfo.GetForCurrentProcess().ProcessId;
-			var storageFolder = ApplicationData.Current.LocalFolder;
-			string settingsPath = Path.Combine(storageFolder.Path, file);
-			string json = settings.ToJson();
-			File.WriteAllText(settingsPath, json);
+			Settings.WriteSettings(settings.ToJson());
 		}
 	}
 }

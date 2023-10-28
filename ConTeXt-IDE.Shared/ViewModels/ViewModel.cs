@@ -1,10 +1,12 @@
 ﻿using CodeEditorControl_WinUI;
 using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -97,7 +99,7 @@ namespace ConTeXt_IDE.ViewModels
 		{
 			if (IsMarkdownViewerActive && CurrentFileItem.FileContent != CurrentMarkdownText)
 			{
-				App.MainPage?.DispatcherQueue.TryEnqueue(() =>
+				_queue.TryEnqueue(() =>
 				{
 					CurrentMarkdownText = CurrentFileItem.FileContent;
 				});
@@ -230,119 +232,128 @@ namespace ConTeXt_IDE.ViewModels
 			UpdateOutline(text.Split("\r\n"), update);
 		}
 
+		DispatcherQueue _queue = DispatcherQueue.GetForCurrentThread();
+
 		public async void UpdateOutline(string[] text = null, bool update = false)
 		{
+
 			//await Task.Run(() =>
 			//{
-			if (CurrentFileItem != null)
-				try
-				{
-					if (text == null)
-						text = CurrentFileItem.FileContent.Split("\r\n", StringSplitOptions.None);
 
-					if (!update)
-						OutlineItems.Clear();
+			_queue.TryEnqueue(() =>
+			{
 
-					string[] lines = text;
-
-					List<OutlineItem> founditems = new();
-					int row = 0;
-					int ID = 0;
-					foreach (string line in lines)
+				if (CurrentFileItem != null)
+					try
 					{
-						row++;
-						MatchCollection mc = null;
-						string depthcounter = "";
-						int startdepth = 0;
-						int depthgroup = 0;
-						int titlegroup = 0;
-						int level = 0;
-						if (CurrentFileItem.FileLanguage == "ConTeXt")
-						{
-							mc = Regex.Matches(line, @"\\(start)?([sub].*?)?(section|subject|part|title|chapter)(\[.*?title\s*?=\s*)(.+?)(\s*?)(\,|\])");
-							depthgroup = 2;
-							depthcounter = "sub";
-							startdepth = 0;
-							titlegroup = 5;
-						}
-						else if (CurrentFileItem.FileLanguage == "Markdown")
-						{
-							mc = Regex.Matches(line, @"(^ *?)(#+ *)(.*)");
-							depthgroup = 2;
-							depthcounter = "#";
-							startdepth = -1;
-							titlegroup = 3;
+						if (text == null)
+							text = CurrentFileItem.FileContent.Split("\r\n", StringSplitOptions.None);
 
-						}
+						if (!update)
+							OutlineItems.Clear();
 
-						if (mc?.Count > 0 && mc.First().Success)
+						string[] lines = text;
+
+						List<OutlineItem> founditems = new();
+						int row = 0;
+						int ID = 0;
+						foreach (string line in lines)
 						{
-
-							string type = "";
-							string title = "";
+							row++;
+							MatchCollection mc = null;
+							string depthcounter = "";
+							int startdepth = 0;
+							int depthgroup = 0;
+							int titlegroup = 0;
+							int level = 0;
 							if (CurrentFileItem.FileLanguage == "ConTeXt")
 							{
-								level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
-								type = string.Concat(mc.First().Groups.Values.ToList().GetRange(1, 3).Select(x => x.Value)).Replace("start", "");
+								mc = Regex.Matches(line, @"\\(start)?([sub].*?)?(section|subject|part|title|chapter)(\[.*?(title\s*?=)?\s*)(.+?)(\s*?)(\,|\])");
+								depthgroup = 2;
+								depthcounter = "sub";
+								startdepth = 0;
+								titlegroup = 6;
 							}
 							else if (CurrentFileItem.FileLanguage == "Markdown")
 							{
-								level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
-								if (level == 0)
-									type = "section";
-								else
-									type = string.Concat(Enumerable.Repeat("sub", level)) + "section";
-							}
-							if (CurrentFileItem.FileLanguage == "ConTeXt")
-							{
-								title = mc.First().Groups.Values.ElementAt(titlegroup).Value.Replace("{", "").Replace("}", "");
-							}
-							else if (CurrentFileItem.FileLanguage == "Markdown")
-							{
-								title = mc.First().Groups.Values.ElementAt(titlegroup).Value;
+								mc = Regex.Matches(line, @"(^ *?)(#+ *)(.*)");
+								depthgroup = 2;
+								depthcounter = "#";
+								startdepth = -1;
+								titlegroup = 3;
+
 							}
 
-							if (!update)
-								OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
-							else
+							if (mc?.Count > 0 && mc.First().Success)
 							{
-								founditems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
-								if (OutlineItems.Any(x => x.Title == title && x.SectionLevel == level && x.SectionType == type))
+
+								string type = "";
+								string title = "";
+								if (CurrentFileItem.FileLanguage == "ConTeXt")
 								{
-									OutlineItems.First(x => x.Title == title && x.SectionLevel == level && x.SectionType == type).Row = row;
+									level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
+									type = string.Concat(mc.First().Groups.Values.ToList().GetRange(1, 3).Select(x => x.Value)).Replace("start", "");
 								}
+								else if (CurrentFileItem.FileLanguage == "Markdown")
+								{
+									level = startdepth + CountOccurenceswWithinString(mc.First().Groups.Values.ElementAt(depthgroup).Value, depthcounter);
+									if (level == 0)
+										type = "section";
+									else
+										type = string.Concat(Enumerable.Repeat("sub", level)) + "section";
+								}
+
+								if (CurrentFileItem.FileLanguage == "ConTeXt")
+								{
+									title = mc.First().Groups.Values.ElementAt(titlegroup).Value.Replace("{", "").Replace("}", "");
+								}
+								else if (CurrentFileItem.FileLanguage == "Markdown")
+								{
+									title = mc.First().Groups.Values.ElementAt(titlegroup).Value;
+								}
+
+								if (!update)
+									OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
 								else
 								{
-									if (OutlineItems.FirstOrDefault(x => x.Row > row) != null)
+									founditems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+									if (OutlineItems.Any(x => x.Title == title && x.SectionLevel == level && x.SectionType == type))
 									{
-										int index = OutlineItems.IndexOf(OutlineItems.FirstOrDefault(x => x.Row > row));
-										if (index < OutlineItems.Count)
-											OutlineItems.Insert(index, new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+										OutlineItems.First(x => x.Title == title && x.SectionLevel == level && x.SectionType == type).Row = row;
+									}
+									else
+									{
+										if (OutlineItems.FirstOrDefault(x => x.Row > row) != null)
+										{
+											int index = OutlineItems.IndexOf(OutlineItems.FirstOrDefault(x => x.Row > row));
+											if (index < OutlineItems.Count)
+												OutlineItems.Insert(index, new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+											else
+												OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
+										}
 										else
 											OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
 									}
-									else
-										OutlineItems.Add(new OutlineItem() { Row = row, SectionLevel = level, SectionType = type, Title = title });
 								}
 							}
 						}
-					}
-					if (update)
-					{
-						foreach (var item in new List<OutlineItem>(OutlineItems))
+						if (update)
 						{
-							if (!founditems.Any(x => x.Title == item.Title && x.SectionLevel == item.SectionLevel && x.SectionType == item.SectionType))
+							foreach (var item in new List<OutlineItem>(OutlineItems))
 							{
-								OutlineItems.Remove(item);
+								if (!founditems.Any(x => x.Title == item.Title && x.SectionLevel == item.SectionLevel && x.SectionType == item.SectionType))
+								{
+									OutlineItems.Remove(item);
+								}
 							}
 						}
+						SelectedOutlineItem = OutlineItems.Where(x => CurrentFileItem?.CurrentLine?.iLine + 1 >= x.Row).LastOrDefault();
 					}
-					SelectedOutlineItem = OutlineItems.Where(x => CurrentFileItem?.CurrentLine?.iLine + 1 >= x.Row).LastOrDefault();
-				}
-				catch (Exception ex)
-				{
-					Log(ex.Message);
-				}
+					catch (Exception ex)
+					{
+						Log(ex.Message);
+					}
+			});
 			//});
 		}
 		public int CountOccurenceswWithinString(string text, string searchterm)
@@ -480,7 +491,9 @@ namespace ConTeXt_IDE.ViewModels
 
 		public bool IsError { get => Get(false); set => Set(value); }
         public Thickness Margin_SettingsButton { get => Get(new Thickness(0)); set => Set(value); }
-        public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue,0,0,0)); set => Set(value); }
+		public Thickness RibbonCornerRadius { get => Get(new Thickness(0)); set => Set(value); }
+		public Thickness RibbonMargin { get => Get(new Thickness(0)); set => Set(value); }
+		public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue,0,0,0)); set => Set(value); }
 		public Thickness Margin_Ribbon { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set { Set(value); InfobarMargin = value; } }
 		public CornerRadius CornerRadius_Ribbon { get => Get(new CornerRadius(Default.RibbonMarginValue*2)); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
@@ -554,7 +567,7 @@ namespace ConTeXt_IDE.ViewModels
 					Set(value);
 					Task.Run(async () =>
 				{
-					App.MainPage?.DispatcherQueue?.TryEnqueue(async () =>
+					_queue.TryEnqueue(async () =>
 					{
 						value.IsSelected = true;
 					});
@@ -617,7 +630,7 @@ namespace ConTeXt_IDE.ViewModels
 					bool iscompiledpdf = (filename.StartsWith("project_") | filename.StartsWith("prd_") | filename.StartsWith("c_") | filename.StartsWith("env_") | filename.StartsWith("p-") | filename.StartsWith("t-")) && filename.EndsWith(".pdf");
 					if (!b.FullPath.EndsWith("~tmp") && !cancelWords.Contains(Path.GetExtension(b.FullPath)) && !iscompiledpdf)
 					{
-						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						_queue.TryEnqueue(async () =>
 						{
 							var item = await GetStorageItem(b.FullPath);
 							if (item != null)
@@ -640,7 +653,7 @@ namespace ConTeXt_IDE.ViewModels
 				{
 					if (!b.FullPath.ToLower().EndsWith("tmp") && !b.OldFullPath.ToLower().EndsWith("tmp"))
 					{
-						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						_queue.TryEnqueue(async () =>
 						{
 							var item = await GetStorageItem(b.FullPath);
 							if (item != null)
@@ -664,7 +677,7 @@ namespace ConTeXt_IDE.ViewModels
 				{
 					if (!b.FullPath.EndsWith("~tmp"))
 					{
-						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						_queue.TryEnqueue(async () =>
 					{
 
 						var fi = CurrentProject.RemoveFileItemByPath(CurrentProject?.Directory[0], b.FullPath);
@@ -682,7 +695,7 @@ namespace ConTeXt_IDE.ViewModels
 				{
 					if (!b.FullPath.EndsWith("~tmp") && !b.FullPath.EndsWith(".TMP") && b.ChangeType == WatcherChangeTypes.Changed)
 					{
-						App.MainPage.DispatcherQueue.TryEnqueue(async () =>
+						_queue.TryEnqueue(async () =>
 						{
 							try
 							{
@@ -881,6 +894,8 @@ namespace ConTeXt_IDE.ViewModels
 			if (fi != null)
 				OpenFile(fi);
 		}
+
+		public MainPage MainPage;
 		public async void OpenFile(FileItem file, bool ProjectLoad = false)
 		{
 			try
@@ -925,7 +940,7 @@ namespace ConTeXt_IDE.ViewModels
 
 						StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(CurrentFileItem.FileName) + ".pdf") as StorageFile;
 						if (pdfout != null)
-							await App.MainPage?.OpenPDF(pdfout);
+							await MainPage?.OpenPDF(pdfout);
 					}
 					//if (!ProjectLoad)
 					//    CurrentProject.LastOpenedFiles = FileItems.Select(x => x.FileName).ToList();
