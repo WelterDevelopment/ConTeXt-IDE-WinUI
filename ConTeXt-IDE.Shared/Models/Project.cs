@@ -50,16 +50,17 @@ namespace ConTeXt_IDE.Models
 				Set(value);
 				if (Directory != null && Directory.Count > 0)
 				{
-					Directory.FirstOrDefault().Children?.Where(x => x.FileName != value).ToList().ForEach(x => x.IsRoot = false);
-					var df = Directory.Where(x => x.FileName == value);
-					if (df.Count() == 1)
-					{
-						df.FirstOrDefault().IsRoot = true;
-					}
+					//	Directory.FirstOrDefault().Children?.Where(x => x.FileName != value).ToList().ForEach(x => x.IsRoot = false);
+					//	var df = Directory.Where(x => x.FileName == value);
+					//	if (df.Count() == 1)
+					//	{
+					//		df.FirstOrDefault().IsRoot = true;
+					//	}
 
-					App.VM.Log("Root file changed to " + System.IO.Path.GetFileName(value));
+					App.VM?.Log("Root file changed to " + System.IO.Path.GetFileName(value));
 
 				}
+			
 			}
 		}
 

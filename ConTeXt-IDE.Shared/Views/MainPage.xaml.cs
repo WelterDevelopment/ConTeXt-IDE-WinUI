@@ -88,7 +88,7 @@ namespace ConTeXt_IDE
 
 				MenuCompile.Command = new RelayCommand(() => { Btn_Compile_Click(null, null); });
 				MenuCompile.KeyboardAccelerators.Add(new() { Key = VirtualKey.Enter, Modifiers = VirtualKeyModifiers.Control });
-				MenuCompile.SetBinding(MenuFlyoutItem.IsEnabledProperty, new Binding() {  Path = new("CurrentFileItem.IsTexFile") });
+				MenuCompile.SetBinding(MenuFlyoutItem.IsEnabledProperty, new Binding() { Path = new("CurrentFileItem.IsTexFile") });
 
 				MenuSyncTeX.Command = new RelayCommand(() => { FindInPDF(); });
 				MenuSyncTeX.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = VirtualKey.Space, Modifiers = VirtualKeyModifiers.Control });
@@ -99,6 +99,8 @@ namespace ConTeXt_IDE
 			{
 				App.VM?.InfoMessage("Exception", ex.Message, InfoBarSeverity.Error);
 			}
+
+
 		}
 
 		private async void FindInPDF()
@@ -204,7 +206,7 @@ namespace ConTeXt_IDE
 
 		private async void Codewriter_Loaded(object sender, RoutedEventArgs e)
 		{
-			CodeWriter cw = sender as CodeWriter; 
+			CodeWriter cw = sender as CodeWriter;
 
 			VM.Codewriter = cw;
 
@@ -215,8 +217,8 @@ namespace ConTeXt_IDE
 				cw.Action_Add(MenuCompile);
 
 			if (VM.CurrentProject != null)
-			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX && cw.Language.Name == "ConTeXt")
-				cw.Action_Add(MenuSyncTeX);
+				if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Find in PDF"; else return false; }) && VM.CurrentProject.UseSyncTeX && cw.Language.Name == "ConTeXt")
+					cw.Action_Add(MenuSyncTeX);
 
 			if (VM.CurrentFileItem.IsTexFile)
 				cw.UpdateSuggestions();
@@ -572,7 +574,7 @@ namespace ConTeXt_IDE
 		}
 
 		private void Tbv_FileItems_DragStarting(object sender, DragStartingEventArgs e)
-		{ 
+		{
 			VM.IsDragging = true;
 		}
 
@@ -589,11 +591,11 @@ namespace ConTeXt_IDE
 			}
 			else
 			{
-					foreach (var item in DraggedItems)
-					{
-						if (item.Type == FileItem.ExplorerItemType.File)
-							VM.OpenFile(item);
-					}
+				foreach (var item in DraggedItems)
+				{
+					if (item.Type == FileItem.ExplorerItemType.File)
+						VM.OpenFile(item);
+				}
 				DraggedItems.Clear();
 			}
 			e.Handled = true;
@@ -628,7 +630,7 @@ namespace ConTeXt_IDE
 					DraggedItems.Add(item);
 
 				}
-				
+
 			}
 			catch (Exception ex)
 			{
@@ -701,25 +703,25 @@ namespace ConTeXt_IDE
 		{
 			// ToDo: This workaround to collapse the currently selected ribbon item is the hackiest of hacks, needs better logic
 			FrameworkElement item = sender as FrameworkElement;
-		
+
 			if (string.Compare((MainRibbon.SelectedItem as TabViewItem)?.Tag as string, item?.Tag as string) == 0)
 			{
 				MainRibbon.SelectedIndex = -1;
 				e.Handled = true;
 			}
-			
+
 		}
-			private static async Task<ImageSource> LoadImage(StorageFile file, string type)
+		private static async Task<ImageSource> LoadImage(StorageFile file, string type)
 		{
 			ImageSource image = null;
 			FileRandomAccessStream stream = (FileRandomAccessStream)await file.OpenAsync(FileAccessMode.Read);
 			switch (type)
 			{
-				case ".svg": SvgImageSource svgsource = new(); svgsource.RasterizePixelWidth = 400; svgsource.SetSourceAsync(stream); image = svgsource;  break;
+				case ".svg": SvgImageSource svgsource = new(); svgsource.RasterizePixelWidth = 400; svgsource.SetSourceAsync(stream); image = svgsource; break;
 				default: BitmapImage bmpsource = new(); bmpsource.SetSourceAsync(stream); image = bmpsource; break;
 			}
-			
-			
+
+
 			return image;
 		}
 
@@ -728,7 +730,7 @@ namespace ConTeXt_IDE
 			var ei = (FileItem)(sender as FrameworkElement).DataContext;
 			if (true) //ei.Level == 0
 			{
-				ei.IsRoot = true;
+				//ei.IsRoot = true;
 				VM.CurrentRootItem = ei;
 				VM.CurrentProject.RootFilePath = ei.File.Path;
 			}
@@ -777,7 +779,7 @@ namespace ConTeXt_IDE
 					FileItem filetocompile = null;
 					if (compileRoot)
 					{
-							filetocompile = VM.CurrentRootItem ?? VM.CurrentFileItem;
+						filetocompile = VM.CurrentRootItem ?? VM.CurrentFileItem;
 					}
 					else
 					{
@@ -893,18 +895,10 @@ namespace ConTeXt_IDE
 							if (pdfout != null)
 							{
 								VM.Log("Opening " + Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".pdf");
-								//PDFWindow = AppWindow.Create();
-								////PDFWindow.OwnerWindowId = App.MainWindow.AW.Id;
-								//Frame appWindowContentFrame = new Frame();
-								//appWindowContentFrame.Content = new PDFWindowViewer() { DataContext = VM};
 
-								//ElementCompositionPreview.SetAppWindowContent(appWindow, appWindowContentFrame);
-
-								//PDFWindow.Show();
 								if (VM.Default.InternalViewer)
 								{
 									await OpenPDF(pdfout);
-
 									if (VM.CurrentProject.UseSyncTeX)
 									{
 										string synctexpath = Path.GetFileNameWithoutExtension(filetocompile.FileName) + ".synctex";
@@ -915,7 +909,7 @@ namespace ConTeXt_IDE
 											if (await syncTeX.ParseFile(synctexfile))
 											{
 												VM.CurrentProject.SyncTeX = syncTeX;
-												VM.Log($"Successfully loaded {syncTeX.FileName}");
+												VM.Log($"Opening {syncTeX.FileName}");
 											}
 										}
 									}
@@ -926,7 +920,7 @@ namespace ConTeXt_IDE
 										await Launcher.LaunchFileAsync(pdfout);
 									else
 									{
-										OpenPDFInExternalViewer(currFolder.Path,VM.Default.CurrentPDFViewer.Path,pdfout.Name);
+										OpenPDFInExternalViewer(currFolder.Path, VM.Default.CurrentPDFViewer.Path, pdfout.Name);
 									}
 								}
 							}
@@ -961,12 +955,38 @@ namespace ConTeXt_IDE
 			VM.IsSaving = false;
 		}
 
-		public async Task<bool> OpenPDF(StorageFile pdfout)
+		StorageFile lastPDFFile = null;
+
+		public async Task<bool> OpenPDF(StorageFile pdfout = null, bool openpdfwindow = false)
 		{
 			try
 			{
-				VM.IsInternalViewerActive = true;
-				await PDFReader.OpenPDF(pdfout);
+				StorageFile pdffile = pdfout ?? lastPDFFile;
+				if (pdffile != null){
+					lastPDFFile = pdffile;
+					if (VM.Default.PDFWindow & !VM.IsInternalViewerActive)
+					{
+						if (pDFWindow == null)
+						{
+							pDFWindow = new();
+							pDFWindow.Activate();
+							if (VM.CurrentProject.UseSyncTeX)
+								pDFWindow.PDFReader.SyncTeXRequested += PDFjsViewer_SyncTeXRequested;
+							pDFWindow.AW.Closing += async (a, b) =>
+							{
+								await PDFReader.OpenPDF(pdffile);
+								VM.IsInternalViewerActive = true;
+								pDFWindow = null;
+							};
+						}
+						pDFWindow?.PDFReader.OpenPDF(pdffile);
+					}
+					else
+					{
+						VM.IsInternalViewerActive = true;
+						await PDFReader.OpenPDF(pdffile);
+					}
+				}
 				return true;
 			}
 			catch (Exception ex)
@@ -1083,7 +1103,7 @@ namespace ConTeXt_IDE
 
 			p.StartInfo = info;
 			info.FileName = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe";// @"C:\Windows\System32\cmd.exe";
-			info.Arguments = " " + param + "\"" +texFileName + "\"";
+			info.Arguments = " " + param + "\"" + texFileName + "\"";
 
 			if (VM.Default.ShowCompilerOutput)
 				p.OutputDataReceived += (a, b) =>
@@ -1123,9 +1143,9 @@ namespace ConTeXt_IDE
 
 				p.StartInfo = info;
 				info.FileName = Environment.ExpandEnvironmentVariables(exepath);
-				info.Arguments = " " + param  + " " + pdfFileName;
+				info.Arguments = " " + param + " " + pdfFileName;
 
-				p.Exited += (a,b) => { p.Close(); };
+				p.Exited += (a, b) => { p.Close(); };
 
 				p.Start();
 			}
@@ -1372,9 +1392,10 @@ namespace ConTeXt_IDE
 											case "mwe": rootfile = "c_main.tex"; break;
 											case "markdown": rootfile = "prd_markdown.tex"; break;
 											case "cv": rootfile = "prd_cv.tex"; break;
-											case "projpres": rootfile = "prd_presentation.tex"; 
+											case "projpres":
+												rootfile = "prd_presentation.tex";
 												proj.Modes.FirstOrDefault(x => x.Name == "screen").IsSelected = true;
-												proj.Modes.Add(new() { Name = "handout"});
+												proj.Modes.Add(new() { Name = "handout" });
 												break;
 											case "projthes": rootfile = "prd_thesis.tex"; break;
 											case "single": rootfile = "prd_main.tex"; break;
@@ -1419,6 +1440,11 @@ namespace ConTeXt_IDE
 			//VM.InfoMessage("You changed the theme", "Not every UI element updates its theme at runtime. You may want to restart the app.");
 			await Task.Delay(50);
 			PDFReader.Theme = VM.Default.Theme;
+			if (pDFWindow != null) {
+				pDFWindow.RequestedTheme = (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme);
+				pDFWindow.PDFReader.Theme = VM.Default.Theme;
+				pDFWindow.ResetTitleBar();
+					}
 		}
 		private async void WebView2loading(FrameworkElement sender, object args)
 		{
@@ -1588,8 +1614,8 @@ namespace ConTeXt_IDE
 									{
 										VM.IsIndeterminate = false;
 										double val = (double)Math.Max(0.5d, (double)percentage);
-										VM.ProgressValue =  val;
-										TaskbarUtility.SetProgressValue(Math.Max(3,(int)val), 100);
+										VM.ProgressValue = val;
+										TaskbarUtility.SetProgressValue(Math.Max(3, (int)val), 100);
 									}
 								}
 							}
@@ -1706,7 +1732,7 @@ namespace ConTeXt_IDE
 			CompileTex(true);
 		}
 
-
+		PDFWindowViewer pDFWindow { get; set; }
 		private void Undo_Click(object sender, SplitButtonClickEventArgs e)
 		{
 			Codewriter.TextAction_Undo();
@@ -1715,6 +1741,7 @@ namespace ConTeXt_IDE
 
 		private async void Btn_Save_Click(object sender, RoutedEventArgs e)
 		{
+			
 			await VM.Save();
 			Codewriter.Save();
 		}
@@ -1850,7 +1877,7 @@ namespace ConTeXt_IDE
 						OpenPDFInExternalViewer(lsf.Path + hf.Path, VM.Default.CurrentPDFViewer.Path, sf.Name);
 					}
 				}
-					
+
 			}
 			catch (Exception ex)
 			{
@@ -1970,7 +1997,7 @@ namespace ConTeXt_IDE
 			if (accentColor != null)
 			{
 				setting.Theme = theme;
-				setting.Backdrop = VM.Default.Backdrop ;
+				setting.Backdrop = VM.Default.Backdrop;
 				setting.AccentColor = accentColor.Color;
 
 				//setting.AccentColorLowLow = Colors.Transparent;
@@ -2138,10 +2165,11 @@ namespace ConTeXt_IDE
 					}
 
 					bool success = false;
-					wc.DownloadProgressChanged += (a, b) => { 
+					wc.DownloadProgressChanged += (a, b) =>
+					{
 						VM.ProgressValue = b.ProgressPercentage;
-						VM.InfoText = VM.ProgressValue.ToString() + "%" ;
-						TaskbarUtility.SetProgressValue(b.ProgressPercentage,100);
+						VM.InfoText = VM.ProgressValue.ToString() + "%";
+						TaskbarUtility.SetProgressValue(b.ProgressPercentage, 100);
 					};
 
 					wc.DownloadFileCompleted += async (a, b) =>
@@ -2292,7 +2320,7 @@ namespace ConTeXt_IDE
 				XmlSerializer serializer = new XmlSerializer(typeof(Interface), "cd");
 				await Task.Run(() =>
 				{
-					
+
 					string xml = File.ReadAllText(Path.Combine(ApplicationData.Current.LocalFolder.Path, @"tex\texmf-context\tex\context\interface\mkiv\context-en.xml"));
 					using (StringReader reader = new StringReader(xml))
 					{
@@ -2449,7 +2477,7 @@ namespace ConTeXt_IDE
 							}
 						});
 
-						
+
 					}
 
 				});
@@ -2458,15 +2486,15 @@ namespace ConTeXt_IDE
 				string text = Searchtext.Text;
 				await Task.Run(() => { filtered = UpdateSearchFilter(text, VM.Default.FilterFavorites); });
 
-					VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
-					cvs.Source = filtered;
-				
-
-					//DocumentationView.SelectedIndex = -1;
+				VM.ContextCommandGroupList = filtered.SelectMany(x => x).Select(x => x.Category).Distinct().ToList();
+				cvs.Source = filtered;
 
 
-					PopulateIntelliSense("ConTeXt");
-				
+				//DocumentationView.SelectedIndex = -1;
+
+
+				PopulateIntelliSense("ConTeXt");
+
 			}
 			catch (Exception ex)
 			{
@@ -2496,7 +2524,7 @@ namespace ConTeXt_IDE
 				var lang = FileLanguages.LanguageList.First(x => x.Name == name);
 				Task.Run(() =>
 				{
-					
+
 					if (lang.Commands == null)
 						lang.Commands = new();
 					lang.Commands.Clear();
@@ -2575,7 +2603,7 @@ namespace ConTeXt_IDE
 									}
 								}
 							intelliSense.Token = command.Type == "environment" ? Token.Environment : Token.Command;
-						//intelliSense.ArgumentsList = command.Arguments?.ArgumentsList?.Select(x=> x is Assignments assignments ? new CodeEditorControl_WinUI.() { Delimiters = x.Delimiters, List = x.List, Name = assignments.Inherit?.Name, } : null ).ToList();
+							//intelliSense.ArgumentsList = command.Arguments?.ArgumentsList?.Select(x=> x is Assignments assignments ? new CodeEditorControl_WinUI.() { Delimiters = x.Delimiters, List = x.List, Name = assignments.Inherit?.Name, } : null ).ToList();
 							lang.Commands.Add(intelliSense);
 						}
 					}
@@ -2606,7 +2634,7 @@ namespace ConTeXt_IDE
 						Codewriter.UpdateSuggestions();
 					});
 				});
-				
+
 			}
 			catch (Exception ex)
 			{
@@ -2685,7 +2713,8 @@ namespace ConTeXt_IDE
 				bool ischecked = ((ToggleButton)sender).IsChecked ?? false;
 				IOrderedEnumerable<IGrouping<string, Command>> filtered = null;
 				string text = Searchtext.Text;
-				await Task.Run(() => {
+				await Task.Run(() =>
+				{
 					filtered = UpdateSearchFilter(text, ischecked);
 
 					DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
@@ -2791,7 +2820,8 @@ namespace ConTeXt_IDE
 		private void Btn_CloseError_Click(object sender, RoutedEventArgs e)
 		{
 			VM.IsTeXError = false;
-			if (!VM.IsInstalling) {
+			if (!VM.IsInstalling)
+			{
 				VM.IsLoadingBarVisible = false;
 				TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
 			}
@@ -2982,7 +3012,7 @@ namespace ConTeXt_IDE
 			}
 			catch (Exception ex)
 			{
-				VM.Log("Error at DPI change: "+ex.Message);
+				VM.Log("Error at DPI change: " + ex.Message);
 			}
 		}
 
@@ -3012,7 +3042,7 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
-			 exceptionHandlerDelegate();
+				exceptionHandlerDelegate();
 			}
 			catch (Exception ex)
 			{
@@ -3096,7 +3126,7 @@ namespace ConTeXt_IDE
 
 		private void Tbn_ShowOutline_Checked(object sender, RoutedEventArgs e)
 		{
-			VM.UpdateOutline(Codewriter.Lines.ToList(),true);
+			VM.UpdateOutline(Codewriter.Lines.ToList(), true);
 		}
 
 		private void Codewriter_DoubleClicked(object sender, EventArgs e)
@@ -3114,7 +3144,7 @@ namespace ConTeXt_IDE
 			{
 				if (fileitem.IsTexFile)
 				{
-				StorageFolder folder = 	await StorageFolder.GetFolderFromPathAsync(Directory.GetParent(fileitem.File.Path).FullName);
+					StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(Directory.GetParent(fileitem.File.Path).FullName);
 					StorageFile pdfout = await folder.TryGetItemAsync(Path.GetFileNameWithoutExtension(fileitem.FileName) + ".pdf") as StorageFile;
 					if (pdfout != null)
 					{
@@ -3138,8 +3168,24 @@ namespace ConTeXt_IDE
 								}
 							}
 						}
-						}
 					}
+				}
+			}
+		}
+
+		private async void TgB_PDFWindow_Click(object sender, RoutedEventArgs e)
+		{
+			if ((sender as ToggleButton).IsChecked == false)
+			{
+				VM.IsInternalViewerActive = true;
+				await OpenPDF(null);
+				pDFWindow?.Close();
+				pDFWindow = null;
+			}
+			else
+			{
+				VM.IsInternalViewerActive = false;
+				await OpenPDF(null);
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 ﻿
 using CodeEditorControl_WinUI;
+using ConTeXt_IDE.Shared.Models;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Newtonsoft.Json;
@@ -208,6 +209,7 @@ namespace ConTeXt_IDE.Models
 		public bool FirstStart { get => Get(true); set => Set(value); }
 		public bool HelpPDFInInternalViewer { get => Get(false); set => Set(value); }
 		public bool InternalViewer { get => Get(true); set => Set(value); }
+		public bool PDFWindow { get => Get(false); set => Set(value); }
 		public bool MultiInstance { get => Get(false); set => Set(value); }
 		public bool ShowLog { get => Get(false); set => Set(value); }
 		public bool ShowCompilerOutput { get => Get(false); set => Set(value); }
@@ -241,21 +243,10 @@ namespace ConTeXt_IDE.Models
 		public string ContextDistributionPath { get => Get(ApplicationData.Current.LocalFolder.Path); set => Set(value); }
 		public string ContextDownloadLink { get => Get(@"http://lmtx.pragma-ade.nl/install-lmtx/context-mswin.zip"); set => Set(value); }
 		public string LastActiveProject { get => Get(""); set => Set(value); }
-		public RectInt32 LastSize
-		{
-			get => Get(new RectInt32(24, 24, 1600, 800));
-			set
-			{
-				value.X = Math.Max(0, value.X); // Ensure that the Window is actually visible
-				value.Y = Math.Max(0, value.Y);
-				value.Width = Math.Max(854, value.Width);// Ensure that the Window starts with a reasonable minimum size
-				value.Height = Math.Max(480, value.Height);
-				Set(value);
-			}
-		}
 
-		public AppWindowPresenterKind LastPresenter { get => Get(AppWindowPresenterKind.Default); set => Set(value); }
-		public bool IsMaximized { get => Get(false); set => Set(value); }
+		public WindowSetting WindowSettingMain { get => Get(new WindowSetting()); set => Set(value); }
+		public WindowSetting WindowSettingPDF { get => Get(new WindowSetting()); set => Set(value); }
+
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }

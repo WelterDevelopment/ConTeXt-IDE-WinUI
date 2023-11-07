@@ -28,6 +28,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Languages.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Parameter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Project.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\WindowSetting.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

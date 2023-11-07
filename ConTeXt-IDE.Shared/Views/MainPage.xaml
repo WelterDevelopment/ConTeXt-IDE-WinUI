@@ -56,7 +56,7 @@
 						<FontIcon Width="6" Height="6" VerticalAlignment="Center" FontSize="6" Glyph="&#xF127;" Visibility="{Binding IsOpened}"></FontIcon>
 					</Grid>
 					<SymbolIcon Width="20" Symbol="Document"></SymbolIcon>
-					<TextBlock Text="{Binding FileName, Mode=OneWay}" FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}}" />
+					<TextBlock Text="{Binding FileName, Mode=OneWay}" FontWeight="{Binding IsRoot, Converter={StaticResource BoolToFontWeight}, Mode=OneWay}" />
 				</StackPanel>
 			</models:MyTreeViewItem>
 		</DataTemplate>
@@ -818,6 +818,14 @@
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
+								<ToggleButton CornerRadius="0" IsChecked="{Binding Default.PDFWindow, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer}" Click="TgB_PDFWindow_Click">
+									<ToggleButton.Content>
+										<StackPanel Style="{StaticResource HorizontalStack}" >
+											<FontIcon Glyph="&#xE89F;"></FontIcon>
+											<TextBlock  Text="Seperate Window" ></TextBlock>
+										</StackPanel>
+									</ToggleButton.Content>
+								</ToggleButton>
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1"  IsChecked="{Binding Default.AutoOpenPDFOnFileOpen, Mode=TwoWay}" >
 									<ToggleButton.Content>
 										<StackPanel Style="{StaticResource HorizontalStack}" >
@@ -1279,8 +1287,8 @@
 					<Grid x:Name="IDEGrid" Grid.Row="0">
 						<Grid.ColumnDefinitions>
 							<ColumnDefinition x:Name="EditorGridColumn" Width="2*"></ColumnDefinition>
-							<ColumnDefinition x:Name="PDFGridSplitter" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=Auto}"></ColumnDefinition>
-							<ColumnDefinition x:Name="PDFGridColumn" Width="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=*}" MinWidth="{Binding Default.InternalViewer, Mode=OneWay, Converter={StaticResource BoolToMinWidth}, ConverterParameter=250}"></ColumnDefinition>
+							<ColumnDefinition x:Name="PDFGridSplitter" Width="{Binding IsInternalViewerActive, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=Auto}"></ColumnDefinition>
+							<ColumnDefinition x:Name="PDFGridColumn" Width="{Binding IsInternalViewerActive, Mode=OneWay, Converter={StaticResource BoolToWidth}, ConverterParameter=*}" MinWidth="{Binding IsInternalViewerActive, Mode=OneWay, Converter={StaticResource BoolToMinWidth}, ConverterParameter=250}"></ColumnDefinition>
 						</Grid.ColumnDefinitions>
 
 						<Grid x:Name="EditGrid" Grid.Column="0" Style="{StaticResource GridCell}" RowSpacing="0" Padding="0">
@@ -1486,8 +1494,8 @@
 							</Grid>
 
 						</Grid>
-						<toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" MinWidth="{Binding SplitterWidth}" Grid.Column="1"  Visibility="{Binding Default.InternalViewer}"/>
-						<Grid x:Name="ViewerGrid" Grid.Column="2" Visibility="{Binding Default.InternalViewer}" Style="{StaticResource GridCell}" Padding="0" >
+						<toolkit:GridSplitter  Style="{StaticResource ColumnSplitter}" MinWidth="{Binding SplitterWidth}" Grid.Column="1"  Visibility="{Binding IsInternalViewerActive}"/>
+						<Grid x:Name="ViewerGrid" Grid.Column="2" Visibility="{Binding IsInternalViewerActive}" Style="{StaticResource GridCell}" Padding="0" >
 							<Grid.BackgroundTransition>
 								<BrushTransition />
 							</Grid.BackgroundTransition>

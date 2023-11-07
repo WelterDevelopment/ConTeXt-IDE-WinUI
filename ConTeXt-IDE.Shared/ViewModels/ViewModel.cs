@@ -58,8 +58,12 @@ namespace ConTeXt_IDE.ViewModels
 
 				var modules = new ObservableCollection<ContextModule>() {
 									new ContextModule() {  Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter.zip", Type = ContextModuleType.TDSArchive},
+
+									new ContextModule() {  Name = "vim", Description = "This module uses Vim editor's syntax files to syntax highlight verbatim code in ConTeXt (Module filter needs to be installed! Installed vim needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-vim.zip", Type = ContextModuleType.TDSArchive},
+									new ContextModule() {  Name = "annotation", Description = "Lets you create your own commands and environments to mark text blocks.", URL = @"https://modules.contextgarden.net/dl/t-annotation.zip", Type = ContextModuleType.TDSArchive},
+									new ContextModule() {  Name = "simpleslides", Description = "A module for creating presentations in ConTeXt.", URL = @"https://modules.contextgarden.net/dl/t-simpleslides.zip", Type = ContextModuleType.TDSArchive},
 									new ContextModule() {  Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
-									new ContextModule() {  Name = "letter", Description = "Package for writing letters", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-letter.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-letter\"},
+									new ContextModule() {  Name = "letter", Description = "Package for writing letters", URL = @"https://modules.contextgarden.net/dl/t-letter.zip", Type = ContextModuleType.TDSArchive },
 									new ContextModule() { Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
 									new ContextModule() { Name = "pgfplots", Description = "Create normal/logarithmic plots in two and three dimensions", URL = @"http://mirrors.ctan.org/install/graphics/pgf/contrib/pgfplots.tds.zip", Type = ContextModuleType.TDSArchive},
 					};
@@ -185,14 +189,12 @@ namespace ConTeXt_IDE.ViewModels
 
 				if (value == null)
 				{
-					IsInternalViewerActive = false;
 					IsMarkdownViewerActive = false;
 					return;
 				}
 				if (value?.FileLanguage == "ConTeXt")
 				{
 					//UpdateOutline(value.FileContent);
-					IsInternalViewerActive = true;
 					IsMarkdownViewerActive = false;
 				}
 				else if (value?.FileLanguage == "Markdown" && Default.ShowMarkdownViewer)
@@ -209,7 +211,6 @@ namespace ConTeXt_IDE.ViewModels
 				}
 				else
 				{
-					IsInternalViewerActive = true;
 					IsMarkdownViewerActive = false;
 				}
 
@@ -366,7 +367,34 @@ namespace ConTeXt_IDE.ViewModels
 
 			return wordCount;
 		}
-		public FileItem CurrentRootItem { get => Get<FileItem>(null); set => Set(value); }
+		public FileItem CurrentRootItem
+		{
+			get => Get<FileItem>(null);
+			set
+			{
+				if (CurrentRootItem != value)
+				{
+					Set(value);
+					ResetRoot(CurrentProject.Directory);
+					value.IsRoot = true;
+				}
+			}
+		}
+
+		private void ResetRoot(ObservableCollection<FileItem> fileItems)
+		{
+			foreach (var item in fileItems)
+			{
+				if (item.Type == FileItem.ExplorerItemType.ProjectRootFolder | item.Type == FileItem.ExplorerItemType.Folder)
+				{
+					ResetRoot(item.Children);
+				}
+				else if (item.File is StorageFile sfile)
+				{
+					item.IsRoot = false;
+				}
+			}
+		}
 
 		public Project CurrentProject
 		{
@@ -490,22 +518,22 @@ namespace ConTeXt_IDE.ViewModels
 		public Color SystemAccentColor { get => Get((new Windows.UI.ViewManagement.UISettings()).GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent)); set => Set(value); }
 
 		public bool IsError { get => Get(false); set => Set(value); }
-        public Thickness Margin_SettingsButton { get => Get(new Thickness(0)); set => Set(value); }
+		public Thickness Margin_SettingsButton { get => Get(new Thickness(0)); set => Set(value); }
 		public Thickness RibbonCornerRadius { get => Get(new Thickness(0)); set => Set(value); }
 		public Thickness RibbonMargin { get => Get(new Thickness(0)); set => Set(value); }
-		public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue,0,0,0)); set => Set(value); }
+		public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, 0, 0)); set => Set(value); }
 		public Thickness Margin_Ribbon { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set { Set(value); InfobarMargin = value; } }
-		public CornerRadius CornerRadius_Ribbon { get => Get(new CornerRadius(Default.RibbonMarginValue*2)); set => Set(value); }
+		public CornerRadius CornerRadius_Ribbon { get => Get(new CornerRadius(Default.RibbonMarginValue * 2)); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
 
 		public bool IsIndeterminate { get => Get(true); set { Set(value); } }
 
 		public double ProgressValue { get => Get(0d); set => Set(value); }
 
-        public bool IsUsingTouch { get => Get(false); set { Set(value); SplitterWidth = value ? 5 : 3; PlacementMode = value ? NumberBoxSpinButtonPlacementMode.Inline : NumberBoxSpinButtonPlacementMode.Compact; } }
-        public NumberBoxSpinButtonPlacementMode PlacementMode { get => Get(NumberBoxSpinButtonPlacementMode.Compact); set { Set(value); } }
-        public int SplitterWidth { get => Get(3); set { Set(value); } }
-        public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
+		public bool IsUsingTouch { get => Get(false); set { Set(value); SplitterWidth = value ? 5 : 3; PlacementMode = value ? NumberBoxSpinButtonPlacementMode.Inline : NumberBoxSpinButtonPlacementMode.Compact; } }
+		public NumberBoxSpinButtonPlacementMode PlacementMode { get => Get(NumberBoxSpinButtonPlacementMode.Compact); set { Set(value); } }
+		public int SplitterWidth { get => Get(3); set { Set(value); } }
+		public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
 
 		public bool IsInternalViewerActive { get => Get(false); set => Set(value); }
 
@@ -934,16 +962,6 @@ namespace ConTeXt_IDE.ViewModels
 					if (FileItems.Contains(file))
 						CurrentFileItem = file;
 
-					if (ProjectLoad)
-					{
-						StorageFolder currFolder = await StorageFolder.GetFolderFromPathAsync(CurrentFileItem.FileFolder);
-
-						StorageFile pdfout = await currFolder.TryGetItemAsync(Path.GetFileNameWithoutExtension(CurrentFileItem.FileName) + ".pdf") as StorageFile;
-						if (pdfout != null)
-							await MainPage?.OpenPDF(pdfout);
-					}
-					//if (!ProjectLoad)
-					//    CurrentProject.LastOpenedFiles = FileItems.Select(x => x.FileName).ToList();
 				}
 				else
 				{
