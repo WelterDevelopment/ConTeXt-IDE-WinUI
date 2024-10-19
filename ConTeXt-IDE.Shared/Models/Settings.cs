@@ -1,5 +1,6 @@
 ﻿
 using CodeEditorControl_WinUI;
+using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Shared.Models;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -15,6 +16,7 @@ using Windows.Storage;
 using Windows.System.Diagnostics;
 using Windows.UI;
 using Windows.UI.ApplicationSettings;
+using Windows.UI.Core;
 using static ConTeXt_IDE.Shared.SystemBackdropWindow;
 
 namespace ConTeXt_IDE.Models
@@ -84,7 +86,7 @@ namespace ConTeXt_IDE.Models
 
 				settings.CommandFavorites.CollectionChanged += (o, a) =>
 				{
-					WriteSettings(settings.ToJson()); watch();
+					WriteSettings(settings.ToJson()); //watch();
 				};
 
 				if (settings.HelpItemList.Count == 0)
@@ -104,10 +106,19 @@ namespace ConTeXt_IDE.Models
 				}
 				settings.CurrentPDFViewer = settings.PDFViewerList.FirstOrDefault(x => x.Name == settings.CurrentPDFViewer.Name); // Ensure that the selected object is not a new object and is actually from within the collection
 
-				if (settings.InstalledContextModules.Count == 0)
+				if (settings.ContextModules.Count == 0)
 				{
-					settings.InstalledContextModules.Add("pgf");
-					settings.InstalledContextModules.Add("pgfplots");
+					settings.ContextModules = new ObservableCollection<ContextModule>() {
+									new ContextModule() {  Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter.zip", Type = ContextModuleType.TDSArchive},
+
+									new ContextModule() {  Name = "vim", Description = "This module uses Vim editor's syntax files to syntax highlight verbatim code in ConTeXt (Module filter needs to be installed! Installed vim needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-vim.zip", Type = ContextModuleType.TDSArchive},
+									new ContextModule() {  Name = "annotation", Description = "Lets you create your own commands and environments to mark text blocks.", URL = @"https://modules.contextgarden.net/dl/t-annotation.zip", Type = ContextModuleType.TDSArchive},
+									new ContextModule() {  Name = "simpleslides", Description = "A module for creating presentations in ConTeXt.", URL = @"https://modules.contextgarden.net/dl/t-simpleslides.zip", Type = ContextModuleType.TDSArchive},
+									new ContextModule() {  Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
+									new ContextModule() {  Name = "letter", Description = "Package for writing letters", URL = @"https://modules.contextgarden.net/dl/t-letter.zip", Type = ContextModuleType.TDSArchive },
+									new ContextModule() { Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
+									new ContextModule() { Name = "pgfplots", Description = "Create normal/logarithmic plots in two and three dimensions", URL = @"http://mirrors.ctan.org/install/graphics/pgf/contrib/pgfplots.tds.zip", Type = ContextModuleType.TDSArchive},
+					};
 				}
 				if (settings.TokenColorDefinitions.Count == 0)
 				{
@@ -141,18 +152,18 @@ namespace ConTeXt_IDE.Models
 
 				settings.PropertyChanged += (o, a) =>
 				{
-					WriteSettings(settings.ToJson()); watch();
+					WriteSettings(settings.ToJson());// watch();
 				};
 
 				settings.ProjectList.CollectionChanged += (o, a) =>
 				{
-					WriteSettings(settings.ToJson()); watch();
+					WriteSettings(settings.ToJson()); //watch();
 				};
 
 				ProcessDiagnosticInfo diagnosticInfo = ProcessDiagnosticInfo.GetForCurrentProcess();
 				settings.CurrentWindowID = diagnosticInfo.ProcessId;
-				WriteSettings(settings.ToJson()); watch();
-
+				WriteSettings(settings.ToJson());// watch();
+				//watch();
 				return settings;
 			}
 			catch (Exception ex)
@@ -166,8 +177,8 @@ namespace ConTeXt_IDE.Models
 
 		public static void WriteSettings(string json)
 		{
-			watcher?.Dispose();
-			watcher = null;
+			//watcher?.Dispose();
+		//	watcher = null;
 			string file = "settings.json";
 			var storageFolder = ApplicationData.Current.LocalFolder;
 			string settingsPath = Path.Combine(storageFolder.Path, file);
@@ -181,17 +192,23 @@ namespace ConTeXt_IDE.Models
 
 			watcher.NotifyFilter = NotifyFilters.LastWrite;
 
-			watcher.Changed += (a, b) =>
+			watcher.Changed += async (a, b) =>
 			{
 				if (b.ChangeType == WatcherChangeTypes.Changed)
 					try
 					{
-						Settings updatedSettings = FromJson(File.ReadAllText(b.FullPath));
-						ProcessDiagnosticInfo diagnosticInfo = ProcessDiagnosticInfo.GetForCurrentProcess();
-						if (updatedSettings.CurrentWindowID != diagnosticInfo.ProcessId)
-						{
-							Default = updatedSettings;
-						}
+						
+						App.MainWindow.DispatcherQueue.TryEnqueue(() => {
+							Settings updatedSettings = null;
+							updatedSettings = FromJson(File.ReadAllText(b.FullPath));
+							ProcessDiagnosticInfo diagnosticInfo = ProcessDiagnosticInfo.GetForCurrentProcess();
+							if (updatedSettings.CurrentWindowID != diagnosticInfo.ProcessId)
+							{
+								Default = updatedSettings;
+							}
+						});
+					
+						
 					}
 					catch (Exception ex)
 					{
@@ -208,7 +225,7 @@ namespace ConTeXt_IDE.Models
 		public bool EvergreenInstalled { get => Get(false); set => Set(value); }
 		public bool FirstStart { get => Get(true); set => Set(value); }
 		public bool HelpPDFInInternalViewer { get => Get(false); set => Set(value); }
-		public bool InternalViewer { get => Get(true); set => Set(value); }
+		public bool InternalViewer { get => Get(true); set { Set(value); if (App.VM != null) App.VM.IsInternalViewerActive = false; } }
 		public bool PDFWindow { get => Get(false); set => Set(value); }
 		public bool MultiInstance { get => Get(false); set => Set(value); }
 		public bool ShowLog { get => Get(false); set => Set(value); }
@@ -250,7 +267,21 @@ namespace ConTeXt_IDE.Models
 		public string NavigationViewPaneMode { get => Get("Auto"); set => Set(value); }
 		public string PackageID { get => Get(Package.Current.Id.FamilyName); set => Set(value); }
 		public int FontSize { get => Get(14); set => Set(value); }
-		public int RibbonMarginValue { get => Get(4); set { Set(value); if (App.VM != null) { App.VM.CornerRadius_Ribbon = new(value*2); App.VM.Margin_Ribbon = new(value, 0, value, value); } } }
+		public int RibbonMarginValue { get => Get(4); set 
+			{
+				Set(value); 
+				if (App.VM != null) 
+				{ 
+					App.VM.CornerRadius_Ribbon = new(value*2); 
+					App.VM.Margin_Ribbon = new(value, 0, value, value);
+					Application.Current.Resources["OverlayCornerRadius"] = new CornerRadius(value);
+					Application.Current.Resources["CornerRadius"] = new CornerRadius(value);
+					Application.Current.Resources["LargeCornerRadius"] = new CornerRadius(2*value);
+					Application.Current.Resources["CornerRadiusRight"] = new CornerRadius(0,value,value,0);
+					Application.Current.Resources["CornerRadiusRight"] = new CornerRadius(value, 0,0,value);
+				} 
+			} 
+		}
 		public int TabLength { get => Get(2); set => Set(value); }
 		public string Theme
 		{
@@ -275,7 +306,8 @@ namespace ConTeXt_IDE.Models
 
 		public ObservableCollection<CommandFavorite> CommandFavorites { get => Get(new ObservableCollection<CommandFavorite>()); set => Set(value); }
 
-		public List<string> InstalledContextModules { get => Get(new List<string>()); set => Set(value); }
+		public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
+
 
 
 		public ObservableCollection<Project> ProjectList { get => Get(new ObservableCollection<Project>()); set => Set(value); }

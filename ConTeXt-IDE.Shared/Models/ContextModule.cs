@@ -2,7 +2,7 @@
 
 namespace ConTeXt_IDE.Models
 {
-    public enum ContextModuleType { TDSArchive, Archive, GitHub }
+    public enum ContextModuleType { TDSArchive, Archive }
 
     public class ContextModule : Bindable
     {

@@ -31,9 +31,13 @@ namespace ConTeXt_IDE
 			this.InitializeComponent();
 			IsCustomizationSupported = AppWindowTitleBar.IsCustomizationSupported();
 			AW = GetAppWindowForCurrentWindow();
+
+			
+			
 			
 			AW.Title = "PDF Viewer";
 			AW.Closing += AW_Closing;
+			
 			string IconPath = Path.Combine(Package.Current.Installed­Location.Path, @"Assets", @"SquareLogo.ico");
 			AW.SetIcon(IconPath);
 
@@ -65,8 +69,8 @@ namespace ConTeXt_IDE
 				SetTitleBar(CustomDragRegion);
 				Title = "PDF Viewer";
 			}
+			AW.MoveInZOrderAtTop();
 		}
-
 
 		public void ResetTitleBar()
 		{
@@ -90,6 +94,7 @@ namespace ConTeXt_IDE
 
 		private async void AW_Closing(AppWindow sender, AppWindowClosingEventArgs args)
 		{
+			PDFReader?.PDFjsViewerWebView?.Close();
 			int x = Math.Max(sender.Position.X, 0);
 			int y = Math.Max(sender.Position.Y, 0);
 			int w = Math.Max(sender.Size.Width, 200);
@@ -100,8 +105,6 @@ namespace ConTeXt_IDE
 			 ismax= OP.State == OverlappedPresenterState.Maximized;
 			}
 			VM.Default.WindowSettingPDF = new() { IsMaximized = ismax, LastPresenter = sender.Presenter.Kind, LastSize = new(x, y, w, h) };
-
-			sender.Destroy();
 
 		}
 

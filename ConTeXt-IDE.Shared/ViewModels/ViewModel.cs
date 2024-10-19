@@ -6,7 +6,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -46,7 +45,7 @@ namespace ConTeXt_IDE.ViewModels
 
 		private string rootFilePath;
 
-		public ObservableCollection<ContextModule> ContextModules { get => Get(new ObservableCollection<ContextModule>()); set => Set(value); }
+	
 		public ViewModel()
 		{
 			try
@@ -56,22 +55,6 @@ namespace ConTeXt_IDE.ViewModels
 				CurrentFileItem = FileItems.Count > 0 ? FileItems.FirstOrDefault() : new FileItem(null);
 
 
-				var modules = new ObservableCollection<ContextModule>() {
-									new ContextModule() {  Name = "filter", Description = "Process contents of a start-stop environment through an external program (Installed Pandoc needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-filter.zip", Type = ContextModuleType.TDSArchive},
-
-									new ContextModule() {  Name = "vim", Description = "This module uses Vim editor's syntax files to syntax highlight verbatim code in ConTeXt (Module filter needs to be installed! Installed vim needs to be in PATH!)", URL = @"https://modules.contextgarden.net/dl/t-vim.zip", Type = ContextModuleType.TDSArchive},
-									new ContextModule() {  Name = "annotation", Description = "Lets you create your own commands and environments to mark text blocks.", URL = @"https://modules.contextgarden.net/dl/t-annotation.zip", Type = ContextModuleType.TDSArchive},
-									new ContextModule() {  Name = "simpleslides", Description = "A module for creating presentations in ConTeXt.", URL = @"https://modules.contextgarden.net/dl/t-simpleslides.zip", Type = ContextModuleType.TDSArchive},
-									new ContextModule() {  Name = "gnuplot", Description = "Inclusion of Gnuplot graphs in ConTeXt (Installed Gnuplot needs to be in PATH!)", URL = @"https://mirrors.ctan.org/macros/context/contrib/context-gnuplot.zip", Type = ContextModuleType.Archive, ArchiveFolderPath = @"context-gnuplot\"},
-									new ContextModule() {  Name = "letter", Description = "Package for writing letters", URL = @"https://modules.contextgarden.net/dl/t-letter.zip", Type = ContextModuleType.TDSArchive },
-									new ContextModule() { Name = "pgf", Description = "Create PostScript and PDF graphics in TeX", URL = @"http://mirrors.ctan.org/install/graphics/pgf/base/pgf.tds.zip", Type = ContextModuleType.TDSArchive},
-									new ContextModule() { Name = "pgfplots", Description = "Create normal/logarithmic plots in two and three dimensions", URL = @"http://mirrors.ctan.org/install/graphics/pgf/contrib/pgfplots.tds.zip", Type = ContextModuleType.TDSArchive},
-					};
-				foreach (var module in modules)
-				{
-					module.IsInstalled = Default.InstalledContextModules.Contains(module.Name);
-				}
-				ContextModules = modules;
 
 				FileItems.CollectionChanged += FileItems_CollectionChanged1;
 
@@ -115,32 +98,6 @@ namespace ConTeXt_IDE.ViewModels
 
 		}
 
-		private ColorPaletteResources FindColorPaletteResourcesForTheme(string theme)
-		{
-			foreach (var themeDictionary in Application.Current.Resources.ThemeDictionaries)
-			{
-				if (themeDictionary.Key.ToString() == theme)
-				{
-					if (themeDictionary.Value is ColorPaletteResources)
-					{
-						return themeDictionary.Value as ColorPaletteResources;
-					}
-					else if (themeDictionary.Value is ResourceDictionary targetDictionary)
-					{
-						foreach (var mergedDictionary in targetDictionary.MergedDictionaries)
-						{
-							if (mergedDictionary is ColorPaletteResources)
-							{
-								return mergedDictionary as ColorPaletteResources;
-							}
-						}
-					}
-				}
-			}
-			return null;
-		}
-
-
 		public string CurrentMarkdownText { get => Get(""); set => Set(value); }
 		public AppServiceConnection AppServiceConnection { get; set; }
 
@@ -165,7 +122,6 @@ namespace ConTeXt_IDE.ViewModels
 		}
 
 		public ConTeXtErrorMessage ConTeXtErrorMessage { get => Get(new ConTeXtErrorMessage()); set => Set(value); }
-
 
 		public Timer MarkdownTimer = new(250) { AutoReset = true };
 		public FileItem CurrentFileItem
@@ -521,7 +477,7 @@ namespace ConTeXt_IDE.ViewModels
 		public Thickness Margin_SettingsButton { get => Get(new Thickness(0)); set => Set(value); }
 		public Thickness RibbonCornerRadius { get => Get(new Thickness(0)); set => Set(value); }
 		public Thickness RibbonMargin { get => Get(new Thickness(0)); set => Set(value); }
-		public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, 0, 0)); set => Set(value); }
+		public Thickness InfobarMargin { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, 0)); set => Set(value); }
 		public Thickness Margin_Ribbon { get => Get(new Thickness(Default.RibbonMarginValue, 0, Default.RibbonMarginValue, Default.RibbonMarginValue)); set { Set(value); InfobarMargin = value; } }
 		public CornerRadius CornerRadius_Ribbon { get => Get(new CornerRadius(Default.RibbonMarginValue * 2)); set => Set(value); }
 		public bool IsTeXError { get => Get(false); set => Set(value); }
@@ -535,7 +491,7 @@ namespace ConTeXt_IDE.ViewModels
 		public int SplitterWidth { get => Get(3); set { Set(value); } }
 		public bool IsFileItemLoaded { get => Get(false); set { Set(value); } }
 
-		public bool IsInternalViewerActive { get => Get(false); set => Set(value); }
+		public bool IsInternalViewerActive { get => Get(false); set { Set(value); } }
 
 		public bool IsMarkdownViewerActive { get => Get(false); set => Set(value); }
 

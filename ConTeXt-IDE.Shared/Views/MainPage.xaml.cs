@@ -1,5 +1,4 @@
 ﻿using CodeEditorControl_WinUI;
-using CommunityToolkit.WinUI.Controls;
 using ConTeXt_IDE.Helpers;
 using ConTeXt_IDE.Models;
 using ConTeXt_IDE.Shared.Helpers;
@@ -21,6 +20,7 @@ using PDFjs.WinUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -35,7 +35,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
-using Windows.Media.Protection.PlayReady;
+using Windows.Security.Authentication.OnlineId;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
@@ -61,6 +61,7 @@ namespace ConTeXt_IDE
 				// Listen to the Settings --> Update the fiddly docking manager
 				//App.m_window.SetTitleBar(TabStripFooter);
 				VM.Default.PropertyChanged += Default_PropertyChanged;
+				VM.PropertyChanged += ViewModel_PropertyChanged;
 
 				//SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += MainPage_CloseRequested;
 
@@ -210,7 +211,7 @@ namespace ConTeXt_IDE
 
 			VM.Codewriter = cw;
 
-			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Save"; else return false; }))
+			if (!cw.ContextMenu.Items.Any(x => { return x is MenuFlyoutItem item && item.Text == "Save"; }))
 				cw.Action_Add(MenuSave);
 
 			if (!cw.ContextMenu.Items.Any(x => { if (x is MenuFlyoutItem item) return item.Text == "Compile"; else return false; }) && cw.Language.Name == "ConTeXt")
@@ -253,14 +254,28 @@ namespace ConTeXt_IDE
 				VM.IsSaving = true;
 				VM.IsPaused = false;
 				VM.InfoMessage("Installing", "Extracting the ConTeXt Distribution to the app's package Folder", InfoBarSeverity.Informational);
+
+				bool temporarilyshowlog = !VM.Default.ShowLog;
+
+				if (temporarilyshowlog)
+					VM.Default.ShowLog = true;
+
 				await Task.Run(async () => { InstallSuccessful = await InstallContext(); });
-				//InstallSuccessful = await InstallContext();
+
+				if (temporarilyshowlog)
+					VM.Default.ShowLog = false;
+				
+
+
 				if (InstallSuccessful)
 				{
 					VM.Default.DistributionInstalled = true;
 					VM.IsSaving = false;
 					VM.IsPaused = true;
 					VM.IsLoadingBarVisible = false;
+					string version = "";
+					await Task.Run(async () => { version = await GetVersion(); });
+					VM.Default.ContextVersion = version;
 					VM.InfoMessage("Installation complete!", "Your ConTeXt distribution is up n' running!", InfoBarSeverity.Success);
 				}
 				else
@@ -962,7 +977,8 @@ namespace ConTeXt_IDE
 			try
 			{
 				StorageFile pdffile = pdfout ?? lastPDFFile;
-				if (pdffile != null){
+				if (pdffile != null)
+				{
 					lastPDFFile = pdffile;
 					if (VM.Default.PDFWindow & !VM.IsInternalViewerActive)
 					{
@@ -974,12 +990,16 @@ namespace ConTeXt_IDE
 								pDFWindow.PDFReader.SyncTeXRequested += PDFjsViewer_SyncTeXRequested;
 							pDFWindow.AW.Closing += async (a, b) =>
 							{
-								await PDFReader.OpenPDF(pdffile);
-								VM.IsInternalViewerActive = true;
 								pDFWindow = null;
+								if (!VM.Default.PDFWindow)
+								{
+									await PDFReader.OpenPDF(pdffile);
+									VM.IsInternalViewerActive = true;
+
+								}
 							};
 						}
-						pDFWindow?.PDFReader.OpenPDF(pdffile);
+						await pDFWindow?.PDFReader.OpenPDF(pdffile);
 					}
 					else
 					{
@@ -1044,24 +1064,68 @@ namespace ConTeXt_IDE
 		{
 			try
 			{
+				if (!NetworkInterface.GetIsNetworkAvailable())
+					return false;
+
+				string architecture = "win64";
+
+				switch (System.Runtime.InteropServices.RuntimeInformation.OSArchitecture)
+				{
+					case System.Runtime.InteropServices.Architecture.X64: architecture = "win64"; break;
+					case System.Runtime.InteropServices.Architecture.X86: architecture = "mswin"; break;
+					case System.Runtime.InteropServices.Architecture.Arm64: architecture = "windows-arm64"; break;
+					default: break;
+
+				}
+
 				var storageFolder = ApplicationData.Current.LocalFolder;
 				VM.Default.ContextDistributionPath = storageFolder.Path;
 
-				var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", @"context-mswin.zip");
+				string filepath = Path.Combine(ApplicationData.Current.LocalFolder.Path, $"context-{architecture}" + ".zip");
 
-				StorageFile zipfile;
+				//var p = Path.Combine(Package.Current.Installed­Location.Path, @"ConTeXt-IDE.Desktop", @"context-mswin.zip");
+				bool UpdateSuccessful = false;
+				using (WebClient wc = new WebClient())
+				{
 
-				if (File.Exists(p))
-				{
-					zipfile = await StorageFile.GetFileFromPathAsync(p);
+
+					if (File.Exists(filepath))
+					{
+						File.Delete(filepath);
+					}
+
+					bool success = false;
+					wc.DownloadProgressChanged += (a, b) =>
+					{
+						VM.ProgressValue = b.ProgressPercentage;
+						VM.InfoText = VM.ProgressValue.ToString() + "%";
+						TaskbarUtility.SetProgressValue(b.ProgressPercentage, 100);
+					};
+
+					wc.DownloadFileCompleted += async (a, b) =>
+					{
+						VM.IsIndeterminate = true;
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.Indeterminate);
+						VM.InfoMessage($"Installing ConTeXt", "Please wait...");
+
+
+						TaskbarUtility.SetProgressState(TaskbarProgressBarStatus.NoProgress);
+					};
+
+				
+
+					wc.DownloadFile(new Uri($"http://lmtx.pragma-ade.nl/install-lmtx/context-{architecture}.zip"), filepath);
 				}
-				else
-				{
-					zipfile = await StorageFile.GetFileFromApplicationUriAsync(new("ms-appx:///context-mswin.zip"));
-				}
+
+				StorageFile zipfile = await StorageFile.GetFileFromPathAsync(filepath);
+
 
 				ZipFile.ExtractToDirectory(zipfile.Path, storageFolder.Path, true);
-				return true;
+
+				await Task.Run(async () => { UpdateSuccessful = await Update(); });
+
+				return UpdateSuccessful;
 			}
 			catch (Exception ex)
 			{
@@ -1102,16 +1166,16 @@ namespace ConTeXt_IDE
 			};
 
 			p.StartInfo = info;
-			info.FileName = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe";// @"C:\Windows\System32\cmd.exe";
+			info.FileName = VM.Default.ContextDistributionPath + @"\tex" + getversion() + @"\bin\context.exe";
 			info.Arguments = " " + param + "\"" + texFileName + "\"";
 
 			if (VM.Default.ShowCompilerOutput)
 				p.OutputDataReceived += (a, b) =>
 				{
 					DispatcherQueue.TryEnqueue(async () =>
-																	{
-																		VM.Log(b.Data);
-																	});
+					{
+						VM.Log(b.Data);
+					});
 
 				};
 
@@ -1244,7 +1308,25 @@ namespace ConTeXt_IDE
 			VM.LogLines.Clear();
 		}
 
-		private void Default_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			switch (e.PropertyName)
+			{
+				case "IsInternalViewerActive":
+					if (VM.IsInternalViewerActive)
+					{
+						PDFGridSplitter.Width = new GridLength(1, GridUnitType.Auto);
+						PDFGridColumn.Width = new GridLength(400, GridUnitType.Pixel);
+					}
+					else
+					{
+						PDFGridSplitter.Width = new GridLength(0, GridUnitType.Pixel);
+						PDFGridColumn.Width = new GridLength(0, GridUnitType.Pixel);
+					}
+					break;
+			}
+		}
+		private void Default_PropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			switch (e.PropertyName)
 			{
@@ -1289,18 +1371,7 @@ namespace ConTeXt_IDE
 					}
 					break;
 
-				case "InternalViewer":
-					if (VM.Default.InternalViewer)
-					{
-						PDFGridSplitter.Width = new GridLength(1, GridUnitType.Auto);
-						PDFGridColumn.Width = new GridLength(400, GridUnitType.Pixel);
-					}
-					else
-					{
-						PDFGridSplitter.Width = new GridLength(0, GridUnitType.Pixel);
-						PDFGridColumn.Width = new GridLength(0, GridUnitType.Pixel);
-					}
-					break;
+
 				default: break;
 			}
 		}
@@ -1440,11 +1511,12 @@ namespace ConTeXt_IDE
 			//VM.InfoMessage("You changed the theme", "Not every UI element updates its theme at runtime. You may want to restart the app.");
 			await Task.Delay(50);
 			PDFReader.Theme = VM.Default.Theme;
-			if (pDFWindow != null) {
+			if (pDFWindow != null)
+			{
 				pDFWindow.RequestedTheme = (ElementTheme)Enum.Parse(typeof(ElementTheme), VM.Default.Theme);
 				pDFWindow.PDFReader.Theme = VM.Default.Theme;
 				pDFWindow.ResetTitleBar();
-					}
+			}
 		}
 		private async void WebView2loading(FrameworkElement sender, object args)
 		{
@@ -1537,11 +1609,8 @@ namespace ConTeXt_IDE
 
 				if (temporarilyshowlog)
 					VM.Default.ShowLog = true;
-				await Task.Run(async () => { UpdateSuccessful = await Update(); });
+				await Task.Run(async () => { UpdateSuccessful = await InstallContext(); });
 
-				string version = "";
-				await Task.Run(async () => { version = await GetVersion(); });
-				VM.Default.ContextVersion = version;
 
 				if (temporarilyshowlog)
 					VM.Default.ShowLog = false;
@@ -1741,7 +1810,7 @@ namespace ConTeXt_IDE
 
 		private async void Btn_Save_Click(object sender, RoutedEventArgs e)
 		{
-			
+
 			await VM.Save();
 			Codewriter.Save();
 		}
@@ -2099,8 +2168,7 @@ namespace ConTeXt_IDE
 			if (NetworkInterface.GetIsNetworkAvailable())
 			{
 				DownloadModule(module);
-				VM.ContextModules.Where(x => x.Name == module.Name).FirstOrDefault().IsInstalled = true;
-				VM.Default.InstalledContextModules = VM.ContextModules.Where(x => x.IsInstalled).Select(x => x.Name).ToList();
+				VM.Default.ContextModules.Where(x => x.Name == module.Name).FirstOrDefault().IsInstalled = true;
 			}
 			else
 				VM.InfoMessage("Download error", "No internet connection available.");
@@ -2137,8 +2205,7 @@ namespace ConTeXt_IDE
 			if (success)
 			{
 				VM.InfoMessage("Success", $"Module {module.Name} has been successfully uninstalled.", InfoBarSeverity.Success);
-				VM.ContextModules.Where(x => x.Name == module.Name).FirstOrDefault().IsInstalled = false;
-				VM.Default.InstalledContextModules = VM.ContextModules.Where(x => x.IsInstalled).Select(x => x.Name).ToList();
+				VM.Default.ContextModules.Where(x => x.Name == module.Name).FirstOrDefault().IsInstalled = false;
 			}
 			else
 			{
@@ -2216,9 +2283,6 @@ namespace ConTeXt_IDE
 						installpath = @"tex\texmf\";
 						break;
 					case ContextModuleType.Archive:
-						installpath = @"tex\texmf\";
-						break;
-					case ContextModuleType.GitHub:
 						installpath = @"tex\texmf\";
 						break;
 				}
@@ -3140,9 +3204,8 @@ namespace ConTeXt_IDE
 
 		private async void TbV_EditorTabView_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (VM.Default.AutoOpenPDFOnFileOpen && e.AddedItems.Count > 0 && e.AddedItems[0] is FileItem fileitem && fileitem != null)
-			{
-				if (fileitem.IsTexFile)
+			if (e.AddedItems.Count > 0 && e.AddedItems[0] is FileItem fileitem && fileitem != null)
+				if (fileitem.IsTexFile && (VM.Default.AutoOpenPDFOnFileOpen | fileitem.IsRoot))
 				{
 					StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(Directory.GetParent(fileitem.File.Path).FullName);
 					StorageFile pdfout = await folder.TryGetItemAsync(Path.GetFileNameWithoutExtension(fileitem.FileName) + ".pdf") as StorageFile;
@@ -3151,6 +3214,8 @@ namespace ConTeXt_IDE
 						VM.Log("Opening " + Path.GetFileNameWithoutExtension(fileitem.FileName) + ".pdf");
 						if (VM.Default.InternalViewer)
 						{
+							if (fileitem.IsRoot && lastPDFFile?.Path == pdfout?.Path)
+								return;
 							await OpenPDF(pdfout);
 
 							if (VM.CurrentProject.UseSyncTeX)
@@ -3170,7 +3235,6 @@ namespace ConTeXt_IDE
 						}
 					}
 				}
-			}
 		}
 
 		private async void TgB_PDFWindow_Click(object sender, RoutedEventArgs e)
@@ -3186,6 +3250,60 @@ namespace ConTeXt_IDE
 			{
 				VM.IsInternalViewerActive = false;
 				await OpenPDF(null);
+			}
+		}
+
+		private async void Btn_EditModule_Click(object sender, RoutedEventArgs e)
+		{
+			var item = (sender as Control).DataContext as ContextModule;
+			ContextModule module = await editContextModule(item);
+			if (module != null)
+			{
+				VM.Default.ContextModules[VM.Default.ContextModules.IndexOf(item)] = module;
+				VM.Default.SaveSettings();
+			}
+		}
+
+		private async Task<ContextModule> editContextModule(ContextModule module)
+		{
+			ContentDialog cd = new() { Title = "Edit module", PrimaryButtonText = "Save", SecondaryButtonText = "Cancel" };
+			StackPanel st = new() { Orientation = Orientation.Vertical, Spacing = 6 };
+
+			TextBox name = new() { Header = "Name", Text = module.Name };
+			ComboBox type = new() { Header = "Type", ItemsSource = Enum.GetNames(typeof(ContextModuleType)), SelectedItem = default(ContextModuleType).ToString() };
+			TextBox archivepath = new() { Header = "Folder path (only for type 'Archive')", Text = module.ArchiveFolderPath };
+			TextBox url = new() { Header = "Url", Text = module.URL };
+			TextBox description = new() { Header = "Description", Text = module.Description, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
+
+			st.Children.Add(name);
+			st.Children.Add(type);
+			st.Children.Add(archivepath);
+			st.Children.Add(url);
+			st.Children.Add(description);
+
+			cd.Content = st;
+			cd.XamlRoot = XamlRoot;
+
+			var result = await cd.ShowAsync();
+
+			switch (result)
+			{
+				case ContentDialogResult.Primary: return new ContextModule() { Name = name.Text, Type = (ContextModuleType)Enum.Parse(typeof(ContextModuleType), type.SelectedItem as string), ArchiveFolderPath = archivepath.Text, URL = url.Text, Description = description.Text };
+				case ContentDialogResult.Secondary: return null;
+				case ContentDialogResult.None: return null;
+				default: return null;
+			}
+
+
+		}
+
+		private async void Btn_AddModule_Click(object sender, RoutedEventArgs e)
+		{
+			ContextModule module = await editContextModule(new ContextModule());
+			if (module != null)
+			{
+				VM.Default.ContextModules.Add(module);
+				VM.Default.SaveSettings();
 			}
 		}
 	}

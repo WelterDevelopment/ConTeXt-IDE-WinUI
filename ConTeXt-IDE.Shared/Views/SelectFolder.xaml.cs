@@ -20,45 +20,45 @@ using WinRT;
 
 namespace ConTeXt_IDE
 {
-    public sealed partial class SelectFolder : ContentDialog
-    {
-        [ComImport, System.Runtime.InteropServices.Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IInitializeWithWindow
-        {
-            void Initialize([In] IntPtr hwnd);
-        }
+	public sealed partial class SelectFolder : ContentDialog
+	{
 
-        [DllImport("user32.dll", ExactSpelling = true, CharSet = CharSet.Auto, PreserveSig = true, SetLastError = false)]
-        public static extern IntPtr GetActiveWindow();
-
-        ViewModel vm = App.VM;
-        public SelectFolder()
-        {
-            App.VM.SelectedPath = "";
-            this.InitializeComponent();
-        }
+		ViewModel vm = App.VM;
+		public SelectFolder()
+		{
+			App.VM.SelectedPath = "";
+			this.InitializeComponent();
+		}
 
 
-        public StorageFolder folder;
+		public StorageFolder folder;
 
-        private async  void Button_Click(object sender, RoutedEventArgs e)
-        {
+		private async void Button_Click(object sender, RoutedEventArgs e)
+		{
 
-            var folderPicker = new FolderPicker();
-            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-            folderPicker.FileTypeFilter.Add("*");
-            folderPicker.CommitButtonText = "Open";
-            folderPicker.SettingsIdentifier = "ChooseWorkspace";
-            folderPicker.ViewMode = PickerViewMode.List;
-            IInitializeWithWindow initializeWithWindowWrapper = folderPicker.As<IInitializeWithWindow>();
-            IntPtr hwnd = GetActiveWindow();
-            initializeWithWindowWrapper.Initialize(hwnd);
-            folder = await folderPicker.PickSingleFolderAsync();
-            if (folder != null)
-            {
-                App.VM.SelectedPath = folder.Path;
-                this.PrimaryButtonText = "Select";
-            }
-        }
-    }
+			var folderPicker = new FolderPicker();
+			folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+			folderPicker.FileTypeFilter.Add("*");
+			folderPicker.SettingsIdentifier = "ChooseWorkspace";
+			folderPicker.ViewMode = PickerViewMode.List;
+
+			// See the sample code below for how to make the window accessible from the App class.
+			var window = App.MainWindow;
+
+			// Retrieve the window handle (HWND) of the current WinUI 3 window.
+			var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+
+			// Initialize the folder picker with the window handle (HWND).
+			WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hWnd);
+
+
+		
+			folder ??= await folderPicker.PickSingleFolderAsync();
+			if (folder != null)
+			{
+				App.VM.SelectedPath = folder.Path;
+				this.PrimaryButtonText = "Select";
+			}
+		}
+	}
 }

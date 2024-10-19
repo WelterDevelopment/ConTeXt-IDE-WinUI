@@ -76,8 +76,8 @@ namespace ConTeXt_IDE
 
 	private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
 	{
-	 write("Unhandled app exception:" + e.Message + " - " + e.Exception.StackTrace);
-	 VM?.Log("Unhandled app exception:" + e.Message);
+	 write("Unhandled app exception: " + e.Message + " - " + e.Exception.StackTrace);
+	 VM?.Log("Unhandled app exception:" + e.Message + " - " + e.Exception.StackTrace);
 	}
 
 	protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)

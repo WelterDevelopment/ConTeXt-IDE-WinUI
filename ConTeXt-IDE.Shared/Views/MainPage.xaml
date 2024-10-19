@@ -814,23 +814,23 @@
 									<ToggleButton.Content>
 										<StackPanel Style="{StaticResource HorizontalStack}" >
 											<FontIcon Glyph="&#xE89F;"></FontIcon>
-											<TextBlock  Text="Internal viewer" ></TextBlock>
+											<TextBlock  Text="Use integrated PDF viewer" ></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
 								<ToggleButton CornerRadius="0" IsChecked="{Binding Default.PDFWindow, Mode=TwoWay}" IsEnabled="{Binding Default.InternalViewer}" Click="TgB_PDFWindow_Click">
 									<ToggleButton.Content>
 										<StackPanel Style="{StaticResource HorizontalStack}" >
-											<FontIcon Glyph="&#xE89F;"></FontIcon>
-											<TextBlock  Text="Seperate Window" ></TextBlock>
+											<FontIcon Glyph="&#xE8A7;"></FontIcon>
+											<TextBlock  Text="Seperate Window (β)" ></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
 								<ToggleButton CornerRadius="{StaticResource CornerRadiusRight}" BorderThickness="0,1,1,1"  IsChecked="{Binding Default.AutoOpenPDFOnFileOpen, Mode=TwoWay}" >
 									<ToggleButton.Content>
 										<StackPanel Style="{StaticResource HorizontalStack}" >
-											<FontIcon Glyph="&#xEA90;"></FontIcon>
-											<TextBlock  Text="Open PDF after file change" ></TextBlock>
+											<FontIcon Glyph="&#xE945;"></FontIcon>
+											<TextBlock  Text="Open PDF at file change (β)" ></TextBlock>
 										</StackPanel>
 									</ToggleButton.Content>
 								</ToggleButton>
@@ -1115,46 +1115,69 @@
 									</StackPanel>
 								</DropDownButton.Content>
 								<DropDownButton.Flyout>
-									<Flyout Placement="Bottom"  >
-
+									<Flyout Placement="Bottom" >
 										<Flyout.FlyoutPresenterStyle >
 											<Style TargetType="FlyoutPresenter">
 												<Setter Property="MaxWidth" Value="500" />
 											</Style>
 										</Flyout.FlyoutPresenterStyle>
-										
-										<ItemsControl  Margin="0" Padding="0" MaxWidth="400"  IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}, Mode=OneWay}" ItemsSource="{Binding ContextModules}"  >
-											<!--<ItemsControl.ItemContainerStyle>
-												<Style TargetType="ItemContainer">
-													<Setter Property="HorizontalContentAlignment"  Value="Stretch"></Setter>
-													--><!--<Setter Property="Margin"  Value="0,0,0,6"></Setter>--><!--
-												</Style>
-											</ItemsControl.ItemContainerStyle>-->
-											<ItemsControl.ItemTemplate>
-												<DataTemplate>
+										<Grid>
+											<Grid.RowDefinitions>
+												<RowDefinition Height="Auto" />
+												<RowDefinition Height="*" />
+											</Grid.RowDefinitions>
+											<Button  x:Name="Btn_AddModule" Grid.Row="0" HorizontalAlignment="Right" Click="Btn_AddModule_Click" Margin="3">
+												<StackPanel Style="{StaticResource HorizontalStack}" >
+													<SymbolIcon Symbol="Add"></SymbolIcon>
+													<TextBlock  Text="Add module installer" VerticalAlignment="Center" Style="{ThemeResource BodyTextBlockStyle}"></TextBlock>
+												</StackPanel>
+											</Button>
+											<ItemsControl Grid.Row="1" Margin="0" Padding="0" MaxWidth="400"  IsEnabled="{Binding IsSaving, Converter={StaticResource BoolInverter}, Mode=OneWay}" ItemsSource="{Binding Default.ContextModules}"  >
+												<!--<ItemsControl.ItemContainerStyle>
+		<Style TargetType="ItemContainer">
+			<Setter Property="HorizontalContentAlignment"  Value="Stretch"></Setter>
+			-->
+												<!--<Setter Property="Margin"  Value="0,0,0,6"></Setter>-->
+												<!--
+		</Style>
+	</ItemsControl.ItemContainerStyle>-->
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
 
-													<toolkit:SettingsCard Header="{Binding Name}" Description="{Binding Description}" Margin="3">
-														<toolkit:SettingsCard.Resources>
-															<x:Double x:Key="SettingsCardWrapThreshold">300</x:Double>
-															<x:Double x:Key="SettingsCardWrapNoIconThreshold">50</x:Double>
-														</toolkit:SettingsCard.Resources>
-														<StackPanel Style="{StaticResource HorizontalStack}">
-															<Button Click="Btn_InstallModule_Click" ToolTipService.ToolTip="Download and install the latest version">
-																<Button.Content>
-																	<SymbolIcon Symbol="Download"></SymbolIcon>
-																</Button.Content>
-															</Button>
-															<Button Click="Btn_RemoveModule_Click" IsEnabled="{Binding IsInstalled, Mode=OneWay}" ToolTipService.ToolTip="Remove module files">
-																<Button.Content>
-																	<SymbolIcon Symbol="Delete"></SymbolIcon>
-																</Button.Content>
-															</Button>
-														</StackPanel>
-													</toolkit:SettingsCard>
-													
-												</DataTemplate>
-											</ItemsControl.ItemTemplate>
-										</ItemsControl>
+														<toolkit:SettingsCard VerticalContentAlignment="Top" Header="{Binding Name}" Description="{Binding Description}" Margin="3">
+															<toolkit:SettingsCard.ContextFlyout>
+																<MenuFlyout>
+																	<MenuFlyoutItem x:Name="Btn_EditModule" Text="Edit" Click="Btn_EditModule_Click" >
+																		<MenuFlyoutItem.Icon>
+																			<SymbolIcon Symbol="Edit"></SymbolIcon>
+																		</MenuFlyoutItem.Icon>
+																	</MenuFlyoutItem>
+																</MenuFlyout>
+															</toolkit:SettingsCard.ContextFlyout>
+															<toolkit:SettingsCard.Resources>
+																<x:Double x:Key="SettingsCardWrapThreshold">300</x:Double>
+																<x:Double x:Key="SettingsCardWrapNoIconThreshold">50</x:Double>
+															</toolkit:SettingsCard.Resources>
+															<StackPanel VerticalAlignment="Top" Style="{StaticResource HorizontalStack}">
+																<Button Click="Btn_InstallModule_Click" ToolTipService.ToolTip="Download and install the latest version">
+																	<Button.Content>
+																		<SymbolIcon Symbol="Download"></SymbolIcon>
+																	</Button.Content>
+																</Button>
+																<Button Click="Btn_RemoveModule_Click" IsEnabled="{Binding IsInstalled, Mode=OneWay}" ToolTipService.ToolTip="Remove module files">
+																	<Button.Content>
+																		<SymbolIcon Symbol="Delete"></SymbolIcon>
+																	</Button.Content>
+																</Button>
+															</StackPanel>
+														</toolkit:SettingsCard>
+
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</Grid>
+										
+										
 									</Flyout>
 								</DropDownButton.Flyout>
 							</DropDownButton>
@@ -1371,7 +1394,7 @@
 					  CanReorderTabs="True"  TabItemsSource="{Binding FileItems}" SelectedItem="{Binding CurrentFileItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  SelectionChanged="TbV_EditorTabView_SelectionChanged"
 					  AllowDrop="True"  TabStripDragOver="EditorTabViewDrag" BorderThickness="0"  TabStripDrop="EditorTabViewDrop"  FontFamily="Segoe">
 								<TabView.TabStripHeader>
-									<Grid Width="{Binding Margin_Ribbon}"></Grid>
+									<Grid Margin="{Binding Margin_Ribbon}"></Grid>
 								</TabView.TabStripHeader>
 
 								<TabView.TabStripFooter>

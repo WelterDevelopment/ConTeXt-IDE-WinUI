@@ -100,9 +100,13 @@ public sealed partial class MainWindow : SystemBackdropWindow
 		}
 		if (!canceled)
 		{
-			Application.Current.Exit();
-			Environment.Exit(0);
-			sender.Destroy();
+			//Application.Current.Exit();
+			try
+			{
+				Environment.Exit(0);
+				sender.Destroy();
+			}
+			catch { }
 		}
 	}
 

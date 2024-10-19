@@ -158,9 +158,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)context-mswin.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Templates\projthes\components\c_3_section3.tex">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
